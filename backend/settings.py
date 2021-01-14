@@ -27,7 +27,7 @@ SECRET_KEY = 'a_y&_%d&)5hn#^yz7t8!u4#i1=8=volekb$%#h&-y381he_e!p'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', 'freshi-test3.us-east-1.elasticbeanstalk.com', 'freshi-prod.us-east-1.elasticbeanstalk.com', ]
 
 
 # Application definition
@@ -127,6 +127,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+# STATIC_ROOT is where static files are placed after collectstatic.
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
+# STATICFILES_DIRS is where collectstatic can find static files that it will collect.
 STATICFILES_DIRS = (
     # Add the build directory from the frontend directory to serve front and back end at port 8000.
     os.path.join(BASE_DIR, 'frontend', "build", "static"),  
