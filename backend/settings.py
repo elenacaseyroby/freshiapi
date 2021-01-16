@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from pathlib import Path
 
-import os
+import os, requests
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,7 +27,24 @@ SECRET_KEY = 'a_y&_%d&)5hn#^yz7t8!u4#i1=8=volekb$%#h&-y381he_e!p'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', 'freshi-test3.us-east-1.elasticbeanstalk.com', 'freshi-prod.us-east-1.elasticbeanstalk.com', ]
+# Fix enhanced health overview false negative:
+# Get IP address of the EC2 instance that sends the health check request to Django
+# so we can add it to ALLOWED_HOSTS and change the 4xx error it returns into a 3xx error.
+# Django returns the 3xx error when an http request is sent, since it requires all requests 
+# be sent with https.
+def get_ec2_instance_ip():
+    try:
+        ip = requests.get(
+          'http://169.254.169.254/latest/meta-data/local-ipv4',
+          timeout=0.01
+        ).text
+    except requests.exceptions.ConnectionError:
+        return None
+    return ip
+
+AWS_LOCAL_IP = get_ec2_instance_ip()
+
+ALLOWED_HOSTS = ['localhost', 'freshi-prod.us-east-1.elasticbeanstalk.com', AWS_LOCAL_IP]
 
 
 # Application definition
