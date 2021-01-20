@@ -56,6 +56,7 @@ AWS_LOCAL_IP = get_ec2_instance_ip()
 ALLOWED_HOSTS = [
     'localhost',
     'freshi-prod.us-east-1.elasticbeanstalk.com',
+    'freshi-staging.us-east-1.elasticbeanstalk.com',
     AWS_LOCAL_IP
 ]
 
