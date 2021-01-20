@@ -14,14 +14,17 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, re_path
 
 from backend_apps.food_app.views import index, manifest
 
 urlpatterns = [
+    # Route “host:8000/” to the view that renders the frontend build to serve
+    # front and back end at port 8000.
+    # Only urls starting with /admin or /api or manifest.jon will be rendered
+    # from the backend.
+    re_path(r'^(?!admin)(?!api)(?!manifest.json).*', index, name="index"),
     path('admin/', admin.site.urls),
-    # Route “host:8000/” to the view that renders the frontend build to serve front and back end at port 8000.
-    path("", index, name="index"),
     # Route "host:8000/manifest.json" to frontend/build/manifest.json
     path("manifest.json", manifest, name="manifest"),
 ]

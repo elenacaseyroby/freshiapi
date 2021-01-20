@@ -12,7 +12,13 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from pathlib import Path
 
-import os, requests
+import os
+import requests
+import environ
+
+# Initialise environment variables.
+env = environ.Env()
+environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,30 +28,36 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'a_y&_%d&)5hn#^yz7t8!u4#i1=8=volekb$%#h&-y381he_e!p'
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DEBUG')
 
 # Fix enhanced health overview false negative:
-# Get IP address of the EC2 instance that sends the health check request to Django
-# so we can add it to ALLOWED_HOSTS and change the 4xx error it returns into a 3xx error.
-# Django returns the 3xx error when an http request is sent, since it requires all requests 
-# be sent with https.
+# Get IP address of the EC2 instance that sends the health check request to
+# Django so we can add it to ALLOWED_HOSTS and change the 4xx error it
+# returns into a 3xx error.Django returns the 3xx error when an http request
+# is sent, since it requires all requests be sent with https.
+
+
 def get_ec2_instance_ip():
     try:
         ip = requests.get(
-          'http://169.254.169.254/latest/meta-data/local-ipv4',
-          timeout=0.01
+            'http://169.254.169.254/latest/meta-data/local-ipv4',
+            timeout=0.01
         ).text
     except requests.exceptions.ConnectionError:
         return None
     return ip
 
+
 AWS_LOCAL_IP = get_ec2_instance_ip()
 
-ALLOWED_HOSTS = ['localhost', 'freshi-prod.us-east-1.elasticbeanstalk.com', AWS_LOCAL_IP]
-
+ALLOWED_HOSTS = [
+    'localhost',
+    'freshi-prod.us-east-1.elasticbeanstalk.com',
+    AWS_LOCAL_IP
+]
 
 # Application definition
 
@@ -79,7 +91,8 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        # Add the root folder of frontend to serve front and back end at port 8000.
+        # Add the root folder of frontend to serve front and back end
+        # at port 8000.
         'DIRS': [os.path.join(BASE_DIR, 'frontend')],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -101,9 +114,8 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+        'URL': env('DATABASE_URL'),
+    },
 }
 
 
@@ -112,16 +124,20 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME': 'django.contrib.auth.password_validation\
+            .UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME': 'django.contrib.auth.password_validation\
+            .MinimumLengthValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        'NAME': 'django.contrib.auth.password_validation\
+            .CommonPasswordValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME': 'django.contrib.auth.password_validation\
+            .NumericPasswordValidator',
     },
 ]
 
@@ -146,8 +162,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 # STATIC_ROOT is where static files are placed after collectstatic.
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
-# STATICFILES_DIRS is where collectstatic can find static files that it will collect.
+# STATICFILES_DIRS is where collectstatic can find static files that it will
+# collect.
 STATICFILES_DIRS = (
-    # Add the build directory from the frontend directory to serve front and back end at port 8000.
-    os.path.join(BASE_DIR, 'frontend', "build", "static"),  
+    # Add the build directory from the frontend directory to serve front and
+    # back end at port 8000.
+    os.path.join(BASE_DIR, 'frontend', "build", "static"),
 )
