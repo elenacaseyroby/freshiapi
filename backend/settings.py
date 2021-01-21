@@ -16,7 +16,7 @@ import os
 import requests
 import environ
 
-# Initialise environment variables.
+# Initialise environment variables. Test deploy~
 env = environ.Env()
 environ.Env.read_env()
 
