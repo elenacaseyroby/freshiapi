@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, re_path
 
-from backend_apps.food_app.views import index, manifest
+from backend_apps.website.views import index, manifest
 
 urlpatterns = [
     # Route “host:8000/” to the view that renders the frontend build to serve

@@ -16,7 +16,7 @@ import os
 import requests
 import environ
 
-# Initialise environment variables. Test deploy~
+# Initialize environment variables. Test deploy~
 env = environ.Env()
 environ.Env.read_env()
 
@@ -72,7 +72,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'backend_apps',
-    'backend_apps.food_app',
+    'backend_apps.website',
 ]
 
 MIDDLEWARE = [
