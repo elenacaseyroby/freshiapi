@@ -73,6 +73,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_apps',
     'django_apps.website',
+    'django_apps.food',
+    'django_apps.users'
 ]
 
 MIDDLEWARE = [
