@@ -56,6 +56,23 @@ class Food(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    @cached_property
+    def citation(self):
+        if self.usda_fdc_id:
+            return 'U.S. Department of Agriculture, Agricultural Research \
+                Service. 2018. USDA Food and Nutrient Database for Dietary \
+                Studies 2017-2018. Food Surveys Research Group Home \
+                Page, www.ars.usda.gov/nea/bhnrc/fsrg '
+        return ''
+
+    @cached_property
+    def source_note(self):
+        if self.usda_fdc_id:
+            return 'USDA’s Food and Nutrient Database for Dietary Studies \
+                2017-2018 was used to code dietary intake data and calculate \
+                nutrient intakes.'
+        return ''
+
 
 class NutritionFact(models.Model):
     food = models.ForeignKey(Food, on_delete=models.CASCADE)
