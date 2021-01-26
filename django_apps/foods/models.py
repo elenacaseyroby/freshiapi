@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.functional import cached_property
 
 from django_apps.users.models import User
 
@@ -15,10 +16,12 @@ class Nutrient(models.Model):
     # Defines a single serving of the food
     # Example: 1 cup
     dv_qty = models.DecimalField(max_digits=5, decimal_places=2)
-    dv_unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
+    dv_unit = models.ForeignKey(Unit, on_delete=models.RESTRICT)
     # usda_nutrient_id stores the nutrient id from the USDA FoodData Central
     # Database.
     usda_nutrient_id = models.IntegerField(max_length=15)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class USDACategory(models.Model):
@@ -35,8 +38,9 @@ class Food(models.Model):
     # Use these for conversions & writing recipes
     one_serving_qty = models.DecimalField(
         max_digits=5, decimal_places=2, blank=True)
+    # If unit is deleted we do not want food record to be deleted.
     one_serving_unit = models.ForeignKey(
-        Unit, on_delete=models.CASCADE, blank=True)
+        Unit, on_delete=models.RESTRICT, blank=True)
     # If one serving is 100 grams.
     # We might want one serving to be displayed as 1 slice or 5 crackers.
     # Use these for tracking foods.
@@ -46,8 +50,9 @@ class Food(models.Model):
         max_digits=5, decimal_places=2, blank=True)
     one_serving_display_unit = models.CharField(max_length=30, blank=True)
     nutrients = models.ManyToManyField(Nutrient, through='Nutrition')
+    # If usda category is deleted, we do not want food to be deleted.
     usda_category = models.ForeignKey(
-        USDACategory, on_delete=models.CASCADE, blank=True)
+        USDACategory, on_delete=models.RESTRICT, blank=True)
     # usda_fdc_id will only exist for foods added from the USDA FoodData
     # Central Database.
     usda_fdc_id = models.IntegerField(max_length=15, blank=True)
@@ -93,5 +98,7 @@ class UnitConversion(models.Model):
 
 # Mostly for internal record.
 class FoodAddedByUser(models.Model):
+    # Record will not be deleted if user is deleted, but it will be deleted if
+    # food is deleted.
     food = models.ForeignKey(Food, unique=True, on_delete=models.CASCADE)
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.RESTRICT)
