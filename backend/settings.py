@@ -71,8 +71,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'backend_apps',
-    'backend_apps.website',
+    'environ',
+    'django_apps',
+    'django_apps.website',
+    'django_apps.foods',
+    'django_apps.users',
+    'django_apps.recipes'
 ]
 
 MIDDLEWARE = [
@@ -115,7 +119,12 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'URL': env('DATABASE_URL'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST'),
+        'PORT': env('DB_PORT'),
     },
 }
 
