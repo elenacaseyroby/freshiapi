@@ -9,12 +9,15 @@ from django_apps.users.models import User
 
 class Unit(models.Model):
     name = models.CharField(unique=True, max_length=50)
+    abbr = models.CharField(unique=True, max_length=10)
+
+    # add so unit dropdowns in admin have the unit name as the label
+    def __str__(self):
+        return self.name
 
 
 class Nutrient(models.Model):
     name = models.CharField(unique=True, max_length=40)
-    # Defines a single serving of the food
-    # Example: 1 cup
     dv_qty = models.DecimalField(max_digits=5, decimal_places=2)
     dv_unit = models.ForeignKey(Unit, on_delete=models.RESTRICT)
     # usda_nutrient_id stores the nutrient id from the USDA FoodData Central
