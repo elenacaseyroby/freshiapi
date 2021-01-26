@@ -19,7 +19,7 @@ class Nutrient(models.Model):
     dv_unit = models.ForeignKey(Unit, on_delete=models.RESTRICT)
     # usda_nutrient_id stores the nutrient id from the USDA FoodData Central
     # Database.
-    usda_nutrient_id = models.IntegerField(max_length=15)
+    usda_nutrient_id = models.IntegerField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -28,7 +28,7 @@ class USDACategory(models.Model):
     name = models.CharField(unique=True, max_length=40)
     # usda_category_id stores the category id from the USDA FoodData Central
     # Database.
-    usda_category_id = models.IntegerField(max_length=5)
+    usda_category_id = models.PositiveSmallIntegerField()
 
 
 class Food(models.Model):
@@ -49,15 +49,15 @@ class Food(models.Model):
     one_serving_display_qty = models.DecimalField(
         max_digits=5, decimal_places=2, blank=True)
     one_serving_display_unit = models.CharField(max_length=30, blank=True)
-    nutrients = models.ManyToManyField(Nutrient, through='Nutrition')
+    nutrients = models.ManyToManyField(Nutrient, through='NutritionFact')
     # If usda category is deleted, we do not want food to be deleted.
     usda_category = models.ForeignKey(
         USDACategory, on_delete=models.RESTRICT, blank=True)
     # usda_fdc_id will only exist for foods added from the USDA FoodData
     # Central Database.
-    usda_fdc_id = models.IntegerField(max_length=15, blank=True)
+    usda_fdc_id = models.IntegerField(blank=True)
     # upc_code is bar code.
-    upc_code = models.IntegerField(max_length=15, blank=True)
+    upc_code = models.IntegerField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -100,5 +100,5 @@ class UnitConversion(models.Model):
 class FoodAddedByUser(models.Model):
     # Record will not be deleted if user is deleted, but it will be deleted if
     # food is deleted.
-    food = models.ForeignKey(Food, unique=True, on_delete=models.CASCADE)
+    food = models.OneToOneField(Food, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.RESTRICT)
