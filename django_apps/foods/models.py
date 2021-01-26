@@ -9,7 +9,7 @@ from django_apps.users.models import User
 
 class Unit(models.Model):
     name = models.CharField(unique=True, max_length=50)
-    abbr = models.CharField(unique=True, max_length=10)
+    abbr = models.CharField(max_length=10)
 
     # add so unit dropdowns in admin have the unit name as the label
     def __str__(self):
@@ -18,7 +18,7 @@ class Unit(models.Model):
 
 class Nutrient(models.Model):
     name = models.CharField(unique=True, max_length=40)
-    dv_qty = models.DecimalField(max_digits=5, decimal_places=2)
+    dv_qty = models.DecimalField(max_digits=7, decimal_places=2)
     dv_unit = models.ForeignKey(Unit, on_delete=models.RESTRICT)
     # usda_nutrient_id stores the nutrient id from the USDA FoodData Central
     # Database.
@@ -50,7 +50,7 @@ class Food(models.Model):
     # Ex. I ate 2 cups of banana is not appropriate for food tracker,
     # but 1 banana is.
     one_serving_display_qty = models.DecimalField(
-        max_digits=5, decimal_places=2, blank=True)
+        max_digits=7, decimal_places=2, blank=True)
     one_serving_display_unit = models.CharField(max_length=30, blank=True)
     nutrients = models.ManyToManyField(Nutrient, through='NutritionFact')
     # If usda category is deleted, we do not want food to be deleted.
@@ -88,7 +88,7 @@ class NutritionFact(models.Model):
     unique_together = [['food', 'nutrient']]
     # nutrient qty in one serving of food. unit is defined in nutrient table):
     nutrient_qty = models.DecimalField(
-        max_digits=5, decimal_places=2)
+        max_digits=7, decimal_places=2)
 
 
 class UnitConversion(models.Model):
@@ -98,7 +98,7 @@ class UnitConversion(models.Model):
         Unit, on_delete=models.CASCADE, related_name='to_unit')
     unique_together = [['from_unit', 'to_unit']]
     qty_conversion_coefficient = models.DecimalField(
-        max_digits=5, decimal_places=5)
+        max_digits=45, decimal_places=15)
 
 
 # Mostly for internal record.
