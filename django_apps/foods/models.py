@@ -89,8 +89,10 @@ class NutritionFact(models.Model):
 
 
 class UnitConversion(models.Model):
-    from_unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
-    to_unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
+    from_unit = models.ForeignKey(
+        Unit, on_delete=models.CASCADE, related_name='from_unit')
+    to_unit = models.ForeignKey(
+        Unit, on_delete=models.CASCADE, related_name='to_unit')
     unique_together = [['from_unit', 'to_unit']]
     qty_conversion_coefficient = models.DecimalField(
         max_digits=5, decimal_places=5)
