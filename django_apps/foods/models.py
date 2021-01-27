@@ -25,11 +25,16 @@ class USDANutrient(models.Model):
     # usda_nutrient_id stores the nutrient ids from the USDA FoodData Central
     # Database.  Each usda_nutrient_id is tied to one or more nutrient
     # in the foods_nutrient table.
-    usda_nutrient_id = models.IntegerField()
+    usda_nutrient_id = models.IntegerField(unique=True)
+
+    # object label in admin
+    def __str__(self):
+        return str(self.usda_nutrient_id)
 
 
 class Nutrient(models.Model):
-    name = models.CharField(unique=True, max_length=40)
+    name = models.CharField(
+        unique=True, max_length=40, null=False, blank=False)
     dv_qty = models.DecimalField(
         max_digits=7, decimal_places=2, null=True)
     dv_unit = models.ForeignKey(
