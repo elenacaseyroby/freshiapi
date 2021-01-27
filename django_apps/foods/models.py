@@ -20,16 +20,22 @@ class Unit(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        db_table = '"foods_units"'
+
 
 class USDANutrient(models.Model):
     # usda_nutrient_id stores the nutrient ids from the USDA FoodData Central
     # Database.  Each usda_nutrient_id is tied to one or more nutrient
     # in the foods_nutrient table.
-    usda_nutrient_id = models.IntegerField(unique=True)
+    usdanutrient_id = models.IntegerField(unique=True, primary_key=True)
 
     # object label in admin
     def __str__(self):
-        return str(self.usda_nutrient_id)
+        return str(self.usdanutrient_id)
+
+    class Meta:
+        db_table = '"foods_usdanutrients"'
 
 
 class Nutrient(models.Model):
@@ -39,13 +45,26 @@ class Nutrient(models.Model):
         max_digits=7, decimal_places=2, null=True)
     dv_unit = models.ForeignKey(
         Unit, on_delete=models.RESTRICT, null=True)
-    usda_nutrient_ids = models.ManyToManyField(USDANutrient, blank=True)
+    usdanutrients = models.ManyToManyField(
+        USDANutrient,
+        blank=True
+    )
     article_url = models.URLField(null=True)
     description = models.TextField(null=True)
     description_citations = models.TextField(null=True)
     description_src_note = models.CharField(max_length=255, null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, null=True)
+
+    @cached_property
+    def usdanutrient_ids(self):
+        if self.usdanutrients.exists():
+            usdanutrient_ids = [
+                usdanutrient.usdanutrient_id
+                for usdanutrient
+                in self.usdanutrients]
+            return usdanutrient_ids
+        return []
 
     @cached_property
     def is_spotlight_nutrient(self):
@@ -81,13 +100,21 @@ class Nutrient(models.Model):
             models.F('dv_qty').asc(nulls_last=True),
             models.F('dv_unit').asc(nulls_last=True)
         ]
+        db_table = '"foods_nutrients"'
 
 
 class USDACategory(models.Model):
     name = models.CharField(unique=True, max_length=40)
-    # usda_category_id stores the category id from the USDA FoodData Central
+    # usdacategory_id stores the category id from the USDA FoodData Central
     # Database.
-    usda_category_id = models.PositiveSmallIntegerField()
+    usdacategory_id = models.PositiveSmallIntegerField(primary_key=True)
+
+    # object label in admin
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        db_table = '"foods_usdacategories"'
 
 
 class Food(models.Model):
@@ -111,7 +138,7 @@ class Food(models.Model):
     nutrients = models.ManyToManyField(
         Nutrient, through='NutritionFact', blank=True)
     # If usda category is deleted, we do not want food to be deleted.
-    usda_category = models.ForeignKey(
+    usdacategory = models.ForeignKey(
         USDACategory, on_delete=models.RESTRICT, null=True)
     # usda_fdc_id will only exist for foods added from the USDA FoodData
     # Central Database.
@@ -138,6 +165,13 @@ class Food(models.Model):
                 nutrient intakes.'
         return ''
 
+    # object label in admin
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        db_table = '"foods_foods"'
+
 
 class NutritionFact(models.Model):
     food = models.ForeignKey(Food, on_delete=models.CASCADE)
@@ -147,6 +181,9 @@ class NutritionFact(models.Model):
     nutrient_qty = models.DecimalField(
         max_digits=7, decimal_places=2)
 
+    class Meta:
+        db_table = '"foods_nutrition_facts"'
+
 
 class UnitConversion(models.Model):
     from_unit = models.ForeignKey(
@@ -154,8 +191,16 @@ class UnitConversion(models.Model):
     to_unit = models.ForeignKey(
         Unit, on_delete=models.CASCADE, related_name='to_unit')
     unique_together = [['from_unit', 'to_unit']]
+    # qty in to_units = qty in from_units * qty_conversion_coefficient
     qty_conversion_coefficient = models.DecimalField(
         max_digits=45, decimal_places=15)
+
+    # object label in admin
+    def __str__(self):
+        return self.from_unit.name + ' to ' + self.to_unit.name
+
+    class Meta:
+        db_table = '"foods_unit_conversions"'
 
 
 # Mostly for internal record.
@@ -164,3 +209,6 @@ class FoodAddedByUser(models.Model):
     # food is deleted.
     food = models.OneToOneField(Food, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.RESTRICT)
+
+    class Meta:
+        db_table = '"foods_foods_added_by_users"'
