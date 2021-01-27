@@ -6,25 +6,76 @@ from django_apps.users.models import User
 # Note: in postgress unique_together is functionally the same
 # as index_togeter
 
+# Django standard practice is to use "blank=True"
+# but for this app we are using "null=True"
+# to easier input data without weird errors.
+# Exception: many to many tables.
+
 
 class Unit(models.Model):
     name = models.CharField(unique=True, max_length=50)
     abbr = models.CharField(max_length=10)
 
-    # add so unit dropdowns in admin have the unit name as the label
+    # object label in admin
     def __str__(self):
         return self.name
 
 
+class USDANutrient(models.Model):
+    # usda_nutrient_id stores the nutrient ids from the USDA FoodData Central
+    # Database.  Each usda_nutrient_id is tied to one or more nutrient
+    # in the foods_nutrient table.
+    usda_nutrient_id = models.IntegerField()
+
+
 class Nutrient(models.Model):
     name = models.CharField(unique=True, max_length=40)
-    dv_qty = models.DecimalField(max_digits=7, decimal_places=2)
-    dv_unit = models.ForeignKey(Unit, on_delete=models.RESTRICT)
-    # usda_nutrient_id stores the nutrient id from the USDA FoodData Central
-    # Database.
-    usda_nutrient_id = models.IntegerField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    dv_qty = models.DecimalField(
+        max_digits=7, decimal_places=2, null=True)
+    dv_unit = models.ForeignKey(
+        Unit, on_delete=models.RESTRICT, null=True)
+    usda_nutrient_ids = models.ManyToManyField(USDANutrient, blank=True)
+    article_url = models.URLField(null=True)
+    description = models.TextField(null=True)
+    description_citations = models.TextField(null=True)
+    description_src_note = models.CharField(max_length=255, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
+
+    @cached_property
+    def is_spotlight_nutrient(self):
+        if self.description:
+            return True
+        return False
+
+    @cached_property
+    def is_trackable_nutrient(self):
+        trackable_nutrients_without_dv = [
+            'calories',
+            'carbohydrates',
+            'protein',
+            'fat'
+            'sugars',
+            'sodium',
+            'trans fat',
+            'fiber',
+        ]
+        if (
+            (self.dv_qty and self.dv_unit)
+            or self.name in trackable_nutrients_without_dv
+        ):
+            return True
+        return False
+
+    # object label in admin
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = [
+            models.F('dv_qty').asc(nulls_last=True),
+            models.F('dv_unit').asc(nulls_last=True)
+        ]
 
 
 class USDACategory(models.Model):
@@ -40,29 +91,30 @@ class Food(models.Model):
     # Example: 1 cup
     # Use these for conversions & writing recipes
     one_serving_qty = models.DecimalField(
-        max_digits=5, decimal_places=2, blank=True)
+        max_digits=5, decimal_places=2, null=True)
     # If unit is deleted we do not want food record to be deleted.
     one_serving_unit = models.ForeignKey(
-        Unit, on_delete=models.RESTRICT, blank=True)
+        Unit, on_delete=models.RESTRICT, null=True)
     # If one serving is 100 grams.
     # We might want one serving to be displayed as 1 slice or 5 crackers.
     # Use these for tracking foods.
     # Ex. I ate 2 cups of banana is not appropriate for food tracker,
     # but 1 banana is.
     one_serving_display_qty = models.DecimalField(
-        max_digits=7, decimal_places=2, blank=True)
-    one_serving_display_unit = models.CharField(max_length=30, blank=True)
-    nutrients = models.ManyToManyField(Nutrient, through='NutritionFact')
+        max_digits=7, decimal_places=2, null=True)
+    one_serving_display_unit = models.CharField(max_length=30, null=True)
+    nutrients = models.ManyToManyField(
+        Nutrient, through='NutritionFact', blank=True)
     # If usda category is deleted, we do not want food to be deleted.
     usda_category = models.ForeignKey(
-        USDACategory, on_delete=models.RESTRICT, blank=True)
+        USDACategory, on_delete=models.RESTRICT, null=True)
     # usda_fdc_id will only exist for foods added from the USDA FoodData
     # Central Database.
-    usda_fdc_id = models.IntegerField(blank=True)
+    usda_fdc_id = models.IntegerField(null=True)
     # upc_code is bar code.
-    upc_code = models.IntegerField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    upc_code = models.IntegerField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
 
     @cached_property
     def citation(self):
