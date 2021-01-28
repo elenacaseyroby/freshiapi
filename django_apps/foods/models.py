@@ -228,11 +228,11 @@ class UnitConversion(models.Model):
 
 
 # Mostly for internal record.
-class FoodAddedByUser(models.Model):
+class UserAddedFood(models.Model):
     # Record will not be deleted if user is deleted, but it will be deleted if
     # food is deleted.
     food = models.OneToOneField(Food, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.RESTRICT)
 
     class Meta:
-        db_table = '"foods_foods_added_by_users"'
+        db_table = '"foods_useraddedfoods"'
