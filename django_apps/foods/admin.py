@@ -5,7 +5,8 @@ from .models import Nutrient, Unit, UnitConversion
 
 @admin.register(Nutrient)
 class NutrientAdmin(admin.ModelAdmin):
-    list_display = ['name', 'dv_qty', 'dv_unit', 'usda_nutrient_id']
+    list_display = ['name', 'dv_qty', 'dv_unit']
+    exclude = ['usdanutrients']
 
 
 @admin.register(Unit)
