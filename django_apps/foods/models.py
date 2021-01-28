@@ -117,6 +117,13 @@ class USDACategory(models.Model):
         db_table = '"foods_usdacategories"'
 
 
+class USDAFood(models.Model):
+    fdc_id = models.IntegerField(primary_key=True)
+
+    class Meta:
+        db_table = '"foods_usdafoods"'
+
+
 class Food(models.Model):
     name = models.CharField(unique=True, max_length=100)
     # Defines a single serving of the food
@@ -137,20 +144,27 @@ class Food(models.Model):
     one_serving_display_unit = models.CharField(max_length=30, null=True)
     nutrients = models.ManyToManyField(
         Nutrient, through='NutritionFact', blank=True)
+    usdafoods = models.ManyToManyField(
+        USDAFood, through='FoodUSDAFood', blank=True)
     # If usda category is deleted, we do not want food to be deleted.
     usdacategory = models.ForeignKey(
         USDACategory, on_delete=models.RESTRICT, null=True)
-    # usda_fdc_id will only exist for foods added from the USDA FoodData
-    # Central Database.
-    usda_fdc_id = models.IntegerField(null=True)
     # upc_code is bar code.
     upc_code = models.IntegerField(null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, null=True)
 
     @cached_property
+    def fdc_id(self):
+        # fdc_id will only exist for foods added from the USDA FoodData
+        # Central Database.
+        if self.usdafoods.exists():
+            return self.usdafoods[0].fdc_id
+        return None
+
+    @cached_property
     def citation(self):
-        if self.usda_fdc_id:
+        if self.usdafoods.exists():
             return 'U.S. Department of Agriculture, Agricultural Research \
                 Service. 2018. USDA Food and Nutrient Database for Dietary \
                 Studies 2017-2018. Food Surveys Research Group Home \
@@ -158,8 +172,8 @@ class Food(models.Model):
         return ''
 
     @cached_property
-    def source_note(self):
-        if self.usda_fdc_id:
+    def src_note(self):
+        if self.usdafoods.exists():
             return 'USDA’s Food and Nutrient Database for Dietary Studies \
                 2017-2018 was used to code dietary intake data and calculate \
                 nutrient intakes.'
@@ -171,6 +185,16 @@ class Food(models.Model):
 
     class Meta:
         db_table = '"foods_foods"'
+
+
+class FoodUSDAFood(models.Model):
+    food = models.OneToOneField(
+        Food, on_delete=models.CASCADE, db_column='food_id')
+    usdafood = models.OneToOneField(
+        USDAFood, on_delete=models.CASCADE, db_column='fdc_id')
+
+    class Meta:
+        db_table = '"foods_foods_usdafoods"'
 
 
 class NutritionFact(models.Model):
