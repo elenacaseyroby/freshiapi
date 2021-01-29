@@ -135,7 +135,7 @@ class Command(BaseCommand):
         usdafoods_to_create = []
         foods_usdafoods_to_create = []
         usdacategory_id_count = 0
-        counter = 0
+        unique_food_names = []
         for row in food_df.index:
             fdc_id = int(food_df['fdc_id'][row])
             # Skip if food doesn't have associated serving sizes.
@@ -148,14 +148,18 @@ class Command(BaseCommand):
             # sync: name, usdacategory_id, one_serving_qty
             # one_serving_unit, one_serving_display_qty,
             # one_serving_display_unit, upc_code
-            name = food_df['description'][row]
+            name = food_df['description'][row][:99]
+            # track unique food names to avoid duplicates:
+            if name in unique_food_names:
+                continue
+            unique_food_names.append(name)
             upc_code = None
             if fdc_id in upc_by_fdc:
                 upc_code = upc_by_fdc[fdc_id]
             one_serving_qty = servings_by_fdc[fdc_id]['qty']
             one_serving_unit = servings_by_fdc[fdc_id]['unit']
             one_serving_display_qty = servings_by_fdc[fdc_id]['display_qty']
-            one_serving_display_unit = servings_by_fdc[fdc_id]['display_unit']
+            one_serving_display_unit = servings_by_fdc[fdc_id]['display_unit'][:29]
             usdacategory_id = int(food_df['food_category_id'][row])
 
             # Some food.csv from usda don't have category ids.
@@ -213,7 +217,8 @@ class Command(BaseCommand):
                       'one_serving_display_unit']
             Food.objects.bulk_update(foods_to_update, fields)
             # 3. Bulk create foods
-            updated_foods = Food.objects.bulk_create(foods_to_create)
+            updated_foods = Food.objects.bulk_create(
+                foods_to_create)
         except NameError:
             return self.stdout.write(self.style.ERROR(
                 f'Failed to bulk create/updates foods and usdafoods:\

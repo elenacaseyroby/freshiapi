@@ -62,7 +62,7 @@ class Nutrient(models.Model):
             usdanutrient_ids = [
                 usdanutrient.usdanutrient_id
                 for usdanutrient
-                in self.usdanutrients]
+                in self.usdanutrients.all()]
             return usdanutrient_ids
         return []
 
