@@ -130,7 +130,7 @@ class Food(models.Model):
     # Example: 1 cup
     # Use these for conversions & writing recipes
     one_serving_qty = models.DecimalField(
-        max_digits=5, decimal_places=2, null=True)
+        max_digits=32, decimal_places=2, null=True)
     # If unit is deleted we do not want food record to be deleted.
     one_serving_unit = models.ForeignKey(
         Unit, on_delete=models.RESTRICT, null=True)
@@ -140,7 +140,7 @@ class Food(models.Model):
     # Ex. I ate 2 cups of banana is not appropriate for food tracker,
     # but 1 banana is.
     one_serving_display_qty = models.DecimalField(
-        max_digits=7, decimal_places=2, null=True)
+        max_digits=32, decimal_places=2, null=True)
     one_serving_display_unit = models.CharField(max_length=30, null=True)
     nutrients = models.ManyToManyField(
         Nutrient, through='NutritionFact', blank=True)
@@ -150,7 +150,7 @@ class Food(models.Model):
     usdacategory = models.ForeignKey(
         USDACategory, on_delete=models.RESTRICT, null=True)
     # upc_code is bar code.
-    upc_code = models.IntegerField(null=True)
+    upc_code = models.PositiveBigIntegerField(null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, null=True)
 
@@ -159,7 +159,7 @@ class Food(models.Model):
         # fdc_id will only exist for foods added from the USDA FoodData
         # Central Database.
         if self.usdafoods.exists():
-            return self.usdafoods[0].fdc_id
+            return self.usdafoods.first().fdc_id
         return None
 
     @cached_property
