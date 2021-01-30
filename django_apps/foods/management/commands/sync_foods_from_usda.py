@@ -38,11 +38,71 @@ class Command(BaseCommand):
         category_ids_by_keyword['yogurt'] = 1
         category_ids_by_keyword['egg'] = 1
         category_ids_by_keyword['cream'] = 1
-        category_ids_by_keyword['cow'] = 1
+        category_ids_by_keyword['kefir'] = 1
         # Legumes
         category_ids_by_keyword['bean'] = 16
+        category_ids_by_keyword['lentil'] = 16
+        category_ids_by_keyword['tofu'] = 16
+        category_ids_by_keyword['chickpea'] = 16
         # Pork
         category_ids_by_keyword['pork'] = 10
+        category_ids_by_keyword['hog'] = 10
+        category_ids_by_keyword['sausage'] = 10
+        category_ids_by_keyword['franfurter'] = 10
+        category_ids_by_keyword['hot dog'] = 10
+        # Fish
+        category_ids_by_keyword['pork'] = 15
+        category_ids_by_keyword['tuna'] = 15
+        category_ids_by_keyword['shrimp'] = 15
+        category_ids_by_keyword['crab'] = 15
+        category_ids_by_keyword['fish'] = 15
+        category_ids_by_keyword['turtle'] = 15
+        category_ids_by_keyword['clam'] = 15
+        category_ids_by_keyword['oyster'] = 15
+        category_ids_by_keyword['mussel'] = 15
+        category_ids_by_keyword['lobster'] = 15
+        category_ids_by_keyword['seafood'] = 15
+        # Poultry
+        category_ids_by_keyword['poultry'] = 5
+        category_ids_by_keyword['chicken'] = 5
+        category_ids_by_keyword['duck'] = 5
+        category_ids_by_keyword['turkey'] = 5
+        category_ids_by_keyword['quail'] = 5
+        # Snack
+        category_ids_by_keyword['dip'] = 23
+        category_ids_by_keyword['chip'] = 23
+        category_ids_by_keyword['cracker'] = 23
+        category_ids_by_keyword['hummus'] = 23
+        category_ids_by_keyword['puff'] = 23
+        # Soup, Sauce
+        category_ids_by_keyword['soup'] = 6
+        category_ids_by_keyword['sauce'] = 6
+        category_ids_by_keyword['gravy'] = 6
+        # Beef
+        category_ids_by_keyword['beef'] = 13
+        # Veggie
+        category_ids_by_keyword['vegetable protein'] = 11
+        # Lunchmeat
+        category_ids_by_keyword['lunch meat'] = 7
+        category_ids_by_keyword['salami'] = 7
+        category_ids_by_keyword['ham'] = 7
+        category_ids_by_keyword['bologna'] = 7
+        # Game
+        category_ids_by_keyword['lamb'] = 17
+        category_ids_by_keyword['veal'] = 17
+        category_ids_by_keyword['rabbit'] = 17
+        category_ids_by_keyword['moose'] = 17
+        category_ids_by_keyword['bear'] = 17
+        category_ids_by_keyword['bison'] = 17
+        category_ids_by_keyword['opossum'] = 17
+        category_ids_by_keyword['caribou'] = 17
+        category_ids_by_keyword['squirrel'] = 17
+        category_ids_by_keyword['raccoon'] = 17
+        category_ids_by_keyword['beaver'] = 17
+        category_ids_by_keyword['armadillo'] = 17
+        category_ids_by_keyword['ostrich'] = 17
+        category_ids_by_keyword['deer'] = 17
+        category_ids_by_keyword['goat'] = 17
 
         # 1. If category set, run with that.
         if usdacategory_id:
