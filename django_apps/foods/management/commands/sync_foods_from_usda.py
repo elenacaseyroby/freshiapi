@@ -39,6 +39,7 @@ class Command(BaseCommand):
         category_ids_by_keyword['egg'] = 1
         category_ids_by_keyword['cream'] = 1
         category_ids_by_keyword['kefir'] = 1
+        category_ids_by_keyword['cheese'] = 1
         # Legumes
         category_ids_by_keyword['bean'] = 16
         category_ids_by_keyword['lentil'] = 16
@@ -50,6 +51,7 @@ class Command(BaseCommand):
         category_ids_by_keyword['sausage'] = 10
         category_ids_by_keyword['franfurter'] = 10
         category_ids_by_keyword['hot dog'] = 10
+        category_ids_by_keyword['bacon'] = 10
         # Fish
         category_ids_by_keyword['pork'] = 15
         category_ids_by_keyword['tuna'] = 15
@@ -62,24 +64,66 @@ class Command(BaseCommand):
         category_ids_by_keyword['mussel'] = 15
         category_ids_by_keyword['lobster'] = 15
         category_ids_by_keyword['seafood'] = 15
+        category_ids_by_keyword['halibut'] = 15
+        category_ids_by_keyword['herring'] = 15
+        category_ids_by_keyword['mackerel'] = 15
+        category_ids_by_keyword['mullet'] = 15
+        category_ids_by_keyword['perch'] = 15
+        category_ids_by_keyword['ray'] = 15
+        category_ids_by_keyword['sturgeon'] = 15
+        category_ids_by_keyword['salmon'] = 15
+        category_ids_by_keyword['trout'] = 15
+        category_ids_by_keyword['tilapia'] = 15
+        category_ids_by_keyword['whiting'] = 15
+        category_ids_by_keyword['sea bass'] = 15
+        category_ids_by_keyword['shark'] = 15
+        category_ids_by_keyword['squid'] = 15
+        category_ids_by_keyword['octopus'] = 15
+        category_ids_by_keyword['roe'] = 15
+        category_ids_by_keyword['abalone'] = 15
+        category_ids_by_keyword['scallops'] = 15
+        category_ids_by_keyword['carp'] = 15
+        category_ids_by_keyword['eel'] = 15
+        category_ids_by_keyword['flounder'] = 15
+        category_ids_by_keyword['haddock'] = 15
+        category_ids_by_keyword['porgy'] = 15
+        category_ids_by_keyword['pike'] = 15
+        category_ids_by_keyword['pompano'] = 15
+        category_ids_by_keyword['cod'] = 15
+        category_ids_by_keyword['eel'] = 15
+        category_ids_by_keyword['croaker'] = 15
+        # Baked
+        category_ids_by_keyword['bread'] = 18
+        category_ids_by_keyword['roll'] = 18
+        category_ids_by_keyword['muffin'] = 18
         # Poultry
         category_ids_by_keyword['poultry'] = 5
         category_ids_by_keyword['chicken'] = 5
         category_ids_by_keyword['duck'] = 5
         category_ids_by_keyword['turkey'] = 5
         category_ids_by_keyword['quail'] = 5
+        category_ids_by_keyword['goose'] = 5
+        category_ids_by_keyword['hen'] = 5
+        category_ids_by_keyword['pheasant'] = 5
+        category_ids_by_keyword['dove'] = 5
         # Snack
         category_ids_by_keyword['dip'] = 23
         category_ids_by_keyword['chip'] = 23
         category_ids_by_keyword['cracker'] = 23
         category_ids_by_keyword['hummus'] = 23
         category_ids_by_keyword['puff'] = 23
+        category_ids_by_keyword['popcorn'] = 23
         # Soup, Sauce
         category_ids_by_keyword['soup'] = 6
         category_ids_by_keyword['sauce'] = 6
         category_ids_by_keyword['gravy'] = 6
         # Beef
         category_ids_by_keyword['beef'] = 13
+        category_ids_by_keyword['liver'] = 13
+        category_ids_by_keyword['brain'] = 13
+        category_ids_by_keyword['tongue'] = 13
+        category_ids_by_keyword['burger'] = 13
+        category_ids_by_keyword['tripe'] = 13
         # Veggie
         category_ids_by_keyword['vegetable protein'] = 11
         # Lunchmeat
@@ -103,6 +147,44 @@ class Command(BaseCommand):
         category_ids_by_keyword['ostrich'] = 17
         category_ids_by_keyword['deer'] = 17
         category_ids_by_keyword['goat'] = 17
+        # Branded
+        category_ids_by_keyword['gerber'] = 26
+        category_ids_by_keyword['formula'] = 17
+        category_ids_by_keyword['baby food'] = 17
+        # Breakfast
+        category_ids_by_keyword['bar'] = 8
+        category_ids_by_keyword['smoothie'] = 8
+        category_ids_by_keyword['oatmeal'] = 8
+        category_ids_by_keyword['granola'] = 8
+        category_ids_by_keyword['kashi'] = 8
+        category_ids_by_keyword['kellogs'] = 8
+        category_ids_by_keyword['cereal'] = 8
+        category_ids_by_keyword['bran'] = 8
+        category_ids_by_keyword['waffle'] = 8
+        category_ids_by_keyword['toast'] = 8
+        # Grains
+        category_ids_by_keyword['noodles'] = 20
+        category_ids_by_keyword['pasta'] = 20
+        category_ids_by_keyword['macaroni'] = 20
+        category_ids_by_keyword['spaghetti'] = 20
+        category_ids_by_keyword['rice'] = 20
+        category_ids_by_keyword['grits'] = 20
+        category_ids_by_keyword['quinoa'] = 20
+        # Sweets
+        category_ids_by_keyword['flan'] = 19
+        category_ids_by_keyword['custard'] = 19
+        category_ids_by_keyword['pudding'] = 19
+        category_ids_by_keyword['chocolate'] = 19
+        category_ids_by_keyword['vanilla'] = 19
+        category_ids_by_keyword['caramel'] = 19
+        category_ids_by_keyword['cake'] = 19
+        category_ids_by_keyword['cookie'] = 19
+        category_ids_by_keyword['crisp'] = 19
+        category_ids_by_keyword['pie'] = 19
+        category_ids_by_keyword['turnover'] = 19
+        # Nut and seed
+        category_ids_by_keyword['nut'] = 12
+        category_ids_by_keyword['seed'] = 12
 
         # 1. If category set, run with that.
         if usdacategory_id:
