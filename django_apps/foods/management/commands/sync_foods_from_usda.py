@@ -20,6 +20,68 @@ class Command(BaseCommand):
     """
     help = 'Sync foods from USDA food and nutrient data sets.'
 
+    def get_category_id(self, data_type, usdacategory_id, name):
+        # I know for this I should query db to get usdacategory
+        # names in case they've changed.
+        # I'm not doing that because it would be too many queries
+        # and I think it's unlikely they will change.
+
+        category_ids_by_data_type = {}
+        # Legumes:
+        category_ids_by_data_type['agricultural_acquisition'] = 16
+        # Branded Foods:
+        category_ids_by_data_type['branded_food'] = 26
+
+        category_ids_by_keyword = {}
+        # Dairy
+        category_ids_by_keyword['milk'] = 1
+        category_ids_by_keyword['yogurt'] = 1
+        category_ids_by_keyword['egg'] = 1
+        category_ids_by_keyword['cream'] = 1
+        category_ids_by_keyword['cow'] = 1
+        # Legumes
+        category_ids_by_keyword['bean'] = 16
+        # Pork
+        category_ids_by_keyword['pork'] = 10
+
+        # 1. If category set, run with that.
+        if usdacategory_id:
+            return int(usdacategory_id)
+
+        # 2. If data type is meaningful run with that.
+        if data_type in category_ids_by_data_type:
+            return int(category_ids_by_data_type[data_type])
+
+        # 3. If name contains keywords run with that.
+        normal_name = str(name).lower()
+        for keyword in category_ids_by_keyword:
+            if keyword in normal_name:
+                return int(category_ids_by_keyword[keyword])
+
+        return None
+
+    def weed_out_food(self, data_type, name, fdc_id_by_food_names):
+        # Weed out about 200 entries like this:
+        # "328216","sub_sample_food","Niacin, Cheese,...
+        # "328217","sub_sample_food","Proximates, Cheese,...
+        if (
+            str(data_type) == 'sub_sample_food' and
+            str(name).contains(', Cheese')
+        ):
+            return True
+
+        # We use fdc_id_by_food_names
+        # to link fdc_id to new food objects
+        # after they have been created.
+        # To avoid adding new food objects with the
+        # same name (foods with same name have multiple
+        # fdc_ids in food.csv unfortunately),
+        # weed out food if it's already in the list
+        # of new food objects.
+        if name in fdc_id_by_food_names:
+            return True
+        return False
+
     def sync_categories(self, *args, **options):
         # Prereqs: must upload csvs to /freshi-app/food-sync-csvs
         # s3 bucket.
@@ -159,31 +221,23 @@ class Command(BaseCommand):
             # Skip if food doesn't have associated serving sizes.
             if fdc_id not in servings_by_fdc:
                 continue
+            data_type = str(food_df['data_type'][row])
+            # Skip food if should be weeded out of data set.
+            if self.weed_out_food(data_type, name, fdc_id_by_food_names):
+                continue
             # Collect serving info
             one_serving_qty = servings_by_fdc[fdc_id]['qty']
             one_serving_unit = servings_by_fdc[fdc_id]['unit']
             one_serving_display_qty = servings_by_fdc[fdc_id]['display_qty']
             one_serving_display_unit = servings_by_fdc[fdc_id]['display_unit']
-            usdacategory_id = None
-            try:
-                usdacategory_id = int(food_df['food_category_id'][row])
-                usdacategory_id = (
-                    usdacategory_id
-                    if usdacategory_id in usdacategory_ids else
-                    None
-                )
-            except:
-                pass
-            # Skip if food name has already been iterated.
-            # There are multiple fcd_ids for foods
-            # with identical upc_codes (bar codes) and names.
-            # We will just take whatever comes first since it should
-            # still be tied to all the same info like upc_code etc.
-            if name in fdc_id_by_food_names:
-                continue
-            # If name hasn't been iterated, add it to list to record iteration
-            # now and use to link foods to fdc_id later.
-            fdc_id_by_food_names[name] = fdc_id
+            usdacategory_id = (
+                None
+                if math.isnan(food_df['food_category_id'][row]) else
+                int(food_df['food_category_id'][row])
+            )
+            usdacategory_id = self.get_category_id(
+                data_type, usdacategory_id, name)
+
             # If usdafood record is new, add usdafood with fdc_id to create list.
             if fdc_id not in usdafoods_by_fdc:
                 new_usdafood = USDAFood(fdc_id=fdc_id)
@@ -194,6 +248,9 @@ class Command(BaseCommand):
             # Make sure you are using a csv with category ids.
             if usdacategory_id:
                 usdacategory_id_count += 1
+
+            # Add to list and use to link foods to fdc_id later.
+            fdc_id_by_food_names[name] = fdc_id
 
             # If food exists in db
             if fdc_id in foods_by_fdc:
