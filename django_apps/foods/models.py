@@ -158,7 +158,7 @@ class Food(models.Model):
     def fdc_id(self):
         # fdc_id will only exist for foods added from the USDA FoodData
         # Central Database.
-        if self.usdafoods.exists():
+        if self.usdafoods.first():
             return self.usdafoods.first().fdc_id
         return None
 
@@ -203,7 +203,7 @@ class NutritionFact(models.Model):
     unique_together = [['food', 'nutrient']]
     # nutrient qty in one serving of food. unit is defined in nutrient table):
     nutrient_qty = models.DecimalField(
-        max_digits=7, decimal_places=2)
+        max_digits=12, decimal_places=2)
 
     class Meta:
         db_table = '"foods_nutrition_facts"'
