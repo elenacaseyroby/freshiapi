@@ -48,9 +48,6 @@ class Command(BaseCommand):
         # Pork
         category_ids_by_keyword['pork'] = 10
         category_ids_by_keyword['hog'] = 10
-        category_ids_by_keyword['sausage'] = 10
-        category_ids_by_keyword['franfurter'] = 10
-        category_ids_by_keyword['hot dog'] = 10
         category_ids_by_keyword['bacon'] = 10
         # Fish
         category_ids_by_keyword['pork'] = 15
@@ -124,13 +121,14 @@ class Command(BaseCommand):
         category_ids_by_keyword['tongue'] = 13
         category_ids_by_keyword['burger'] = 13
         category_ids_by_keyword['tripe'] = 13
-        # Veggie
-        category_ids_by_keyword['vegetable protein'] = 11
-        # Lunchmeat
+        # Lunchmeat & Sausages
         category_ids_by_keyword['lunch meat'] = 7
         category_ids_by_keyword['salami'] = 7
         category_ids_by_keyword['ham'] = 7
         category_ids_by_keyword['bologna'] = 7
+        category_ids_by_keyword['sausage'] = 7
+        category_ids_by_keyword['franfurter'] = 7
+        category_ids_by_keyword['hot dog'] = 7
         # Game
         category_ids_by_keyword['lamb'] = 17
         category_ids_by_keyword['veal'] = 17
@@ -185,6 +183,63 @@ class Command(BaseCommand):
         # Nut and seed
         category_ids_by_keyword['nut'] = 12
         category_ids_by_keyword['seed'] = 12
+        # Beverage
+        category_ids_by_keyword['tea'] = 14
+        category_ids_by_keyword['drink'] = 14
+        # Fruit & Juice
+        category_ids_by_keyword['apple'] = 9
+        category_ids_by_keyword['mango'] = 9
+        category_ids_by_keyword['pinapple'] = 9
+        category_ids_by_keyword['pear'] = 9
+        category_ids_by_keyword['berries'] = 9
+        category_ids_by_keyword['peach'] = 9
+        category_ids_by_keyword['pomegranate'] = 9
+        category_ids_by_keyword['banana'] = 9
+        category_ids_by_keyword['grape'] = 9
+        category_ids_by_keyword['tomato'] = 9
+        category_ids_by_keyword['lime'] = 9
+        category_ids_by_keyword['lemon'] = 9
+        category_ids_by_keyword['guava'] = 9
+        category_ids_by_keyword['papaya'] = 9
+        category_ids_by_keyword['passion fruit'] = 9
+        category_ids_by_keyword['nectar'] = 9
+        category_ids_by_keyword['cantaloupe'] = 9
+        category_ids_by_keyword['melon'] = 9
+        category_ids_by_keyword['berry'] = 9
+        # Veggie
+        category_ids_by_keyword['vegetable protein'] = 11
+        category_ids_by_keyword['chard'] = 11
+        category_ids_by_keyword['broccoli'] = 11
+        category_ids_by_keyword['beet'] = 11
+        category_ids_by_keyword['kale'] = 11
+        category_ids_by_keyword['mushroom'] = 11
+        category_ids_by_keyword['corn'] = 11
+        category_ids_by_keyword['bok choy'] = 11
+        category_ids_by_keyword['cabbage'] = 11
+        category_ids_by_keyword['lettuce'] = 11
+        category_ids_by_keyword['spinach'] = 11
+        category_ids_by_keyword['pepper'] = 11
+        category_ids_by_keyword['onion'] = 11
+        category_ids_by_keyword['collard'] = 11
+        category_ids_by_keyword['greens'] = 11
+        category_ids_by_keyword['turnip'] = 11
+        category_ids_by_keyword['radish'] = 11
+        category_ids_by_keyword['watercress'] = 11
+        category_ids_by_keyword['carrot'] = 11
+        category_ids_by_keyword['pea'] = 11
+        category_ids_by_keyword['potato'] = 11
+        category_ids_by_keyword['cucumber'] = 11
+        category_ids_by_keyword['celery'] = 11
+        category_ids_by_keyword['fennel'] = 11
+        category_ids_by_keyword['squash'] = 11
+        category_ids_by_keyword['seaweed'] = 11
+        category_ids_by_keyword['artichoke'] = 11
+        category_ids_by_keyword['asparagus'] = 11
+        category_ids_by_keyword['sprouts'] = 11
+        category_ids_by_keyword['cauliflower'] = 11
+        category_ids_by_keyword['okra'] = 11
+        category_ids_by_keyword['plantain'] = 11
+        category_ids_by_keyword['yam'] = 11
 
         # 1. If category set, run with that.
         if usdacategory_id:
@@ -318,17 +373,19 @@ class Command(BaseCommand):
             if one_serving_qty <= 0:
                 continue
 
-            one_serving_display_qty = round(
-                float(food_portion_df['amount'][row]), 2)
-            # If value is NaN, set a None
-            if math.isnan(one_serving_display_qty):
-                one_serving_display_qty = None
+            one_serving_display_qty = (
+                round(float(food_portion_df['amount'][row]), 2)
+                if not food_portion_df['amount'][row] else
+                None
+            )
             fdc_id = int(food_portion_df['fdc_id'][row])
             servings_by_fdc[fdc_id] = {}
             servings_by_fdc[fdc_id]['display_unit'] = (
                 str(food_portion_df['portion_description'][row])[:29]
-                if food_portion_df['portion_description'][row] !=
-                'Quantity not specified' else
+                if (
+                    food_portion_df['portion_description'][row] != 'Quantity not specified' and
+                    not food_portion_df['portion_description'][row]
+                )else
                 None
             )
             servings_by_fdc[fdc_id]['display_qty'] = one_serving_display_qty
