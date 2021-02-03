@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from django.db import models
 from django.core.management.base import BaseCommand
 from django_apps.foods.models import (
@@ -359,14 +360,37 @@ class Command(BaseCommand):
     def sync_foods(self, *args, **options):
         # Prereqs: must upload csvs to /freshi-app/food-sync-csvs
         # s3 bucket.
+        food_cols = ['fdc_id', 'description', 'data_type', 'food_category_id']
+        food_dtypes = {
+            'fdc_id': np.float,
+            'description': np.str,
+            'data_type': np.str,
+            'food_category_id': np.float
+        }
+        portion_cols = ['fdc_id', 'portion_description',
+                        'modifier', 'gram_weight', 'amount']
+        portion_dtypes = {
+            'fdc_id': np.float,
+            'portion_description': np.str,
+            'modifier': np.str,
+            'gram_weight': np.float,
+            'amount': np.float,
+        }
+        market_cols = ['fdc_id', 'upc_code']
+        market_dtypes = {'fdc_id': np.float, 'upc_code': np.str}
         try:
             food_df = pd.read_csv(
-                'https://freshi-app.s3.amazonaws.com/food-sync-csvs/food.csv')
+                'https://freshi-app.s3.amazonaws.com/food-sync-csvs/food.csv',
+                usecols=food_cols,
+                dtype=food_dtypes)
             food_portion_df = pd.read_csv(
-                'https://freshi-app.s3.amazonaws.com/food-sync-csvs/food_portion.csv')
+                'https://freshi-app.s3.amazonaws.com/food-sync-csvs/food_portion.csv',
+                usecols=portion_cols,
+                dtype=portion_dtypes)
             market_acquisition_df = pd.read_csv(
-                'https://freshi-app.s3.amazonaws.com/food-sync-csvs/market_acquisition.csv')
-        # Throw error if csvs are not uploaded.
+                'https://freshi-app.s3.amazonaws.com/food-sync-csvs/market_acquisition.csv',
+                usecols=market_cols,
+                dtype=market_dtypes)
         except:
             return self.stdout.write(self.style.ERROR(
                 'Failed to sync foods: Please make \
@@ -563,11 +587,23 @@ class Command(BaseCommand):
     def sync_nutrition_facts(self, *args, **options):
         # Prereqs: must upload csvs to /freshi-app/food-sync-csvs
         # s3 bucket.
+        fn_cols = ['fdc_id', 'nutrient_id', 'amount']
+        fn_dtypes = {
+            'fdc_id': np.float,
+            'nutrient_id': np.float,
+            'amount': np.float,
+        }
+        nutrient_cols = ['id', 'unit_name']
+        nutrient_dtypes = {'fdc_id': np.float, 'description': np.str}
         try:
             food_nutrient_df = pd.read_csv(
-                'https://freshi-app.s3.amazonaws.com/food-sync-csvs/food_nutrient.csv')
+                'https://freshi-app.s3.amazonaws.com/food-sync-csvs/food_nutrient.csv',
+                usecols=fn_cols,
+                dtype=fn_dtypes)
             nutrient_df = pd.read_csv(
-                'https://freshi-app.s3.amazonaws.com/food-sync-csvs/nutrient.csv')
+                'https://freshi-app.s3.amazonaws.com/food-sync-csvs/nutrient.csv',
+                usecols=nutrient_cols,
+                dtype=nutrient_dtypes)
         # Throw error if csvs are not uploaded.
         except NameError:
             return self.stdout.write(self.style.ERROR(
