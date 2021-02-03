@@ -33,6 +33,12 @@ class Command(BaseCommand):
         category_ids_by_data_type['branded_food'] = 26
 
         category_ids_by_keyword = {}
+        # Branded
+        category_ids_by_keyword['kroger'] = 26
+        category_ids_by_keyword['ore-ida'] = 26
+        # Restaurant Foods
+        category_ids_by_keyword['pizza'] = 25
+        category_ids_by_keyword['restaurant'] = 25
         # Dairy
         category_ids_by_keyword['milk'] = 1
         category_ids_by_keyword['yogurt'] = 1
@@ -145,10 +151,10 @@ class Command(BaseCommand):
         category_ids_by_keyword['ostrich'] = 17
         category_ids_by_keyword['deer'] = 17
         category_ids_by_keyword['goat'] = 17
-        # Branded
-        category_ids_by_keyword['gerber'] = 26
-        category_ids_by_keyword['formula'] = 17
-        category_ids_by_keyword['baby food'] = 17
+        # Baby Foods
+        category_ids_by_keyword['gerber'] = 3
+        category_ids_by_keyword['formula'] = 3
+        category_ids_by_keyword['baby food'] = 3
         # Breakfast
         category_ids_by_keyword['bar'] = 8
         category_ids_by_keyword['smoothie'] = 8
@@ -180,6 +186,7 @@ class Command(BaseCommand):
         category_ids_by_keyword['crisp'] = 19
         category_ids_by_keyword['pie'] = 19
         category_ids_by_keyword['turnover'] = 19
+        category_ids_by_keyword['cobbler'] = 19
         # Nut and seed
         category_ids_by_keyword['nut'] = 12
         category_ids_by_keyword['seed'] = 12
@@ -278,6 +285,26 @@ class Command(BaseCommand):
         if name in fdc_id_by_food_names:
             return True
         return False
+
+    def get_display_unit(self, portion_description, modifier):
+        # Choose which column to get the data from
+        data = (
+            portion_description
+            if (
+                str(portion_description) != 'nan' and
+                portion_description != '''
+                Quantity not specified'''
+            ) else
+            modifier
+        )
+        # Return None if column is empty.
+        if (
+            str(data) == 'nan' or
+            data == 'Quantity not specified'
+        ):
+            return None
+        # Else return string and truncate if too long.
+        return str(data)[:29]
 
     def sync_categories(self, *args, **options):
         # Prereqs: must upload csvs to /freshi-app/food-sync-csvs
@@ -379,13 +406,9 @@ class Command(BaseCommand):
             )
             fdc_id = int(food_portion_df['fdc_id'][row])
             servings_by_fdc[fdc_id] = {}
-            servings_by_fdc[fdc_id]['display_unit'] = (
-                str(food_portion_df['portion_description'][row])[:29]
-                if (
-                    food_portion_df['portion_description'][row] != 'Quantity not specified' and
-                    not not food_portion_df['portion_description'][row]
-                )else
-                None
+            servings_by_fdc[fdc_id]['display_unit'] = self.get_display_unit(
+                food_portion_df['portion_description'][row],
+                food_portion_df['modifier'][row]
             )
             servings_by_fdc[fdc_id]['display_qty'] = one_serving_display_qty
             servings_by_fdc[fdc_id]['unit'] = grams
@@ -700,10 +723,10 @@ class Command(BaseCommand):
         # s3 bucket.
 
         # # 1. Sync categories
-        # self.sync_categories()
+        self.sync_categories()
 
         # # 2. Sync foods with barcodes and serving size
-        # self.sync_foods()
+        self.sync_foods()
 
         # 3. Sync nutrition facts
         self.sync_nutrition_facts()
