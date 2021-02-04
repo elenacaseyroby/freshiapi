@@ -139,9 +139,7 @@ class Food(models.Model):
     # Use these for tracking foods.
     # Ex. I ate 2 cups of banana is not appropriate for food tracker,
     # but 1 banana is.
-    one_serving_display_qty = models.DecimalField(
-        max_digits=32, decimal_places=2, null=True)
-    one_serving_display_unit = models.CharField(max_length=30, null=True)
+    one_serving_description = models.CharField(max_length=40, null=True)
     nutrients = models.ManyToManyField(
         Nutrient, through='NutritionFact', blank=True)
     usdafoods = models.ManyToManyField(

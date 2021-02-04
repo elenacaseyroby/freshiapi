@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from django.db import models
+from django.db import models, transaction
 from django.core.management.base import BaseCommand
 from django_apps.foods.models import (
     USDACategory,
@@ -292,7 +292,7 @@ class Command(BaseCommand):
         data = (
             portion_description
             if (
-                str(portion_description) != 'nan' and
+                portion_description != 'nan' and
                 portion_description != '''
                 Quantity not specified'''
             ) else
@@ -300,13 +300,223 @@ class Command(BaseCommand):
         )
         # Return None if column is empty.
         if (
-            str(data) == 'nan' or
+            data == 'nan' or
             data == 'Quantity not specified'
         ):
-            return None
-        # Else return string and truncate if too long.
-        return str(data)[:29]
+            return ''
+        # Else return string
+        return data
 
+    def get_one_serving_description(self, portion_desc, modifier, amount):
+        portion_desc = str(portion_desc)
+        modifier = str(modifier)
+        amount = str(amount)
+        one_serving_display_qty = (
+            ''
+            if amount == 'nan' else
+            amount
+        )
+        one_serving_display_unit = self.get_display_unit(
+            portion_desc,
+            modifier
+        )
+        return (
+            f'{one_serving_display_qty} {one_serving_display_unit}'[:39]
+            if (
+                one_serving_display_qty != '' and
+                one_serving_display_unit != ''
+            ) else
+            None
+        )
+
+    def get_servings_by_fdc(self):
+        portion_cols = ['fdc_id', 'portion_description',
+                        'modifier', 'gram_weight', 'amount']
+        portion_dtypes = {
+            'fdc_id': np.float,
+            'portion_description': np.str,
+            'modifier': np.str,
+            'gram_weight': np.float,
+            'amount': np.str,
+        }
+        try:
+            food_portion_df = pd.read_csv(
+                'https://freshi-app.s3.amazonaws.com/food-sync-csvs/food_portion.csv',
+                usecols=portion_cols,
+                dtype=portion_dtypes)
+        except:
+            return self.stdout.write(self.style.ERROR(
+                'Failed to sync foods: Please make \
+                sure the following USDA FoodData Central csvs \
+                are uploaded to the freshi-app/food-sync-csvs \
+                bucket in AWS S3:\
+                food_portion.csv'
+            ))
+        grams = Unit.objects.get(name="gram")
+        servings_by_fdc = {}
+        for row in food_portion_df.index:
+            one_serving_qty = round(float(
+                food_portion_df['gram_weight'][row]), 2)
+            # Skip foods with negative and thus inaccurate
+            # serving qty.
+            if one_serving_qty <= 0:
+                continue
+
+            portion_desc = food_portion_df['portion_description'][row]
+            modifier = food_portion_df['modifier'][row]
+            amount = food_portion_df['amount'][row]
+            fdc_id = int(food_portion_df['fdc_id'][row])
+            servings_by_fdc[fdc_id] = {}
+            servings_by_fdc[fdc_id]['description'] = \
+                self.get_one_serving_description(
+                    portion_desc,
+                    modifier,
+                    amount
+            )
+            servings_by_fdc[fdc_id]['unit'] = grams
+            servings_by_fdc[fdc_id]['qty'] = one_serving_qty
+        return servings_by_fdc
+
+    def skip_food_is_true(
+        self,
+        row,
+        food_df,
+        fdc_id,
+        servings_by_fdc,
+        existing_food_names,
+        fdc_by_food_name
+    ):
+        # Skip if food doesn't have associated serving sizes.
+        if fdc_id not in servings_by_fdc:
+            return True
+
+        # Skip about 200 entries like this:
+        # "328216","sub_sample_food","Niacin, Cheese,...
+        # "328217","sub_sample_food","Proximates, Cheese,...
+        data_type = str(food_df['data_type'][row])
+        name = str(food_df['description'][row])
+        if (
+            data_type == 'sub_sample_food' and
+            ', Cheese' in name
+        ):
+            return True
+
+        # There are multiple food objects with same
+        # name in the csvs.
+        # Skip foods with the same name that exist in
+        # our db with the same name or foods in the csv
+        # that have already been processed in this sync.
+        if name in fdc_by_food_name or name in existing_food_names:
+            return True
+        return False
+
+    def create_food_object(self, row, food_df, servings_by_fdc, upc_by_fdc):
+        food = Food()
+        fdc_id = food_df['fdc_id'][row]
+        data_type = food_df['data_type'][row]
+        food.name = food_df['description'][row][:99]
+        food.one_serving_qty = servings_by_fdc[fdc_id]['qty']
+        food.one_serving_unit = servings_by_fdc[fdc_id]['unit']
+        food.one_serving_description = servings_by_fdc[fdc_id]['description']
+        food.upc_code = upc_by_fdc[fdc_id] if fdc_id in upc_by_fdc else None
+        usdacategory_id = (
+            None
+            if math.isnan(food_df['food_category_id'][row]) else
+            int(food_df['food_category_id'][row])
+        )
+        food.usdacategory_id = self.get_category_id(
+            data_type, usdacategory_id, food.name)
+        return food
+
+    def food_updated_is_true(self, updated_food, food_in_db):
+        return not (
+            updated_food.name == food_in_db.name and
+            updated_food.one_serving_qty == food_in_db.one_serving_qty and
+            updated_food.one_serving_unit == food_in_db.one_serving_unit and
+            updated_food.upc_code == food_in_db.upc_code and
+            updated_food.one_serving_description == food_in_db.one_serving_description
+        )
+
+    def get_food_to_update_by_fdc(self, foods_by_fdc, food, fdc_id):
+        if fdc_id not in foods_by_fdc:
+            return None
+        food_in_db = foods_by_fdc[fdc_id]
+        food_updated = self.food_updated_is_true(food, food_in_db)
+        if not food_updated:
+            return None
+        food.id = food_in_db.id
+        return food
+
+    def get_food_to_update_by_name(self, foods_by_name, food):
+        food_to_update = None
+        usdafood_to_create = None
+        food_usdafood_to_create = None
+        if food.name not in foods_by_name:
+            return food_to_update, usdafood_to_create, food_usdafood_to_create
+        food_in_db = foods_by_name[food.name]
+        food_updated = self.food_updated_is_true(food, food_in_db)
+        if food_updated:
+            food.id = food_in_db.id
+            food_to_update = food
+        return food_to_update
+
+    def update_or_create_new_foods(
+        self,
+        foods_to_create,
+        foods_to_update,
+        usdafoods_to_create,
+        foods_to_link_to_usdafoods,
+        fdc_by_food_name
+    ):
+        # Create and update food and usdafood objects.
+        food_fields = [
+            'name', 'usdacategory_id', 'upc_code', 'one_serving_qty',
+            'one_serving_unit', 'one_serving_description']
+        Food.objects.bulk_update(foods_to_update, food_fields)
+        new_usdafoods = USDAFood.objects.bulk_create(usdafoods_to_create)
+        new_foods = Food.objects.bulk_create(foods_to_create)
+        # Add new foods with ids to foods_to_link_to_usdafoods.
+        foods_to_link_to_usdafoods.extend(new_foods)
+        udsafoods_by_fdc = {uf.fdc_id: uf for uf in new_usdafoods}
+        foods_usdafoods_to_create = []
+        for food in foods_to_link_to_usdafoods:
+            fdc = fdc_by_food_name[food.name]
+            usdafood = udsafoods_by_fdc[fdc]
+            foods_usdafoods_to_create.append(
+                FoodUSDAFood(food=food, usdafood=usdafood)
+            )
+        FoodUSDAFood.objects.bulk_create(foods_usdafoods_to_create)
+        return "Success"
+
+    def get_upc_by_fdc(self):
+        market_cols = ['fdc_id', 'upc_code']
+        market_dtypes = {'fdc_id': np.float, 'upc_code': np.str}
+        try:
+            market_acquisition_df = pd.read_csv(
+                'https://freshi-app.s3.amazonaws.com/food-sync-csvs/market_acquisition.csv',
+                usecols=market_cols,
+                dtype=market_dtypes)
+        except:
+            return self.stdout.write(self.style.ERROR(
+                'Failed to sync foods: Please make \
+                sure the following USDA FoodData Central csvs \
+                are uploaded to the freshi-app/food-sync-csvs \
+                bucket in AWS S3:\
+                market_acquisition.csv'
+            ))
+        upc_by_fdc = {}
+        # Create dict to sort upc_code (bar codes) by fdc_id
+        for row in market_acquisition_df.index:
+            fdc_id = int(market_acquisition_df['fdc_id'][row])
+            upc_code = None
+            try:
+                upc_code = int(market_acquisition_df['upc_code'][row])
+            except:
+                pass
+            upc_by_fdc[fdc_id] = upc_code
+        return upc_by_fdc
+
+    @transaction.atomic
     def sync_categories(self, *args, **options):
         # Prereqs: must upload csvs to /freshi-app/food-sync-csvs
         # s3 bucket.
@@ -356,7 +566,9 @@ class Command(BaseCommand):
             ))
         self.stdout.write(self.style.SUCCESS(
             'Successfully synced categories!'))
+        return 'Success'
 
+    @transaction.atomic
     def sync_foods(self, *args, **options):
         # Prereqs: must upload csvs to /freshi-app/food-sync-csvs
         # s3 bucket.
@@ -367,223 +579,113 @@ class Command(BaseCommand):
             'data_type': np.str,
             'food_category_id': np.float
         }
-        portion_cols = ['fdc_id', 'portion_description',
-                        'modifier', 'gram_weight', 'amount']
-        portion_dtypes = {
-            'fdc_id': np.float,
-            'portion_description': np.str,
-            'modifier': np.str,
-            'gram_weight': np.float,
-            'amount': np.float,
-        }
-        market_cols = ['fdc_id', 'upc_code']
-        market_dtypes = {'fdc_id': np.float, 'upc_code': np.str}
         try:
             food_df = pd.read_csv(
                 'https://freshi-app.s3.amazonaws.com/food-sync-csvs/food.csv',
                 usecols=food_cols,
                 dtype=food_dtypes)
-            food_portion_df = pd.read_csv(
-                'https://freshi-app.s3.amazonaws.com/food-sync-csvs/food_portion.csv',
-                usecols=portion_cols,
-                dtype=portion_dtypes)
-            market_acquisition_df = pd.read_csv(
-                'https://freshi-app.s3.amazonaws.com/food-sync-csvs/market_acquisition.csv',
-                usecols=market_cols,
-                dtype=market_dtypes)
         except:
             return self.stdout.write(self.style.ERROR(
                 'Failed to sync foods: Please make \
                 sure the following USDA FoodData Central csvs \
                 are uploaded to the freshi-app/food-sync-csvs \
                 bucket in AWS S3:\
-                food.csv,\
-                food_portion.csv, market_acquisition.csv'
+                food.csv'
             ))
+        # Get food data from other csvs and sort into dicts
+        # by fdc_id
+        upc_by_fdc = self.get_upc_by_fdc()
+        servings_by_fdc = self.get_servings_by_fdc()
 
-        upc_by_fdc = {}
-        # Create dict to sort upc_code (bar codes) by fdc_id
-        for row in market_acquisition_df.index:
-            fdc_id = int(market_acquisition_df['fdc_id'][row])
-            upc_code = None
-            try:
-                upc_code = int(market_acquisition_df['upc_code'][row])
-            except:
-                pass
-            upc_by_fdc[fdc_id] = upc_code
+        # Get data from db that you will need to sync foods:
+        foods_by_fdc = {
+            food.fdc_id: food for food in Food.objects.all() if food.fdc_id}
+        foods_by_name = {
+            food.name: food for food in Food.objects.all().prefetch_related(
+                'usdafoods')}
 
-        # Create dict to sort serving_size by fdc_id
-        # serving_size = {'qty': , 'unit': ,'display_qty': , 'display_unit': }
-        grams = Unit.objects.get(name="gram")
-        servings_by_fdc = {}
-        for row in food_portion_df.index:
-            one_serving_qty = round(float(
-                food_portion_df['gram_weight'][row]), 2)
-            # Skip foods with negative and thus inaccurate
-            # serving qty.
-            if one_serving_qty <= 0:
-                continue
-            one_serving_display_qty = (
-                None
-                if math.isnan(food_portion_df['amount'][row]) else
-                round(float(food_portion_df['amount'][row]), 2)
-            )
-            fdc_id = int(food_portion_df['fdc_id'][row])
-            servings_by_fdc[fdc_id] = {}
-            servings_by_fdc[fdc_id]['display_unit'] = self.get_display_unit(
-                food_portion_df['portion_description'][row],
-                food_portion_df['modifier'][row]
-            )
-            servings_by_fdc[fdc_id]['display_qty'] = one_serving_display_qty
-            servings_by_fdc[fdc_id]['unit'] = grams
-            servings_by_fdc[fdc_id]['qty'] = one_serving_qty
-
-        # Store usdafoods by fdc_id
-        usdafoods_by_fdc = {
-            usdafood.fdc_id: usdafood for usdafood in USDAFood.objects.all()}
-
-        # Store foods by fdc_id.
-        all_foods = Food.objects.all()
-        foods_by_fdc = {}
-        for food in all_foods:
-            if not food.fdc_id:
-                continue
-            foods_by_fdc[food.fdc_id] = food
-
-        # Get usdacategory ids in our system
-        # usdacategory_ids = [i for i in USDACategory.objects.all().values_list(
-        #     'usdacategory_id', flat=True)]
-
-        # Iterate through foods to update/create foods and usdafoods
+        # Create lists to perform bulk operations from.
         foods_to_create = []
         foods_to_update = []
         usdafoods_to_create = []
-        foods_usdafoods_to_create = []
         usdacategory_id_count = 0
-        # Track food name by fdc_id to link foods to fdc_id later.
-        fdc_id_by_food_names = {}
+        # Track fdc_id by food name and foods_to_link_to_usdafoods
+        # to link foods to fdc_id later.
+        fdc_by_food_name = {}
+        foods_to_link_to_usdafoods = []
         for row in food_df.index:
-            # Collect food properties.
             fdc_id = int(food_df['fdc_id'][row])
-            name = food_df['description'][row][:99]
-            # Skip if food doesn't have associated serving sizes.
-            if fdc_id not in servings_by_fdc:
-                continue
-            data_type = str(food_df['data_type'][row])
-            # Skip food if should be weeded out of data set.
-            if self.weed_out_food(data_type, name, fdc_id_by_food_names):
-                continue
-            # Collect serving info
-            one_serving_qty = servings_by_fdc[fdc_id]['qty']
-            one_serving_unit = servings_by_fdc[fdc_id]['unit']
-            one_serving_display_qty = servings_by_fdc[fdc_id]['display_qty']
-            one_serving_display_unit = servings_by_fdc[fdc_id]['display_unit']
-            usdacategory_id = (
-                None
-                if math.isnan(food_df['food_category_id'][row]) else
-                int(food_df['food_category_id'][row])
+            # Skip food if doesn't meet criteria
+            skip_food = self.skip_food_is_true(
+                row,
+                food_df,
+                fdc_id,
+                servings_by_fdc,
+                foods_by_name,
+                fdc_by_food_name
             )
-            usdacategory_id = self.get_category_id(
-                data_type, usdacategory_id, name)
+            if skip_food:
+                continue
 
-            # If usdafood record is new, add usdafood with fdc_id to create list.
-            if fdc_id not in usdafoods_by_fdc:
-                new_usdafood = USDAFood(fdc_id=fdc_id)
-                usdafoods_to_create.append(new_usdafood)
-            upc_code = upc_by_fdc[fdc_id] if fdc_id in upc_by_fdc else None
+            # Create food object from df data
+            food = self.create_food_object(
+                row, food_df, servings_by_fdc, upc_by_fdc)
 
-            # Some food.csv from usda don't have category ids.
-            # Make sure you are using a csv with category ids.
-            if usdacategory_id:
+            # Track to make sure you are using food.csv with
+            # food_category_id column data.
+            if food.usdacategory_id:
                 usdacategory_id_count += 1
 
-            # Add to list and use to link foods to fdc_id later.
-            fdc_id_by_food_names[name] = fdc_id
+            # Track fdc_id by food name for all foods processed by sync.
+            # Use this to avoid saving foods with duplicated names
+            # and to link foods to fdc_ids later.
+            fdc_by_food_name[food.name] = fdc_id
 
-            # If food exists in db
+            # Check if food in db with same fdc_id needs to be udpated.
             if fdc_id in foods_by_fdc:
-                food = foods_by_fdc[fdc_id]
-                # Skip if food exists and is up to date.
-                if (
-                    food.name == name
-                    and food.usdacategory_id == usdacategory_id
-                    and food.upc_code == upc_code
-                    and food.one_serving_qty == one_serving_qty
-                    and food.one_serving_unit == one_serving_unit
-                    and food.one_serving_display_qty == one_serving_display_qty
-                    and food.one_serving_display_unit ==
-                    one_serving_display_unit
-                ):
-                    continue
-                # Add to foods to update if changes have been made.
-                food.name = name
-                food.usdacategory_id = usdacategory_id
-                food.upc_code = upc_code
-                food.one_serving_qty = one_serving_qty
-                food.one_serving_unit = one_serving_unit
-                food.one_serving_display_qty = one_serving_display_qty
-                food.one_serving_display_unit = one_serving_display_unit
-                foods_to_update.append(food)
-                continue
-            # If new, add to create list.
-            new_food = Food()
-            new_food.name = name
-            new_food.usdacategory_id = usdacategory_id
-            new_food.upc_code = upc_code
-            new_food.one_serving_qty = one_serving_qty
-            new_food.one_serving_unit = one_serving_unit
-            new_food.one_serving_display_qty = one_serving_display_qty
-            new_food.one_serving_display_unit = one_serving_display_unit
-            foods_to_create.append(new_food)
+                food_to_update = self.get_food_to_update_by_fdc(
+                    foods_by_fdc, food, fdc_id)
+                # If food has been updated, add to list.
+                if food_to_update:
+                    foods_to_update.append(food_to_update)
 
+            # Check if food in db with same name needs to be udpated.
+            elif food.name in foods_by_name:
+                food_to_update = self.get_food_to_update_by_name(
+                    foods_by_name, food
+                )
+                if food_to_update:
+                    foods_to_update.append(food_to_update)
+                # If food with name in db doesn't have fdc_id,
+                # create usdafood with fdc_id and link to food.
+                if not foods_by_name[food.name].usdafoods.exists():
+                    usdafoods_to_create.append(USDAFood(fdc_id=fdc_id))
+                    foods_to_link_to_usdafoods.append(food_to_update)
+
+            # If food is new, add to foods_to_link_to_usdafoods after new
+            # foods are bulk created and have ids set.
+            else:
+                fdc_by_food_name[food.name] = fdc_id
+                usdafoods_to_create.append(USDAFood(fdc_id=fdc_id))
+                foods_to_create.append(food)
+        # Throw error if using food.csv without food_category_id column data.
         if usdacategory_id_count == 0:
             return self.stdout.write(self.style.ERROR(
                 "Failed to sync foods: Check that nutrient.csv contains \
                 food_category_id records for at least one row."
             ))
-        created_foods = []
-        try:
-            # 1. Bulk create usdafoods.
-            USDAFood.objects.bulk_create(usdafoods_to_create)
-            # 2. Bulk update foods
-            fields = ['name', 'usdacategory_id', 'upc_code', 'one_serving_qty',
-                      'one_serving_unit', 'one_serving_display_qty',
-                      'one_serving_display_unit']
-            Food.objects.bulk_update(foods_to_update, fields)
-            # 3. Bulk create foods
-            created_foods = Food.objects.bulk_create(
-                foods_to_create)
-        except NameError:
-            return self.stdout.write(self.style.ERROR(
-                f'Failed to bulk create/updates foods and usdafoods:\
-                {NameError}'
-            ))
-
-        # Store usdafoods by fdc_id.
-        all_usdafoods = USDAFood.objects.all()
-        usdafoods_by_fdc = {
-            usdafood.fdc_id: usdafood for usdafood in all_usdafoods}
-
-        # Interate through created foods to link
-        # food ids to fdc_ids by food name (should be distinct)
-        foods_usdafoods_to_create = []
-        for food in created_foods:
-            fdc_id = fdc_id_by_food_names[food.name]
-            food_usdafood = FoodUSDAFood(
-                food_id=food.id, usdafood=usdafoods_by_fdc[fdc_id])
-            foods_usdafoods_to_create.append(food_usdafood)
-        try:
-            # Bulk create associations between Food and USDAFood
-            # to link fdc_ids to foods.
-            FoodUSDAFood.objects.bulk_create(foods_usdafoods_to_create)
-        except NameError:
-            return self.stdout.write(self.style.ERROR(
-                f'Failed to bulk create food usda food associations: \
-                {NameError}'
-            ))
+        self.update_or_create_new_foods(
+            foods_to_create,
+            foods_to_update,
+            usdafoods_to_create,
+            foods_to_link_to_usdafoods,
+            fdc_by_food_name
+        )
         self.stdout.write(self.style.SUCCESS(
             'Successfully synced foods!'))
+        return 'Success'
 
+    @transaction.atomic
     def sync_nutrition_facts(self, *args, **options):
         # Prereqs: must upload csvs to /freshi-app/food-sync-csvs
         # s3 bucket.
@@ -753,19 +855,26 @@ class Command(BaseCommand):
         NutritionFact.objects.bulk_create(nutrition_facts_to_create)
         self.stdout.write(self.style.SUCCESS(
             'Successfully synced nutrition facts!'))
+        return 'Success'
 
     def handle(self, *args, **options):
         # Prereqs: must upload csvs to /freshi-app/food-sync-csvs
         # s3 bucket.
 
         # # 1. Sync categories
-        self.sync_categories()
+        sync_status = self.sync_categories()
+        if sync_status != 'Success':
+            return
 
         # # 2. Sync foods with barcodes and serving size
-        self.sync_foods()
+        sync_status = self.sync_foods()
+        if sync_status != 'Success':
+            return
 
         # 3. Sync nutrition facts
-        self.sync_nutrition_facts()
+        sync_status = self.sync_nutrition_facts()
+        if sync_status != 'Success':
+            return
 
         self.stdout.write(self.style.SUCCESS(
             'Successfully synced categories, foods and nutrition facts!'))
