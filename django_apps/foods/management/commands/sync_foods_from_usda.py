@@ -894,7 +894,6 @@ class Command(BaseCommand):
             fdc_id = int(food_nutrient_df['fdc_id'][row])
             usdanutrient_id = int(food_nutrient_df['nutrient_id'][row])
             amount = int(food_nutrient_df['amount'][row])
-            print(usdanutrient_id)
             skip_nutrition_fact = self.skip_nutrition_fact_is_true(
                 fdc_id,
                 foods_by_fdc,
@@ -932,13 +931,11 @@ class Command(BaseCommand):
             else:
                 nutrient_qtys[food.id] = {}
                 nutrient_qtys[food.id][nutrient.id] = nutrient_qty
-        print('finished csv processing')
         nutrition_facts_dict = self.get_nutrition_facts_dict()
         nutrition_facts_to_create = []
         nutrition_facts_to_update = []
         for food_id in nutrient_qtys:
             for nutrient_id in nutrient_qtys[food_id]:
-                print(f'{food_id} - {nutrient_id}')
                 nutrient_qty = nutrient_qtys[food_id][nutrient_id]
                 existing_fact = None
                 if food_id in nutrition_facts_dict:
@@ -950,34 +947,26 @@ class Command(BaseCommand):
                         ]
                 # If nutrition fact exists and is updated, add to list.
                 if existing_fact is not None:
-                    print('existing')
                     if (
                         round(float(existing_fact.nutrient_qty), 2) !=
                         round(float(nutrient_qty), 2)
                     ):
-                        print(f'{existing_fact.nutrient_qty} != {nutrient_qty}')
                         nutrition_facts_to_update.append(NutritionFact(
                             id=existing_fact.id,
                             nutrient_qty=nutrient_qty
                         ))
                 # Else create new nutrition fact and add to list.
                 else:
-                    print('new')
                     nutrition_facts_to_create.append(NutritionFact(
                         id=existing_fact.id,
                         food_id=food_id,
                         nutrient_id=nutrient_id,
                         nutrient_qty=nutrient_qty
                     ))
-        print('ready to bulk create and update!')
         fact_fields = ['nutrient_qty']
-        print(f'{len(nutrition_facts_to_update)} facts to update')
-        print(f'{len(nutrition_facts_to_create)} facts to create')
         NutritionFact.objects.bulk_update(
             nutrition_facts_to_update, fact_fields)
-        print('bulk updated!')
         NutritionFact.objects.bulk_create(nutrition_facts_to_create)
-        print('bulk created!')
         self.stdout.write(self.style.SUCCESS(
             'Successfully synced nutrition facts!'))
         return 'Success'
@@ -986,15 +975,15 @@ class Command(BaseCommand):
         # Prereqs: must upload csvs to /freshi-app/food-sync-csvs
         # s3 bucket.
 
-        # # # 1. Sync categories
-        # sync_status = self.sync_categories()
-        # if sync_status != 'Success':
-        #     return
+        # # 1. Sync categories
+        sync_status = self.sync_categories()
+        if sync_status != 'Success':
+            return
 
-        # # # 2. Sync foods with barcodes and serving size
-        # sync_status = self.sync_foods()
-        # if sync_status != 'Success':
-        #     return
+        # # 2. Sync foods with barcodes and serving size
+        sync_status = self.sync_foods()
+        if sync_status != 'Success':
+            return
 
         # 3. Sync nutrition facts
         sync_status = self.sync_nutrition_facts()
