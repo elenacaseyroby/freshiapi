@@ -384,12 +384,12 @@ class Command(BaseCommand):
         row,
         food_df,
         fdc_id,
-        servings_by_fdc,
+        fdc_with_nutrition_facts,
         existing_food_names,
         fdc_by_food_name
     ):
-        # Skip if food doesn't have associated serving sizes.
-        if fdc_id not in servings_by_fdc:
+        # Skip if food doesn't have associated nutrition_facts
+        if fdc_id not in fdc_with_nutrition_facts:
             return True
 
         # Skip about 200 entries like this:
@@ -412,15 +412,27 @@ class Command(BaseCommand):
             return True
         return False
 
-    def create_food_object(self, row, food_df, servings_by_fdc, upc_by_fdc):
+    def create_food_object(self, row, food_df, servings_by_fdc, upc_by_fdc, gram):
         food = Food()
         fdc_id = food_df['fdc_id'][row]
         data_type = food_df['data_type'][row]
         food.name = food_df['description'][row][:99]
-        food.one_serving_qty = servings_by_fdc[fdc_id]['qty']
-        food.one_serving_unit = servings_by_fdc[fdc_id]['unit']
-        food.one_serving_description = servings_by_fdc[fdc_id]['description']
-        food.upc_code = upc_by_fdc[fdc_id] if fdc_id in upc_by_fdc else None
+        # Record serving size so that nutrition facts align.
+        # If none, like in the case of some yogurts,
+        # make serving size 100 grams.
+        if fdc_id in servings_by_fdc:
+            food.one_serving_qty = servings_by_fdc[fdc_id]['qty']
+            food.one_serving_unit = servings_by_fdc[fdc_id]['unit']
+            food.one_serving_description = servings_by_fdc[
+                fdc_id
+            ][
+                'description'
+            ]
+            food.upc_code = upc_by_fdc[fdc_id] if fdc_id in upc_by_fdc else None
+        else:
+            food.one_serving_qty = 100
+            food.one_serving_unit = gram
+            food.one_serving_description = None
         usdacategory_id = (
             None
             if math.isnan(food_df['food_category_id'][row]) else
@@ -671,6 +683,29 @@ class Command(BaseCommand):
         nutrient_qty = round(float(nutrient_qty_per_serving_food), 2)
         return nutrient_qty
 
+    def get_fdc_ids_with_nutrition_facts(self):
+        fn_cols = ['fdc_id']
+        fn_dtypes = {
+            'fdc_id': np.float
+        }
+        try:
+            food_nutrient_df = pd.read_csv(
+                'https://freshi-app.s3.amazonaws.com/food-sync-csvs/food_nutrient.csv',
+                usecols=fn_cols,
+                dtype=fn_dtypes)
+        # Throw error if csvs are not uploaded.
+        except NameError:
+            return self.stdout.write(self.style.ERROR(
+                'Failed to sync nutrition facts: Please make \
+                sure the following USDA FoodData Central csvs \
+                are uploaded to the freshi-app/food-sync-csvs \
+                bucket in AWS S3:\
+                food_nutrient.csv'
+            ))
+        fdc_ids = [int(food_nutrient_df['fdc_id'][row])
+                   for row in food_nutrient_df.index]
+        return fdc_ids
+
     @transaction.atomic
     def sync_categories(self, *args, **options):
         # Prereqs: must upload csvs to /freshi-app/food-sync-csvs
@@ -747,10 +782,12 @@ class Command(BaseCommand):
                 bucket in AWS S3:\
                 food.csv'
             ))
-        # Get food data from other csvs and sort into dicts
-        # by fdc_id
+        # Get food data from other csvs
+        # dicts
         upc_by_fdc = self.get_upc_by_fdc()
         servings_by_fdc = self.get_servings_by_fdc()
+        # list
+        fdc_ids_with_nutrition_facts = self.get_fdc_ids_with_nutrition_facts()
 
         # Get data from db that you will need to sync foods:
         foods_by_fdc = {
@@ -759,6 +796,7 @@ class Command(BaseCommand):
         foods_by_name = {
             food.name: food for food in Food.objects.all().prefetch_related(
                 'usdafoods')}
+        gram = Unit.objects.get(name="gram")
 
         # Create lists to perform bulk operations from.
         foods_to_create = []
@@ -776,7 +814,7 @@ class Command(BaseCommand):
                 row,
                 food_df,
                 fdc_id,
-                servings_by_fdc,
+                fdc_ids_with_nutrition_facts,
                 foods_by_name,
                 fdc_by_food_name
             )
@@ -785,7 +823,7 @@ class Command(BaseCommand):
 
             # Create food object from df data
             food = self.create_food_object(
-                row, food_df, servings_by_fdc, upc_by_fdc)
+                row, food_df, servings_by_fdc, upc_by_fdc, gram)
 
             # Track to make sure you are using food.csv with
             # food_category_id column data.
