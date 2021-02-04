@@ -486,9 +486,14 @@ class Command(BaseCommand):
         food_fields = [
             'name', 'usdacategory_id', 'upc_code', 'one_serving_qty',
             'one_serving_unit', 'one_serving_description']
-        Food.objects.bulk_update(foods_to_update, food_fields)
+        print(f'{len(foods_to_update)} foods to update')
+        Food.objects.bulk_update(foods_to_update, food_fields, batch_size=100)
+        print('updated foods!')
+        print(f'{len(foods_to_create)} foods to create')
         new_usdafoods = USDAFood.objects.bulk_create(usdafoods_to_create)
+        print('created usdafoods!')
         new_foods = Food.objects.bulk_create(foods_to_create)
+        print('created foods!')
         # Add new foods with ids to foods_to_link_to_usdafoods.
         foods_to_link_to_usdafoods.extend(new_foods)
         udsafoods_by_fdc = {uf.fdc_id: uf for uf in new_usdafoods}
@@ -500,6 +505,7 @@ class Command(BaseCommand):
                 FoodUSDAFood(food=food, usdafood=usdafood)
             )
         FoodUSDAFood.objects.bulk_create(foods_usdafoods_to_create)
+        print('linked foods to usdafoods!')
         return "Success"
 
     def get_nutrition_facts_dict(self):
@@ -798,6 +804,8 @@ class Command(BaseCommand):
                 'usdafoods')}
         gram = Unit.objects.get(name="gram")
 
+        print("preloaded all food sync data")
+
         # Create lists to perform bulk operations from.
         foods_to_create = []
         foods_to_update = []
@@ -862,6 +870,8 @@ class Command(BaseCommand):
                 fdc_by_food_name[food.name] = fdc_id
                 usdafoods_to_create.append(USDAFood(fdc_id=fdc_id))
                 foods_to_create.append(food)
+
+        print("finished processing food.csv")
         # Throw error if using food.csv without food_category_id column data.
         if usdacategory_id_count == 0:
             return self.stdout.write(self.style.ERROR(
@@ -925,6 +935,8 @@ class Command(BaseCommand):
 
         units_by_abbr = {unit.abbr: unit for unit in Unit.objects.all()}
 
+        print("Retrieved all data for nutrition fact sync!")
+
         # Create dict to aggregate nutrition facts for usdanutrients
         # tied to same nutrient in our database.
         nutrient_qtys = {}
@@ -969,6 +981,7 @@ class Command(BaseCommand):
             else:
                 nutrient_qtys[food.id] = {}
                 nutrient_qtys[food.id][nutrient.id] = nutrient_qty
+        print("finished processing food_nutrient.csv!")
         nutrition_facts_dict = self.get_nutrition_facts_dict()
         nutrition_facts_to_create = []
         nutrition_facts_to_update = []
@@ -1001,10 +1014,15 @@ class Command(BaseCommand):
                         nutrient_id=nutrient_id,
                         nutrient_qty=nutrient_qty
                     ))
+        print("finished preparing nutrition facts to create and update!")
         fact_fields = ['nutrient_qty']
+        print(f'{len(nutrition_facts_to_update)} facts to update')
         NutritionFact.objects.bulk_update(
-            nutrition_facts_to_update, fact_fields)
+            nutrition_facts_to_update, fact_fields, batch_size=100)
+        print('nutrition facts updated!')
+        print(f'{len(nutrition_facts_to_create)} facts to create')
         NutritionFact.objects.bulk_create(nutrition_facts_to_create)
+        print('nutrition facts created!')
         self.stdout.write(self.style.SUCCESS(
             'Successfully synced nutrition facts!'))
         return 'Success'
