@@ -267,28 +267,6 @@ class Command(BaseCommand):
 
         return None
 
-    def weed_out_food(self, data_type, name, fdc_id_by_food_names):
-        # Weed out about 200 entries like this:
-        # "328216","sub_sample_food","Niacin, Cheese,...
-        # "328217","sub_sample_food","Proximates, Cheese,...
-        if (
-            str(data_type) == 'sub_sample_food' and
-            str(name).contains(', Cheese')
-        ):
-            return True
-
-        # We use fdc_id_by_food_names
-        # to link fdc_id to new food objects
-        # after they have been created.
-        # To avoid adding new food objects with the
-        # same name (foods with same name have multiple
-        # fdc_ids in food.csv unfortunately),
-        # weed out food if it's already in the list
-        # of new food objects.
-        if name in fdc_id_by_food_names:
-            return True
-        return False
-
     def get_display_unit(self, portion_description, modifier):
         # Choose which column to get the data from
         data = (
@@ -396,7 +374,7 @@ class Command(BaseCommand):
         # "328216","sub_sample_food","Niacin, Cheese,...
         # "328217","sub_sample_food","Proximates, Cheese,...
         data_type = str(food_df['data_type'][row])
-        name = str(food_df['description'][row])
+        name = food_df['description'][row][:99]
         if (
             data_type == 'sub_sample_food' and
             ', Cheese' in name
@@ -412,7 +390,8 @@ class Command(BaseCommand):
             return True
         return False
 
-    def create_food_object(self, row, food_df, servings_by_fdc, upc_by_fdc, gram):
+    def create_food_object(
+            self, row, food_df, servings_by_fdc, upc_by_fdc, gram):
         food = Food()
         fdc_id = food_df['fdc_id'][row]
         data_type = food_df['data_type'][row]
@@ -428,7 +407,11 @@ class Command(BaseCommand):
             ][
                 'description'
             ]
-            food.upc_code = upc_by_fdc[fdc_id] if fdc_id in upc_by_fdc else None
+            food.upc_code = (
+                upc_by_fdc[fdc_id]
+                if fdc_id in upc_by_fdc else
+                None
+            )
         else:
             food.one_serving_qty = 100
             food.one_serving_unit = gram
@@ -444,6 +427,7 @@ class Command(BaseCommand):
 
     def food_updated_is_true(self, updated_food, food_in_db):
         return not (
+            updated_food.usdacategory_id == food_in_db.usdacategory_id and
             updated_food.name == food_in_db.name and
             updated_food.one_serving_qty == food_in_db.one_serving_qty and
             updated_food.one_serving_unit == food_in_db.one_serving_unit and
@@ -458,21 +442,30 @@ class Command(BaseCommand):
         food_updated = self.food_updated_is_true(food, food_in_db)
         if not food_updated:
             return None
+        # Don't update category to none if category exists in db
+        if (
+            food.usdacategory_id is None and
+            food_in_db.usdacategory_id is not None
+        ):
+            food.usdacategory_id = food_in_db.usdacategory_id
         food.id = food_in_db.id
         return food
 
     def get_food_to_update_by_name(self, foods_by_name, food):
-        food_to_update = None
-        usdafood_to_create = None
-        food_usdafood_to_create = None
         if food.name not in foods_by_name:
-            return food_to_update, usdafood_to_create, food_usdafood_to_create
+            return None
         food_in_db = foods_by_name[food.name]
         food_updated = self.food_updated_is_true(food, food_in_db)
-        if food_updated:
-            food.id = food_in_db.id
-            food_to_update = food
-        return food_to_update
+        if not food_updated:
+            return None
+        # Don't update category to none if category exists in db
+        if (
+            food.usdacategory_id is None and
+            food_in_db.usdacategory_id is not None
+        ):
+            food.usdacategory_id = food_in_db.usdacategory_id
+        food.id = food_in_db.id
+        return food
 
     def update_or_create_new_foods(
         self,
@@ -490,9 +483,10 @@ class Command(BaseCommand):
         Food.objects.bulk_update(foods_to_update, food_fields, batch_size=100)
         print('updated foods!')
         print(f'{len(foods_to_create)} foods to create')
-        new_usdafoods = USDAFood.objects.bulk_create(usdafoods_to_create)
+        new_usdafoods = USDAFood.objects.bulk_create(
+            usdafoods_to_create, batch_size=100)
         print('created usdafoods!')
-        new_foods = Food.objects.bulk_create(foods_to_create)
+        new_foods = Food.objects.bulk_create(foods_to_create, batch_size=100)
         print('created foods!')
         # Add new foods with ids to foods_to_link_to_usdafoods.
         foods_to_link_to_usdafoods.extend(new_foods)
@@ -504,7 +498,8 @@ class Command(BaseCommand):
             foods_usdafoods_to_create.append(
                 FoodUSDAFood(food=food, usdafood=usdafood)
             )
-        FoodUSDAFood.objects.bulk_create(foods_usdafoods_to_create)
+        FoodUSDAFood.objects.bulk_create(
+            foods_usdafoods_to_create, batch_size=100)
         print('linked foods to usdafoods!')
         return "Success"
 
@@ -713,6 +708,85 @@ class Command(BaseCommand):
         return fdc_ids
 
     @transaction.atomic
+    def batch_sync_foods(
+        self,
+        food_batch_df,
+        upc_by_fdc,
+        servings_by_fdc,
+        fdc_ids_with_nutrition_facts,
+        gram,
+        foods_by_fdc,
+        foods_by_name,
+    ):
+        # Create lists to perform bulk operations from.
+        foods_to_create = []
+        foods_to_update = []
+        usdafoods_to_create = []
+        # Track fdc_id by food name and foods_to_link_to_usdafoods
+        # to link foods to fdc_id later.
+        fdc_by_food_name = {}
+        foods_to_link_to_usdafoods = []
+        for row in food_batch_df.index:
+            fdc_id = int(food_batch_df['fdc_id'][row])
+            print(fdc_id)
+            # Skip food if doesn't meet criteria
+            skip_food = self.skip_food_is_true(
+                row,
+                food_batch_df,
+                fdc_id,
+                fdc_ids_with_nutrition_facts,
+                foods_by_name,
+                fdc_by_food_name
+            )
+            if skip_food:
+                continue
+
+            # Create food object from df data
+            food = self.create_food_object(
+                row, food_batch_df, servings_by_fdc, upc_by_fdc, gram)
+
+            # Track fdc_id by food name for all foods processed by sync.
+            # Use this to avoid saving foods with duplicated names
+            # and to link foods to fdc_ids later.
+            fdc_by_food_name[food.name] = fdc_id
+
+            # Check if food in db with same fdc_id needs to be udpated.
+            if fdc_id in foods_by_fdc:
+                food_to_update = self.get_food_to_update_by_fdc(
+                    foods_by_fdc, food, fdc_id)
+                # If food has been updated, add to list.
+                if food_to_update:
+                    foods_to_update.append(food_to_update)
+
+            # Check if food in db with same name needs to be udpated.
+            elif food.name in foods_by_name:
+                food_to_update = self.get_food_to_update_by_name(
+                    foods_by_name, food
+                )
+                if food_to_update:
+                    foods_to_update.append(food_to_update)
+                # If food with name in db doesn't have fdc_id,
+                # create usdafood with fdc_id and link to food.
+                if not foods_by_name[food.name].usdafoods.exists():
+                    usdafoods_to_create.append(USDAFood(fdc_id=fdc_id))
+                    foods_to_link_to_usdafoods.append(food_to_update)
+
+            # If food is new, add to foods_to_link_to_usdafoods after new
+            # foods are bulk created and have ids set.
+            else:
+                print("new food!")
+                fdc_by_food_name[food.name] = fdc_id
+                usdafoods_to_create.append(USDAFood(fdc_id=fdc_id))
+                foods_to_create.append(food)
+        self.update_or_create_new_foods(
+            foods_to_create,
+            foods_to_update,
+            usdafoods_to_create,
+            foods_to_link_to_usdafoods,
+            fdc_by_food_name
+        )
+
+    @transaction.atomic
     def sync_categories(self, *args, **options):
         # Prereqs: must upload csvs to /freshi-app/food-sync-csvs
         # s3 bucket.
@@ -750,12 +824,14 @@ class Command(BaseCommand):
                 cats_to_update.append(cat_to_update)
                 continue
             # If new add to create list.
-            cat_to_create = USDACategory(usdacategory_id=cat_id, name=cat_name)
+            cat_to_create = USDACategory(
+                usdacategory_id=cat_id, name=cat_name)
             cats_to_create.append(cat_to_create)
         try:
             fields = ['name']
-            USDACategory.objects.bulk_update(cats_to_update, fields)
-            USDACategory.objects.bulk_create(cats_to_create)
+            USDACategory.objects.bulk_update(
+                cats_to_update, fields, batch_size=100)
+            USDACategory.objects.bulk_create(cats_to_create, batch_size=100)
         except:
             return self.stdout.write(self.style.ERROR(
                 f'Failed to update or create usda categories: {NameError}'
@@ -764,7 +840,6 @@ class Command(BaseCommand):
             'Successfully synced categories!'))
         return 'Success'
 
-    @transaction.atomic
     def sync_foods(self, *args, **options):
         # Prereqs: must upload csvs to /freshi-app/food-sync-csvs
         # s3 bucket.
@@ -796,95 +871,39 @@ class Command(BaseCommand):
         fdc_ids_with_nutrition_facts = self.get_fdc_ids_with_nutrition_facts()
 
         # Get data from db that you will need to sync foods:
-        foods_by_fdc = {
-            food.fdc_id: food for food in Food.objects.all().prefetch_related(
-                'usdafoods') if food.fdc_id}
-        foods_by_name = {
-            food.name: food for food in Food.objects.all().prefetch_related(
-                'usdafoods')}
         gram = Unit.objects.get(name="gram")
 
         print("preloaded all food sync data")
 
-        # Create lists to perform bulk operations from.
-        foods_to_create = []
-        foods_to_update = []
-        usdafoods_to_create = []
-        usdacategory_id_count = 0
-        # Track fdc_id by food name and foods_to_link_to_usdafoods
-        # to link foods to fdc_id later.
-        fdc_by_food_name = {}
-        foods_to_link_to_usdafoods = []
-        for row in food_df.index:
-            fdc_id = int(food_df['fdc_id'][row])
-            # Skip food if doesn't meet criteria
-            skip_food = self.skip_food_is_true(
-                row,
-                food_df,
-                fdc_id,
+        foods_count = len(food_df.index)
+        from_index = 0
+        batch_size = 50000
+        while from_index < foods_count:
+            # Refresh dicts with foods from db.
+            foods_by_fdc = {
+                food.fdc_id: food for food in Food.objects.all(
+                ).prefetch_related('usdafoods') if food.fdc_id}
+            foods_by_name = {
+                food.name: food for food in Food.objects.all(
+                ).prefetch_related('usdafoods')}
+            to_index = from_index + batch_size
+            if to_index > foods_count:
+                to_index = foods_count
+            food_batch_df = food_df.iloc[from_index:to_index]
+            self.batch_sync_foods(
+                food_batch_df,
+                upc_by_fdc,
+                servings_by_fdc,
                 fdc_ids_with_nutrition_facts,
-                foods_by_name,
-                fdc_by_food_name
+                gram,
+                foods_by_fdc,
+                foods_by_name
             )
-            if skip_food:
-                continue
-
-            # Create food object from df data
-            food = self.create_food_object(
-                row, food_df, servings_by_fdc, upc_by_fdc, gram)
-
-            # Track to make sure you are using food.csv with
-            # food_category_id column data.
-            if food.usdacategory_id:
-                usdacategory_id_count += 1
-
-            # Track fdc_id by food name for all foods processed by sync.
-            # Use this to avoid saving foods with duplicated names
-            # and to link foods to fdc_ids later.
-            fdc_by_food_name[food.name] = fdc_id
-
-            # Check if food in db with same fdc_id needs to be udpated.
-            if fdc_id in foods_by_fdc:
-                food_to_update = self.get_food_to_update_by_fdc(
-                    foods_by_fdc, food, fdc_id)
-                # If food has been updated, add to list.
-                if food_to_update:
-                    foods_to_update.append(food_to_update)
-
-            # Check if food in db with same name needs to be udpated.
-            elif food.name in foods_by_name:
-                food_to_update = self.get_food_to_update_by_name(
-                    foods_by_name, food
-                )
-                if food_to_update:
-                    foods_to_update.append(food_to_update)
-                # If food with name in db doesn't have fdc_id,
-                # create usdafood with fdc_id and link to food.
-                if not foods_by_name[food.name].usdafoods.exists():
-                    usdafoods_to_create.append(USDAFood(fdc_id=fdc_id))
-                    foods_to_link_to_usdafoods.append(food_to_update)
-
-            # If food is new, add to foods_to_link_to_usdafoods after new
-            # foods are bulk created and have ids set.
-            else:
-                fdc_by_food_name[food.name] = fdc_id
-                usdafoods_to_create.append(USDAFood(fdc_id=fdc_id))
-                foods_to_create.append(food)
-
-        print("finished processing food.csv")
-        # Throw error if using food.csv without food_category_id column data.
-        if usdacategory_id_count == 0:
-            return self.stdout.write(self.style.ERROR(
-                "Failed to sync foods: Check that nutrient.csv contains \
-                food_category_id records for at least one row."
-            ))
-        self.update_or_create_new_foods(
-            foods_to_create,
-            foods_to_update,
-            usdafoods_to_create,
-            foods_to_link_to_usdafoods,
-            fdc_by_food_name
-        )
+            print(
+                f'''finished processing food.csv batch row
+                {from_index} to row {to_index}'''
+            )
+            from_index = to_index
         self.stdout.write(self.style.SUCCESS(
             'Successfully synced foods!'))
         return 'Success'
@@ -1009,7 +1028,6 @@ class Command(BaseCommand):
                 # Else create new nutrition fact and add to list.
                 else:
                     nutrition_facts_to_create.append(NutritionFact(
-                        id=existing_fact.id,
                         food_id=food_id,
                         nutrient_id=nutrient_id,
                         nutrient_qty=nutrient_qty
@@ -1021,7 +1039,8 @@ class Command(BaseCommand):
             nutrition_facts_to_update, fact_fields, batch_size=100)
         print('nutrition facts updated!')
         print(f'{len(nutrition_facts_to_create)} facts to create')
-        NutritionFact.objects.bulk_create(nutrition_facts_to_create)
+        NutritionFact.objects.bulk_create(
+            nutrition_facts_to_create, batch_size=100)
         print('nutrition facts created!')
         self.stdout.write(self.style.SUCCESS(
             'Successfully synced nutrition facts!'))
