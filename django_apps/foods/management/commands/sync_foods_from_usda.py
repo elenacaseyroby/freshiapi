@@ -383,8 +383,8 @@ class Command(BaseCommand):
         desc = description[:99]
         # Cut off anything past these words:
         desc = desc.split("-")[0].strip()
-        desc = desc.split("NS")[0].strip()
-        desc = desc.split("yes")[0].strip()
+        desc = desc.split(" NS ")[0].strip()
+        desc = desc.split(" yes ")[0].strip()
         desc = desc.split("region")[0].strip()
         desc = desc.split("pass")[0].strip()
         desc = desc.split("n/a")[0].strip()
