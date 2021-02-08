@@ -153,14 +153,6 @@ class Food(models.Model):
     updated_at = models.DateTimeField(auto_now=True, null=True)
 
     @cached_property
-    def fdc_id(self):
-        # fdc_id will only exist for foods added from the USDA FoodData
-        # Central Database.
-        if self.usdafoods.first():
-            return self.usdafoods.first().fdc_id
-        return None
-
-    @cached_property
     def citation(self):
         if self.usdafoods.exists():
             return 'U.S. Department of Agriculture, Agricultural Research \
@@ -186,7 +178,7 @@ class Food(models.Model):
 
 
 class FoodUSDAFood(models.Model):
-    food = models.OneToOneField(
+    food = models.ForeignKey(
         Food, on_delete=models.CASCADE, db_column='food_id')
     usdafood = models.OneToOneField(
         USDAFood, on_delete=models.CASCADE, db_column='fdc_id')

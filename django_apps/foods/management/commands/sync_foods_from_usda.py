@@ -215,7 +215,6 @@ class Command(BaseCommand):
         category_ids_by_keyword['nectar'] = 9
         category_ids_by_keyword['cantaloupe'] = 9
         category_ids_by_keyword['melon'] = 9
-        category_ids_by_keyword['berry'] = 9
         # Veggie
         category_ids_by_keyword['vegetable protein'] = 11
         category_ids_by_keyword['chard'] = 11
@@ -362,12 +361,10 @@ class Command(BaseCommand):
         row,
         food_df,
         fdc_id,
-        fdc_with_nutrition_facts,
-        existing_food_names,
-        fdc_by_food_name
+        fdc_ids_with_nutrition_facts,
     ):
         # Skip if food doesn't have associated nutrition_facts
-        if fdc_id not in fdc_with_nutrition_facts:
+        if fdc_id not in fdc_ids_with_nutrition_facts:
             return True
 
         # Skip about 200 entries like this:
@@ -380,22 +377,58 @@ class Command(BaseCommand):
             ', Cheese' in name
         ):
             return True
-
-        # There are multiple food objects with same
-        # name in the csvs.
-        # Skip foods with the same name that exist in
-        # our db with the same name or foods in the csv
-        # that have already been processed in this sync.
-        if name in fdc_by_food_name or name in existing_food_names:
-            return True
         return False
+
+    def get_valid_food_name(self, description):
+        desc = description[:99]
+        # Cut off anything past these words:
+        desc = desc.split("-")[0].strip()
+        desc = desc.split("NS")[0].strip()
+        desc = desc.split("yes")[0].strip()
+        desc = desc.split("region")[0].strip()
+        desc = desc.split("pass")[0].strip()
+        desc = desc.split("n/a")[0].strip()
+        desc = desc.split("(")[0].strip()
+
+        # Remove bad descriptors
+        bad_descriptors = [
+            'folate', 'minerals', 'tdf', 'niacin',
+            'fatty acids', 'selenium', 'vitamin c', 'vitamin k',
+            'carotenoids', 'proximates']
+        desc = desc.lower()
+        for bad_descriptor in bad_descriptors:
+            if bad_descriptor in desc:
+                desc = desc.lstrip(bad_descriptor).strip()
+
+        # Only include first 4 sections
+        measurements = [
+            ' oz', 'oz.', 'lb', 'qt', 'ct', 'count', 'pc',
+            'piece', 'fl oz', 'ounce', 'pound', 'fluid ounces']
+        descriptors = desc.split(",")
+        name = ''
+        for count, descriptor in enumerate(descriptors):
+            if count == 0 or name == '':
+                name = descriptor.strip()
+            else:
+                # skip descriptors containing measurements
+                # if not first descriptor.
+                contains_measurements = False
+                for measurement in measurements:
+                    if measurement in descriptor:
+                        contains_measurements = True
+                if not contains_measurements:
+                    name = f'{name},{descriptor}'
+            if count >= 3:
+                break
+        return name[:99]
 
     def create_food_object(
             self, row, food_df, servings_by_fdc, upc_by_fdc, gram):
         food = Food()
         fdc_id = food_df['fdc_id'][row]
         data_type = food_df['data_type'][row]
-        food.name = food_df['description'][row][:99]
+        description = food_df['description'][row]
+        food.name = self.get_valid_food_name(description)
         # Record serving size so that nutrition facts align.
         # If none, like in the case of some yogurts,
         # make serving size 100 grams.
@@ -473,7 +506,7 @@ class Command(BaseCommand):
         foods_to_update,
         usdafoods_to_create,
         foods_to_link_to_usdafoods,
-        fdc_by_food_name
+        fdcs_by_food_name
     ):
         # Create and update food and usdafood objects.
         food_fields = [
@@ -493,11 +526,11 @@ class Command(BaseCommand):
         udsafoods_by_fdc = {uf.fdc_id: uf for uf in new_usdafoods}
         foods_usdafoods_to_create = []
         for food in foods_to_link_to_usdafoods:
-            fdc = fdc_by_food_name[food.name]
-            usdafood = udsafoods_by_fdc[fdc]
-            foods_usdafoods_to_create.append(
-                FoodUSDAFood(food=food, usdafood=usdafood)
-            )
+            for fdc in fdcs_by_food_name[food.name]:
+                usdafood = udsafoods_by_fdc[fdc]
+                foods_usdafoods_to_create.append(
+                    FoodUSDAFood(food=food, usdafood=usdafood)
+                )
         FoodUSDAFood.objects.bulk_create(
             foods_usdafoods_to_create, batch_size=100)
         print('linked foods to usdafoods!')
@@ -724,7 +757,7 @@ class Command(BaseCommand):
         usdafoods_to_create = []
         # Track fdc_id by food name and foods_to_link_to_usdafoods
         # to link foods to fdc_id later.
-        fdc_by_food_name = {}
+        fdcs_by_food_name = {}
         foods_to_link_to_usdafoods = []
         for row in food_batch_df.index:
             fdc_id = int(food_batch_df['fdc_id'][row])
@@ -734,9 +767,7 @@ class Command(BaseCommand):
                 row,
                 food_batch_df,
                 fdc_id,
-                fdc_ids_with_nutrition_facts,
-                foods_by_name,
-                fdc_by_food_name
+                fdc_ids_with_nutrition_facts
             )
             if skip_food:
                 continue
@@ -748,7 +779,9 @@ class Command(BaseCommand):
             # Track fdc_id by food name for all foods processed by sync.
             # Use this to avoid saving foods with duplicated names
             # and to link foods to fdc_ids later.
-            fdc_by_food_name[food.name] = fdc_id
+            if food.name not in fdcs_by_food_name:
+                fdcs_by_food_name[food.name] = []
+            fdcs_by_food_name[food.name].append(fdc_id)
 
             # Check if food in db with same fdc_id needs to be udpated.
             if fdc_id in foods_by_fdc:
@@ -765,9 +798,8 @@ class Command(BaseCommand):
                 )
                 if food_to_update:
                     foods_to_update.append(food_to_update)
-                # If food with name in db doesn't have fdc_id,
-                # create usdafood with fdc_id and link to food.
-                if not foods_by_name[food.name].usdafoods.exists():
+                # If fcd_id not in db, add it to list to be created.
+                if fdc_id not in foods_by_fdc:
                     usdafoods_to_create.append(USDAFood(fdc_id=fdc_id))
                     foods_to_link_to_usdafoods.append(food_to_update)
 
@@ -775,7 +807,9 @@ class Command(BaseCommand):
             # foods are bulk created and have ids set.
             else:
                 print("new food!")
-                fdc_by_food_name[food.name] = fdc_id
+                if food.name not in fdcs_by_food_name:
+                    fdcs_by_food_name[food.name] = []
+                fdcs_by_food_name[food.name].append(fdc_id)
                 usdafoods_to_create.append(USDAFood(fdc_id=fdc_id))
                 foods_to_create.append(food)
         self.update_or_create_new_foods(
@@ -783,7 +817,7 @@ class Command(BaseCommand):
             foods_to_update,
             usdafoods_to_create,
             foods_to_link_to_usdafoods,
-            fdc_by_food_name
+            fdcs_by_food_name
         )
 
     @transaction.atomic
@@ -881,8 +915,9 @@ class Command(BaseCommand):
         while from_index < foods_count:
             # Refresh dicts with foods from db.
             foods_by_fdc = {
-                food.fdc_id: food for food in Food.objects.all(
-                ).prefetch_related('usdafoods') if food.fdc_id}
+                fuf.usdafood.fdc_id: fuf.food for fuf in
+                FoodUSDAFood.objects.all().prefetch_related(
+                    'food', 'usdafood')}
             foods_by_name = {
                 food.name: food for food in Food.objects.all(
                 ).prefetch_related('usdafoods')}
