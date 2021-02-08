@@ -525,15 +525,24 @@ class Command(BaseCommand):
         foods_to_link_to_usdafoods.extend(new_foods)
         udsafoods_by_fdc = {uf.fdc_id: uf for uf in new_usdafoods}
         foods_usdafoods_to_create = []
+        fdc_ids_commited_in_sync = []
         for food in foods_to_link_to_usdafoods:
-            for fdc in fdcs_by_food_name[food.name]:
-                # Skip if food already linked to fdc_id
-                if fdc in fdcs_by_food_name:
+            for fdc_id in fdcs_by_food_name[food.name]:
+                # Skip if fdc_id is not new to the db or
+                # if already added to list to be committed:
+                if (
+                    fdc_id not in udsafoods_by_fdc or
+                    fdc_id in fdc_ids_commited_in_sync
+                ):
                     continue
-                usdafood = udsafoods_by_fdc[fdc]
+
+                usdafood = udsafoods_by_fdc[fdc_id]
                 foods_usdafoods_to_create.append(
                     FoodUSDAFood(food=food, usdafood=usdafood)
                 )
+                # Track fdc_ids already added to be committed
+                # in this sync.
+                fdc_ids_commited_in_sync.append(fdc_id)
         FoodUSDAFood.objects.bulk_create(
             foods_usdafoods_to_create, batch_size=100)
         print('linked foods to usdafoods!')
@@ -779,14 +788,7 @@ class Command(BaseCommand):
             food = self.create_food_object(
                 row, food_batch_df, servings_by_fdc, upc_by_fdc, gram)
 
-            # Track fdc_id by food name for all foods processed by sync.
-            # Use this to avoid saving foods with duplicated names
-            # and to link foods to fdc_ids later.
-            if food.name not in fdcs_by_food_name:
-                fdcs_by_food_name[food.name] = []
-            fdcs_by_food_name[food.name].append(fdc_id)
-
-            # Check if food in db with same fdc_id needs to be udpated.
+            # Match on fdc_id in database
             if fdc_id in foods_by_fdc:
                 food_to_update = self.get_food_to_update_by_fdc(
                     foods_by_fdc, food, fdc_id)
@@ -794,27 +796,39 @@ class Command(BaseCommand):
                 if food_to_update:
                     foods_to_update.append(food_to_update)
 
-            # Check if food in db with same name needs to be udpated
+            # Match on name in database
             elif food.name in foods_by_name:
                 food_to_update = self.get_food_to_update_by_name(
                     foods_by_name, food
                 )
                 if food_to_update:
                     foods_to_update.append(food_to_update)
-                # If fcd_id not in db, add it to list to be created.
-                if fdc_id not in foods_by_fdc:
-                    usdafoods_to_create.append(USDAFood(fdc_id=fdc_id))
-                    foods_to_link_to_usdafoods.append(foods_by_name[food.name])
-
-            # If food is new, add to foods_to_link_to_usdafoods after new
-            # foods are bulk created and have ids set.
+                # Create usdafood record for fdc_id
+                usdafoods_to_create.append(USDAFood(fdc_id=fdc_id))
+                # Add to list to link to this food
+                foods_to_link_to_usdafoods.append(foods_by_name[food.name])
+                # Store fdc_id by food_name to link later
+                if food.name not in fdcs_by_food_name:
+                    fdcs_by_food_name[food.name] = []
+                fdcs_by_food_name[food.name].append(fdc_id)
+            # Match on name of food that has already been processed
+            # in this sync.
+            elif food.name in fdcs_by_food_name:
+                usdafoods_to_create.append(USDAFood(fdc_id=fdc_id))
+                # Store fdc_id by food_name to link later
+                # Since food is new, it will be added to
+                # foods_to_linke_to_usdafoods after bulk_created.
+                fdcs_by_food_name[food.name].append(fdc_id)
+            # Else, food is new and must be created.
             else:
                 print("new food!")
+                foods_to_create.append(food)
                 usdafoods_to_create.append(USDAFood(fdc_id=fdc_id))
-                # If this is a new food and the first food in the csv
-                # with the name, make a new food record
-                if len(fdcs_by_food_name[food.name]) == 1:
-                    foods_to_create.append(food)
+                # Store fdc_id by food_name to link later
+                # Add to foods_to_link_to_usdafoods
+                # after new foods are bulk created and have ids set.
+                fdcs_by_food_name[food.name] = []
+                fdcs_by_food_name[food.name].append(fdc_id)
         self.update_or_create_new_foods(
             foods_to_create,
             foods_to_update,
