@@ -995,8 +995,9 @@ class Command(BaseCommand):
                     usdanutrient.usdanutrient_id] = nutrient
 
         foods_by_fdc = {
-            food.fdc_id: food for food in Food.objects.all().prefetch_related(
-                'usdafoods') if food.fdc_id}
+            fuf.usdafood.fdc_id: fuf.food for fuf in
+            FoodUSDAFood.objects.all().prefetch_related(
+                'food', 'usdafood')}
 
         unit_conversions_dict = self.get_unit_conversions_dict()
 
