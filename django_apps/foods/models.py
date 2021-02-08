@@ -62,7 +62,7 @@ class Nutrient(models.Model):
             usdanutrient_ids = [
                 usdanutrient.usdanutrient_id
                 for usdanutrient
-                in self.usdanutrients]
+                in self.usdanutrients.all()]
             return usdanutrient_ids
         return []
 
@@ -130,7 +130,7 @@ class Food(models.Model):
     # Example: 1 cup
     # Use these for conversions & writing recipes
     one_serving_qty = models.DecimalField(
-        max_digits=5, decimal_places=2, null=True)
+        max_digits=32, decimal_places=2, null=True)
     # If unit is deleted we do not want food record to be deleted.
     one_serving_unit = models.ForeignKey(
         Unit, on_delete=models.RESTRICT, null=True)
@@ -139,9 +139,7 @@ class Food(models.Model):
     # Use these for tracking foods.
     # Ex. I ate 2 cups of banana is not appropriate for food tracker,
     # but 1 banana is.
-    one_serving_display_qty = models.DecimalField(
-        max_digits=7, decimal_places=2, null=True)
-    one_serving_display_unit = models.CharField(max_length=30, null=True)
+    one_serving_description = models.CharField(max_length=40, null=True)
     nutrients = models.ManyToManyField(
         Nutrient, through='NutritionFact', blank=True)
     usdafoods = models.ManyToManyField(
@@ -150,17 +148,9 @@ class Food(models.Model):
     usdacategory = models.ForeignKey(
         USDACategory, on_delete=models.RESTRICT, null=True)
     # upc_code is bar code.
-    upc_code = models.IntegerField(null=True)
+    upc_code = models.PositiveBigIntegerField(null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, null=True)
-
-    @cached_property
-    def fdc_id(self):
-        # fdc_id will only exist for foods added from the USDA FoodData
-        # Central Database.
-        if self.usdafoods.exists():
-            return self.usdafoods[0].fdc_id
-        return None
 
     @cached_property
     def citation(self):
@@ -188,7 +178,7 @@ class Food(models.Model):
 
 
 class FoodUSDAFood(models.Model):
-    food = models.OneToOneField(
+    food = models.ForeignKey(
         Food, on_delete=models.CASCADE, db_column='food_id')
     usdafood = models.OneToOneField(
         USDAFood, on_delete=models.CASCADE, db_column='fdc_id')
@@ -203,7 +193,7 @@ class NutritionFact(models.Model):
     unique_together = [['food', 'nutrient']]
     # nutrient qty in one serving of food. unit is defined in nutrient table):
     nutrient_qty = models.DecimalField(
-        max_digits=7, decimal_places=2)
+        max_digits=12, decimal_places=2)
 
     class Meta:
         db_table = '"foods_nutrition_facts"'
@@ -228,11 +218,11 @@ class UnitConversion(models.Model):
 
 
 # Mostly for internal record.
-class FoodAddedByUser(models.Model):
+class UserAddedFood(models.Model):
     # Record will not be deleted if user is deleted, but it will be deleted if
     # food is deleted.
     food = models.OneToOneField(Food, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.RESTRICT)
 
     class Meta:
-        db_table = '"foods_foods_added_by_users"'
+        db_table = '"foods_useraddedfoods"'
