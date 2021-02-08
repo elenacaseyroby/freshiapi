@@ -382,7 +382,8 @@ class Command(BaseCommand):
     def get_valid_food_name(self, description):
         desc = description.lower()
         # Cut off anything past these words:
-        desc = desc.split("-")[0].strip()
+        desc = desc.split(" -")[0].strip()
+        desc = desc.split("- ")[0].strip()
         desc = desc.split(" ns ")[0].strip()
         desc = desc.split(" yes ")[0].strip()
         desc = desc.split("region")[0].strip()
@@ -927,9 +928,12 @@ class Command(BaseCommand):
         print("preloaded all food sync data")
 
         foods_count = len(food_df.index)
-        from_index = 0
         batch_size = 50000
-        while from_index < foods_count:
+        from_index = foods_count - batch_size
+        to_index = foods_count
+        # Iterate through foods.csv in reverse so
+        # fruits and veggies categorized first.
+        while from_index >= 0:
             # Refresh dicts with foods from db.
             foods_by_fdc = {
                 fuf.usdafood.fdc_id: fuf.food for fuf in
@@ -938,9 +942,6 @@ class Command(BaseCommand):
             foods_by_name = {
                 food.name: food for food in Food.objects.all(
                 ).prefetch_related('usdafoods')}
-            to_index = from_index + batch_size
-            if to_index > foods_count:
-                to_index = foods_count
             food_batch_df = food_df.iloc[from_index:to_index]
             self.batch_sync_foods(
                 food_batch_df,
@@ -955,7 +956,10 @@ class Command(BaseCommand):
                 f'''finished processing food.csv batch row
                 {from_index} to row {to_index}'''
             )
-            from_index = to_index
+            to_index = from_index
+            from_index = to_index - batch_size
+            if to_index > 0 and from_index < 0:
+                from_index = 0
         self.stdout.write(self.style.SUCCESS(
             'Successfully synced foods!'))
         return 'Success'
@@ -1060,6 +1064,9 @@ class Command(BaseCommand):
         for food_id in nutrient_qtys:
             for nutrient_id in nutrient_qtys[food_id]:
                 nutrient_qty = nutrient_qtys[food_id][nutrient_id]
+                # Skip if nutrient_qty is None or 0:
+                if nutrient_qty is None or nutrient_qty == 0:
+                    continue
                 existing_fact = None
                 if food_id in nutrition_facts_dict:
                     if nutrient_id in nutrition_facts_dict[food_id]:

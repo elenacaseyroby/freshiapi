@@ -68,6 +68,13 @@ class GetValidFoodTestCase(TestCase):
         food_name = c.get_valid_food_name(self, usda_food_description)
         self.assertEqual(food_name, 'oranges, navel')
 
+    def test_dont_remove_lemon_lime(self):
+        usda_food_description = '''LEMON-LIME THIRST QUENCHER POWDER, LEMON-LIME
+        '''
+        food_name = c.get_valid_food_name(self, usda_food_description)
+        self.assertEqual(
+            food_name, 'lemon-lime thirst quencher powder, lemon-lime')
+
 
 # To run:
 # python manage.py test django_apps.foods.tests.tests.BatchSyncFoodsTestCase
