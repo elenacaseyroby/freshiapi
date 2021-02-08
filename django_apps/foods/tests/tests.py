@@ -62,6 +62,12 @@ class GetValidFoodTestCase(TestCase):
         food_name = c.get_valid_food_name(self, usda_food_description)
         self.assertEqual(food_name, 'onion rings, frozen, alexia')
 
+    def test_removes_region(self):
+        usda_food_description = '''Oranges, Navel, Pass 2, Region 2, CY0109W, Yes,
+        '''
+        food_name = c.get_valid_food_name(self, usda_food_description)
+        self.assertEqual(food_name, 'oranges, navel')
+
 
 # To run:
 # python manage.py test django_apps.foods.tests.tests.BatchSyncFoodsTestCase

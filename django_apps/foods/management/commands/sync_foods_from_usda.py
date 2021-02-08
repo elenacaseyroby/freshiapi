@@ -380,11 +380,12 @@ class Command(BaseCommand):
         return False
 
     def get_valid_food_name(self, description):
-        desc = description[:99]
+        desc = description.lower()
         # Cut off anything past these words:
         desc = desc.split("-")[0].strip()
-        desc = desc.split(" NS ")[0].strip()
+        desc = desc.split(" ns ")[0].strip()
         desc = desc.split(" yes ")[0].strip()
+        desc = desc.split("region")[0].strip()
         desc = desc.split("region")[0].strip()
         desc = desc.split("pass")[0].strip()
         desc = desc.split("n/a")[0].strip()
@@ -395,11 +396,9 @@ class Command(BaseCommand):
             'folate', 'minerals', 'tdf', 'niacin',
             'fatty acids', 'selenium', 'vitamin c', 'vitamin k',
             'carotenoids', 'proximates']
-        desc = desc.lower()
         for bad_descriptor in bad_descriptors:
             if bad_descriptor in desc:
                 desc = desc.lstrip(bad_descriptor).strip()
-
         # Only include first 4 sections
         measurements = [
             ' oz', 'oz.', 'lb', 'qt', 'ct', 'count', 'pc',
@@ -407,9 +406,10 @@ class Command(BaseCommand):
         descriptors = desc.split(",")
         name = ''
         for count, descriptor in enumerate(descriptors):
+            descriptor = descriptor.strip()
             if count == 0 or name == '':
-                name = descriptor.strip()
-            else:
+                name = descriptor
+            elif descriptor != '':
                 # skip descriptors containing measurements
                 # if not first descriptor.
                 contains_measurements = False
@@ -417,7 +417,7 @@ class Command(BaseCommand):
                     if measurement in descriptor:
                         contains_measurements = True
                 if not contains_measurements:
-                    name = f'{name},{descriptor}'
+                    name = f'{name}, {descriptor}'
             if count >= 3:
                 break
         return name[:99]
