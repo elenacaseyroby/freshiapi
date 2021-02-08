@@ -197,71 +197,49 @@ class Command(BaseCommand):
         category_ids_by_keyword['tea'] = 14
         category_ids_by_keyword['drink'] = 14
         # Fruit & Juice
-        category_ids_by_keyword['apple'] = 9
-        category_ids_by_keyword['mango'] = 9
-        category_ids_by_keyword['pinapple'] = 9
-        category_ids_by_keyword['pear'] = 9
-        category_ids_by_keyword['berries'] = 9
-        category_ids_by_keyword['peach'] = 9
-        category_ids_by_keyword['pomegranate'] = 9
-        category_ids_by_keyword['banana'] = 9
-        category_ids_by_keyword['grape'] = 9
-        category_ids_by_keyword['tomato'] = 9
-        category_ids_by_keyword['lime'] = 9
-        category_ids_by_keyword['lemon'] = 9
-        category_ids_by_keyword['guava'] = 9
-        category_ids_by_keyword['papaya'] = 9
-        category_ids_by_keyword['passion fruit'] = 9
-        category_ids_by_keyword['nectar'] = 9
-        category_ids_by_keyword['cantaloupe'] = 9
-        category_ids_by_keyword['melon'] = 9
+        fruits = [
+            'apple', 'mango', 'pinapple', 'pear', 'berries',
+            'peach', 'pomegranate', 'banana', 'grape', 'tomato',
+            'lime', 'lemon', 'guava', 'papaya', 'passion fruit',
+            'nectar', 'cantaloupe', 'melon'
+        ]
+        for fruit in fruits:
+            category_ids_by_keyword[fruit] = 9
         # Veggie
-        category_ids_by_keyword['vegetable protein'] = 11
-        category_ids_by_keyword['chard'] = 11
-        category_ids_by_keyword['broccoli'] = 11
-        category_ids_by_keyword['beet'] = 11
-        category_ids_by_keyword['kale'] = 11
-        category_ids_by_keyword['mushroom'] = 11
-        category_ids_by_keyword['corn'] = 11
-        category_ids_by_keyword['bok choy'] = 11
-        category_ids_by_keyword['cabbage'] = 11
-        category_ids_by_keyword['lettuce'] = 11
-        category_ids_by_keyword['spinach'] = 11
-        category_ids_by_keyword['pepper'] = 11
-        category_ids_by_keyword['onion'] = 11
-        category_ids_by_keyword['collard'] = 11
-        category_ids_by_keyword['greens'] = 11
-        category_ids_by_keyword['turnip'] = 11
-        category_ids_by_keyword['radish'] = 11
-        category_ids_by_keyword['watercress'] = 11
-        category_ids_by_keyword['carrot'] = 11
-        category_ids_by_keyword['pea'] = 11
-        category_ids_by_keyword['potato'] = 11
-        category_ids_by_keyword['cucumber'] = 11
-        category_ids_by_keyword['celery'] = 11
-        category_ids_by_keyword['fennel'] = 11
-        category_ids_by_keyword['squash'] = 11
-        category_ids_by_keyword['seaweed'] = 11
-        category_ids_by_keyword['artichoke'] = 11
-        category_ids_by_keyword['asparagus'] = 11
-        category_ids_by_keyword['sprouts'] = 11
-        category_ids_by_keyword['cauliflower'] = 11
-        category_ids_by_keyword['okra'] = 11
-        category_ids_by_keyword['plantain'] = 11
-        category_ids_by_keyword['yam'] = 11
+        veggies = [
+            'vegetable protein', 'chard', 'broccoli', 'broccolini',
+            'beet', 'kale', 'mushroom', 'corn', 'bok choy', 'cabbage',
+            'lettuce', 'spinach', 'pepper', 'onion', 'collard', 'greens',
+            'turnip', 'radish', 'watercress', 'carrot', 'pea', 'potato',
+            'cucumber', 'celery', 'fennel', 'squash', 'seaweed', 'artichoke',
+            'asparagus', 'sprouts', 'cauliflower', 'okra', 'plantain', 'yam',
+            'sweet potato'
+        ]
+        for veggie in veggies:
+            category_ids_by_keyword[veggie] = 11
 
-        # 1. If category set, run with that.
+        name = str(name).lower().strip()
+
+        # If category is branded food, but food is named
+        # for ex. "broccoli" or "apple"
+        # put in fruits or veggies category.
+        if usdacategory_id == 26:
+            if name in veggies:
+                return 11
+            if name in fruits:
+                return 9
+
+        # If category set return category
         if usdacategory_id:
             return int(usdacategory_id)
 
-        # 2. If data type is meaningful run with that.
+        # 2. If data type is meaningful return category based on that.
         if data_type in category_ids_by_data_type:
             return int(category_ids_by_data_type[data_type])
 
-        # 3. If name contains keywords run with that.
-        normal_name = str(name).lower()
+        # 3. If name contains keywords return category based on that.
         for keyword in category_ids_by_keyword:
-            if keyword in normal_name:
+            if keyword in name:
                 return int(category_ids_by_keyword[keyword])
 
         return None
@@ -929,11 +907,13 @@ class Command(BaseCommand):
 
         foods_count = len(food_df.index)
         batch_size = 50000
-        from_index = foods_count - batch_size
-        to_index = foods_count
+        from_index = 0
         # Iterate through foods.csv in reverse so
         # fruits and veggies categorized first.
-        while from_index >= 0:
+        while from_index < foods_count:
+            to_index = from_index + batch_size
+            if to_index > foods_count:
+                to_index = foods_count
             # Refresh dicts with foods from db.
             foods_by_fdc = {
                 fuf.usdafood.fdc_id: fuf.food for fuf in
@@ -956,10 +936,7 @@ class Command(BaseCommand):
                 f'''finished processing food.csv batch row
                 {from_index} to row {to_index}'''
             )
-            to_index = from_index
-            from_index = to_index - batch_size
-            if to_index > 0 and from_index < 0:
-                from_index = 0
+            from_index = to_index
         self.stdout.write(self.style.SUCCESS(
             'Successfully synced foods!'))
         return 'Success'
