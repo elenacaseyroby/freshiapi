@@ -801,7 +801,7 @@ class Command(BaseCommand):
                 # If fcd_id not in db, add it to list to be created.
                 if fdc_id not in foods_by_fdc:
                     usdafoods_to_create.append(USDAFood(fdc_id=fdc_id))
-                    foods_to_link_to_usdafoods.append(food_to_update)
+                    foods_to_link_to_usdafoods.append(foods_by_name[food.name])
 
             # If food is new, add to foods_to_link_to_usdafoods after new
             # foods are bulk created and have ids set.
