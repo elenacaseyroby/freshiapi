@@ -791,7 +791,7 @@ class Command(BaseCommand):
                 if food_to_update:
                     foods_to_update.append(food_to_update)
 
-            # Check if food in db with same name needs to be udpated.
+            # Check if food in db with same name needs to be udpated
             elif food.name in foods_by_name:
                 food_to_update = self.get_food_to_update_by_name(
                     foods_by_name, food
@@ -807,11 +807,11 @@ class Command(BaseCommand):
             # foods are bulk created and have ids set.
             else:
                 print("new food!")
-                if food.name not in fdcs_by_food_name:
-                    fdcs_by_food_name[food.name] = []
-                fdcs_by_food_name[food.name].append(fdc_id)
                 usdafoods_to_create.append(USDAFood(fdc_id=fdc_id))
-                foods_to_create.append(food)
+                # If this is a new food and the first food in the csv
+                # with the name, make a new food record
+                if len(fdcs_by_food_name[food.name]) == 1:
+                    foods_to_create.append(food)
         self.update_or_create_new_foods(
             foods_to_create,
             foods_to_update,
