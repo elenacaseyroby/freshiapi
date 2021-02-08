@@ -527,6 +527,9 @@ class Command(BaseCommand):
         foods_usdafoods_to_create = []
         for food in foods_to_link_to_usdafoods:
             for fdc in fdcs_by_food_name[food.name]:
+                # Skip if food already linked to fdc_id
+                if fdc in fdcs_by_food_name:
+                    continue
                 usdafood = udsafoods_by_fdc[fdc]
                 foods_usdafoods_to_create.append(
                     FoodUSDAFood(food=food, usdafood=usdafood)
