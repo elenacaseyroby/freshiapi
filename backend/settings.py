@@ -16,9 +16,14 @@ import os
 import requests
 import environ
 
-# Initialize environment variables. Test deploy~
-env = environ.Env()
-environ.Env.read_env()
+
+def get_env_var(VAR_NAME):
+    env = environ.Env()
+    environ.Env.read_env()
+    # Use os.environ in elastic beanstalk and env
+    # for local development.
+    return os.environ[VAR_NAME] or env(VAR_NAME)
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,10 +33,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = get_env_var('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG')
+DEBUG = get_env_var('DEBUG')
 
 # Fix enhanced health overview false negative:
 # Get IP address of the EC2 instance that sends the health check request to
@@ -120,11 +125,11 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('DB_NAME'),
-        'USER': env('DB_USER'),
-        'PASSWORD': env('DB_PASSWORD'),
-        'HOST': env('DB_HOST'),
-        'PORT': env('DB_PORT'),
+        'NAME': get_env_var('DB_NAME'),
+        'USER': get_env_var('DB_USER'),
+        'PASSWORD': get_env_var('DB_PASSWORD'),
+        'HOST': get_env_var('DB_HOST'),
+        'PORT': get_env_var('DB_PORT'),
     },
 }
 
