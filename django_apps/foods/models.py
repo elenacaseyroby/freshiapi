@@ -28,7 +28,8 @@ class USDANutrient(models.Model):
     # usda_nutrient_id stores the nutrient ids from the USDA FoodData Central
     # Database.  Each usda_nutrient_id is tied to one or more nutrient
     # in the foods_nutrient table.
-    usdanutrient_id = models.IntegerField(unique=True, primary_key=True)
+    usdanutrient_id = models.PositiveIntegerField(
+        unique=True, primary_key=True)
 
     # object label in admin
     def __str__(self):
@@ -118,7 +119,7 @@ class USDACategory(models.Model):
 
 
 class USDAFood(models.Model):
-    fdc_id = models.IntegerField(primary_key=True)
+    fdc_id = models.PositiveIntegerField(primary_key=True)
 
     class Meta:
         db_table = '"foods_usdafoods"'
