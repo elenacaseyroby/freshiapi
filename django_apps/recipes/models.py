@@ -1,5 +1,6 @@
 from django.db import models
 
+#     title = models.CharField(max_length=40, null=False, blank=False)
 # ingredient.convert_unit(to_unit_id):
 # if the unit_ids are equal, return self
 # converted_ingredient = self OR db.Ingredient() # proxy model #don't save or

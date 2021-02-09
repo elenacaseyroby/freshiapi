@@ -14,10 +14,26 @@ from pathlib import Path
 
 import os
 import requests
+import subprocess
+import ast
+
+
+def get_environ_vars():
+    completed_process = subprocess.run(
+        ['/opt/elasticbeanstalk/bin/get-config', 'environment'],
+        stdout=subprocess.PIPE,
+        text=True,
+        check=True
+    )
+
+    return ast.literal_eval(completed_process.stdout)
+
+
+env_vars = get_environ_vars()
 
 
 def env_var(VAR_NAME):
-    return os.environ.get(VAR_NAME)
+    return env_vars[VAR_NAME] or os.environ.get(VAR_NAME)
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
