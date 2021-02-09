@@ -28,7 +28,8 @@ class USDANutrient(models.Model):
     # usda_nutrient_id stores the nutrient ids from the USDA FoodData Central
     # Database.  Each usda_nutrient_id is tied to one or more nutrient
     # in the foods_nutrient table.
-    usdanutrient_id = models.IntegerField(unique=True, primary_key=True)
+    usdanutrient_id = models.PositiveIntegerField(
+        unique=True, primary_key=True)
 
     # object label in admin
     def __str__(self):
@@ -108,6 +109,7 @@ class USDACategory(models.Model):
     # usdacategory_id stores the category id from the USDA FoodData Central
     # Database.
     usdacategory_id = models.PositiveSmallIntegerField(primary_key=True)
+    search_order = models.PositiveSmallIntegerField(null=True)
 
     # object label in admin
     def __str__(self):
@@ -118,7 +120,7 @@ class USDACategory(models.Model):
 
 
 class USDAFood(models.Model):
-    fdc_id = models.IntegerField(primary_key=True)
+    fdc_id = models.PositiveIntegerField(primary_key=True)
 
     class Meta:
         db_table = '"foods_usdafoods"'
@@ -141,7 +143,7 @@ class Food(models.Model):
     # but 1 banana is.
     one_serving_description = models.CharField(max_length=40, null=True)
     nutrients = models.ManyToManyField(
-        Nutrient, through='NutritionFact', blank=True)
+        Nutrient, through='FoodNutrient', blank=True)
     usdafoods = models.ManyToManyField(
         USDAFood, through='FoodUSDAFood', blank=True)
     # If usda category is deleted, we do not want food to be deleted.
@@ -187,7 +189,7 @@ class FoodUSDAFood(models.Model):
         db_table = '"foods_foods_usdafoods"'
 
 
-class NutritionFact(models.Model):
+class FoodNutrient(models.Model):
     food = models.ForeignKey(Food, on_delete=models.CASCADE)
     nutrient = models.ForeignKey(Nutrient, on_delete=models.CASCADE)
     unique_together = [['food', 'nutrient']]
@@ -196,7 +198,7 @@ class NutritionFact(models.Model):
         max_digits=12, decimal_places=2)
 
     class Meta:
-        db_table = '"foods_nutrition_facts"'
+        db_table = '"food_nutrients"'
 
 
 class UnitConversion(models.Model):
