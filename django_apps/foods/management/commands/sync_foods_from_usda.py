@@ -993,6 +993,7 @@ class Command(BaseCommand):
         # Create dict to aggregate nutrition facts for usdanutrients
         # tied to same nutrient in our database.
         nutrient_qtys = {}
+        food_usdanutrient_records = []
         for row in food_nutrient_df.index:
             fdc_id = int(food_nutrient_df['fdc_id'][row])
             usdanutrient_id = int(food_nutrient_df['nutrient_id'][row])
@@ -1025,15 +1026,28 @@ class Command(BaseCommand):
             # find total.
             food = foods_by_fdc[fdc_id]
             nutrient = nutrients_by_usdanutrient_id[usdanutrient_id]
+            # Skip if usdanutrient_id has already been processed for food,
+            # to avoid aggregating nutrient qtys for all usdanutrients
+            # for all foods with same name.
+            # ex. aggregating calories for all foods w name strawberry.
+            if food_usdanutrient_records[food.id]:
+                if food_usdanutrient_records[food.id][usdanutrient_id]:
+                    continue
             if food.id in nutrient_qtys:
                 if nutrient.id in nutrient_qtys[food.id]:
                     nutrient_qtys[food.id][nutrient.id] += nutrient_qty
                 else:
                     nutrient_qtys[food.id][nutrient.id] = nutrient_qty
-
             else:
                 nutrient_qtys[food.id] = {}
                 nutrient_qtys[food.id][nutrient.id] = nutrient_qty
+            if nutrient_qty > 0:
+                food_usdanutrient_records[food.id] = {}
+                food_usdanutrient_records[
+                    food.id
+                ][
+                    usdanutrient_id
+                ] = 'processed'
         print("finished processing food_nutrient.csv!")
         nutrition_facts_dict = self.get_nutrition_facts_dict()
         nutrition_facts_to_create = []
@@ -1087,15 +1101,15 @@ class Command(BaseCommand):
         # Prereqs: must upload csvs to /freshi-app/food-sync-csvs
         # s3 bucket.
 
-        # # 1. Sync categories
-        sync_status = self.sync_categories()
-        if sync_status != 'Success':
-            return
+        # # # 1. Sync categories
+        # sync_status = self.sync_categories()
+        # if sync_status != 'Success':
+        #     return
 
-        # # 2. Sync foods with barcodes and serving size
-        sync_status = self.sync_foods()
-        if sync_status != 'Success':
-            return
+        # # # 2. Sync foods with barcodes and serving size
+        # sync_status = self.sync_foods()
+        # if sync_status != 'Success':
+        #     return
 
         # 3. Sync nutrition facts
         sync_status = self.sync_nutrition_facts()
