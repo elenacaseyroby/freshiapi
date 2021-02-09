@@ -17,10 +17,13 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Food',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=100, unique=True)),
-                ('one_serving_qty', models.DecimalField(decimal_places=2, max_digits=32, null=True)),
-                ('one_serving_description', models.CharField(max_length=40, null=True)),
+                ('one_serving_qty', models.DecimalField(
+                    decimal_places=2, max_digits=32, null=True)),
+                ('one_serving_description', models.CharField(
+                    max_length=40, null=True)),
                 ('upc_code', models.PositiveBigIntegerField(null=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True, null=True)),
                 ('updated_at', models.DateTimeField(auto_now=True, null=True)),
@@ -32,13 +35,16 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Nutrient',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=40, unique=True)),
-                ('dv_qty', models.DecimalField(decimal_places=2, max_digits=7, null=True)),
+                ('dv_qty', models.DecimalField(
+                    decimal_places=2, max_digits=7, null=True)),
                 ('article_url', models.URLField(null=True)),
                 ('description', models.TextField(null=True)),
                 ('description_citations', models.TextField(null=True)),
-                ('description_src_note', models.CharField(max_length=255, null=True)),
+                ('description_src_note', models.CharField(
+                    max_length=255, null=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True, null=True)),
                 ('updated_at', models.DateTimeField(auto_now=True, null=True)),
             ],
@@ -50,7 +56,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Unit',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=50, unique=True)),
                 ('abbr', models.CharField(max_length=10)),
             ],
@@ -62,7 +69,8 @@ class Migration(migrations.Migration):
             name='USDACategory',
             fields=[
                 ('name', models.CharField(max_length=40, unique=True)),
-                ('usdacategory_id', models.PositiveSmallIntegerField(primary_key=True, serialize=False)),
+                ('usdacategory_id', models.PositiveSmallIntegerField(
+                    primary_key=True, serialize=False)),
             ],
             options={
                 'db_table': '"foods_usdacategories"',
@@ -80,7 +88,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='USDANutrient',
             fields=[
-                ('usdanutrient_id', models.IntegerField(primary_key=True, serialize=False, unique=True)),
+                ('usdanutrient_id', models.IntegerField(
+                    primary_key=True, serialize=False, unique=True)),
             ],
             options={
                 'db_table': '"foods_usdanutrients"',
@@ -89,9 +98,12 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='UserAddedFood',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('food', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='foods.food')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.RESTRICT, to='users.user')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
+                ('food', models.OneToOneField(
+                    on_delete=django.db.models.deletion.CASCADE, to='foods.food')),
+                ('user', models.ForeignKey(
+                    on_delete=django.db.models.deletion.RESTRICT, to='users.user')),
             ],
             options={
                 'db_table': '"foods_useraddedfoods"',
@@ -100,31 +112,40 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='UnitConversion',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('qty_conversion_coefficient', models.DecimalField(decimal_places=15, max_digits=45)),
-                ('from_unit', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='from_unit', to='foods.unit')),
-                ('to_unit', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='to_unit', to='foods.unit')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
+                ('qty_conversion_coefficient', models.DecimalField(
+                    decimal_places=15, max_digits=45)),
+                ('from_unit', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, related_name='from_unit', to='foods.unit')),
+                ('to_unit', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, related_name='to_unit', to='foods.unit')),
             ],
             options={
                 'db_table': '"foods_unit_conversions"',
             },
         ),
         migrations.CreateModel(
-            name='NutritionFact',
+            name='FoodNutrient',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('nutrient_qty', models.DecimalField(decimal_places=2, max_digits=12)),
-                ('food', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='foods.food')),
-                ('nutrient', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='foods.nutrient')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
+                ('nutrient_qty', models.DecimalField(
+                    decimal_places=2, max_digits=12)),
+                ('food', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='foods.food')),
+                ('nutrient', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='foods.nutrient')),
             ],
             options={
-                'db_table': '"foods_nutrition_facts"',
+                'db_table': '"foods_food_nutrients"',
             },
         ),
         migrations.AddField(
             model_name='nutrient',
             name='dv_unit',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.RESTRICT, to='foods.unit'),
+            field=models.ForeignKey(
+                null=True, on_delete=django.db.models.deletion.RESTRICT, to='foods.unit'),
         ),
         migrations.AddField(
             model_name='nutrient',
@@ -134,9 +155,12 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='FoodUSDAFood',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('food', models.ForeignKey(db_column='food_id', on_delete=django.db.models.deletion.CASCADE, to='foods.food')),
-                ('usdafood', models.OneToOneField(db_column='fdc_id', on_delete=django.db.models.deletion.CASCADE, to='foods.usdafood')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
+                ('food', models.ForeignKey(db_column='food_id',
+                                           on_delete=django.db.models.deletion.CASCADE, to='foods.food')),
+                ('usdafood', models.OneToOneField(db_column='fdc_id',
+                                                  on_delete=django.db.models.deletion.CASCADE, to='foods.usdafood')),
             ],
             options={
                 'db_table': '"foods_foods_usdafoods"',
@@ -145,21 +169,25 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='food',
             name='nutrients',
-            field=models.ManyToManyField(blank=True, through='foods.NutritionFact', to='foods.Nutrient'),
+            field=models.ManyToManyField(
+                blank=True, through='foods.FoodNutrient', to='foods.Nutrient'),
         ),
         migrations.AddField(
             model_name='food',
             name='one_serving_unit',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.RESTRICT, to='foods.unit'),
+            field=models.ForeignKey(
+                null=True, on_delete=django.db.models.deletion.RESTRICT, to='foods.unit'),
         ),
         migrations.AddField(
             model_name='food',
             name='usdacategory',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.RESTRICT, to='foods.usdacategory'),
+            field=models.ForeignKey(
+                null=True, on_delete=django.db.models.deletion.RESTRICT, to='foods.usdacategory'),
         ),
         migrations.AddField(
             model_name='food',
             name='usdafoods',
-            field=models.ManyToManyField(blank=True, through='foods.FoodUSDAFood', to='foods.USDAFood'),
+            field=models.ManyToManyField(
+                blank=True, through='foods.FoodUSDAFood', to='foods.USDAFood'),
         ),
     ]

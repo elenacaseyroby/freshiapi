@@ -8,7 +8,7 @@ from django_apps.foods.models import (
     Food, Unit,
     FoodUSDAFood,
     Nutrient,
-    NutritionFact,
+    FoodNutrient,
     UnitConversion,
     Unit
 )
@@ -528,7 +528,7 @@ class Command(BaseCommand):
         return "Success"
 
     def get_nutrition_facts_dict(self):
-        all_nutrition_facts = NutritionFact.objects.all()
+        all_nutrition_facts = FoodNutrient.objects.all()
         nutrition_facts_dict = {}
         for fact in all_nutrition_facts:
             food_id = fact.food_id
@@ -1074,13 +1074,13 @@ class Command(BaseCommand):
                         round(float(existing_fact.nutrient_qty), 2) !=
                         round(float(nutrient_qty), 2)
                     ):
-                        nutrition_facts_to_update.append(NutritionFact(
+                        nutrition_facts_to_update.append(FoodNutrient(
                             id=existing_fact.id,
                             nutrient_qty=nutrient_qty
                         ))
                 # Else create new nutrition fact and add to list.
                 else:
-                    nutrition_facts_to_create.append(NutritionFact(
+                    nutrition_facts_to_create.append(FoodNutrient(
                         food_id=food_id,
                         nutrient_id=nutrient_id,
                         nutrient_qty=nutrient_qty
@@ -1088,11 +1088,11 @@ class Command(BaseCommand):
         print("finished preparing nutrition facts to create and update!")
         fact_fields = ['nutrient_qty']
         print(f'{len(nutrition_facts_to_update)} facts to update')
-        NutritionFact.objects.bulk_update(
+        FoodNutrient.objects.bulk_update(
             nutrition_facts_to_update, fact_fields, batch_size=100)
         print('nutrition facts updated!')
         print(f'{len(nutrition_facts_to_create)} facts to create')
-        NutritionFact.objects.bulk_create(
+        FoodNutrient.objects.bulk_create(
             nutrition_facts_to_create, batch_size=100)
         print('nutrition facts created!')
         self.stdout.write(self.style.SUCCESS(
