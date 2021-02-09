@@ -1103,15 +1103,20 @@ class Command(BaseCommand):
         # Prereqs: must upload csvs to /freshi-app/food-sync-csvs
         # s3 bucket.
 
-        # # # 1. Sync categories
-        # sync_status = self.sync_categories()
-        # if sync_status != 'Success':
-        #     return
+        # 1. Sync categories
+        sync_status = self.sync_categories()
+        if sync_status != 'Success':
+            return
 
-        # # # 2. Sync foods with barcodes and serving size
-        # sync_status = self.sync_foods()
-        # if sync_status != 'Success':
-        #     return
+        # 2. Sync foods with barcodes and serving size
+        # TODO: Currently once an fdc_id has been assigned
+        # to a food in our system, it does not get reassigned to
+        # a different food.  This could be bad if we change the
+        # get_valid_food_name function since it could create new food
+        # objects that would need their fdc_ids reassigned to them.
+        sync_status = self.sync_foods()
+        if sync_status != 'Success':
+            return
 
         # 3. Sync nutrition facts
         sync_status = self.sync_nutrition_facts()
