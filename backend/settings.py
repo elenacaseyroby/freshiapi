@@ -32,14 +32,15 @@ def get_environ_vars():
 def env_var(VAR_NAME):
     env = environ.Env()
     env.read_env()
+    # Local
     try:
         if (
             env('ENV') == 'development'
         ):
             return env(VAR_NAME)
+    # Prod
     except:
-        if 'SECRET_KEY' not in os.environ:
-            env_vars = get_environ_vars()
+        env_vars = get_environ_vars()
         return env_vars[VAR_NAME]
 
 
