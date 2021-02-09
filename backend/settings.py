@@ -16,6 +16,7 @@ import os
 import requests
 import subprocess
 import ast
+import environ
 
 
 def get_environ_vars():
@@ -25,15 +26,17 @@ def get_environ_vars():
         text=True,
         check=True
     )
-
     return ast.literal_eval(completed_process.stdout)
 
 
-env_vars = get_environ_vars()
-
-
 def env_var(VAR_NAME):
-    return env_vars[VAR_NAME] or os.environ.get(VAR_NAME)
+    env = environ.Env()
+    environ.Env.read_env()
+    if env('ENV') == 'development':
+        return env(VAR_NAME)
+    if 'SECRET_KEY' not in os.environ:
+        env_vars = get_environ_vars()
+    return env_vars[VAR_NAME]
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
