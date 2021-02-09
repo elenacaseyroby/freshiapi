@@ -30,14 +30,17 @@ def get_environ_vars():
 
 
 def env_var(VAR_NAME):
-    if (
-        os.environ.get('ENV') is not None and
-        os.environ.get('ENV') == 'development'
-    ):
-        return os.environ.get(VAR_NAME)
-    if 'SECRET_KEY' not in os.environ:
-        env_vars = get_environ_vars()
-    return env_vars[VAR_NAME]
+    env = environ.Env()
+    env.read_env()
+    try:
+        if (
+            env('ENV') == 'development'
+        ):
+            return env(VAR_NAME)
+    except:
+        if 'SECRET_KEY' not in os.environ:
+            env_vars = get_environ_vars()
+        return env_vars[VAR_NAME]
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
