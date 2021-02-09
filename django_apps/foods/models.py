@@ -109,6 +109,7 @@ class USDACategory(models.Model):
     # usdacategory_id stores the category id from the USDA FoodData Central
     # Database.
     usdacategory_id = models.PositiveSmallIntegerField(primary_key=True)
+    search_order = models.PositiveSmallIntegerField(null=True)
 
     # object label in admin
     def __str__(self):
