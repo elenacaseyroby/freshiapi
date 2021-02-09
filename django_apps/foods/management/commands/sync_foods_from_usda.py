@@ -993,7 +993,7 @@ class Command(BaseCommand):
         # Create dict to aggregate nutrition facts for usdanutrients
         # tied to same nutrient in our database.
         nutrient_qtys = {}
-        food_usdanutrient_records = []
+        food_usdanutrient_records = {}
         for row in food_nutrient_df.index:
             fdc_id = int(food_nutrient_df['fdc_id'][row])
             usdanutrient_id = int(food_nutrient_df['nutrient_id'][row])
@@ -1030,8 +1030,8 @@ class Command(BaseCommand):
             # to avoid aggregating nutrient qtys for all usdanutrients
             # for all foods with same name.
             # ex. aggregating calories for all foods w name strawberry.
-            if food_usdanutrient_records[food.id]:
-                if food_usdanutrient_records[food.id][usdanutrient_id]:
+            if food.id in food_usdanutrient_records:
+                if usdanutrient_id in food_usdanutrient_records[food.id]:
                     continue
             if food.id in nutrient_qtys:
                 if nutrient.id in nutrient_qtys[food.id]:
@@ -1042,7 +1042,9 @@ class Command(BaseCommand):
                 nutrient_qtys[food.id] = {}
                 nutrient_qtys[food.id][nutrient.id] = nutrient_qty
             if nutrient_qty > 0:
-                food_usdanutrient_records[food.id] = {}
+                if food.id not in food_usdanutrient_records:
+                    food_usdanutrient_records[food.id] = {}
+
                 food_usdanutrient_records[
                     food.id
                 ][
