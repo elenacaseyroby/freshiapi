@@ -4,7 +4,7 @@ from django.utils.functional import cached_property
 from django_apps.users.models import User
 
 # Note: in postgress unique_together is functionally the same
-# as index_togeter
+# as index_together
 
 # Django standard practice is to use "blank=True"
 # but for this app we are using "null=True"
@@ -192,7 +192,10 @@ class FoodUSDAFood(models.Model):
 
 class NutritionFact(models.Model):
     food = models.ForeignKey(Food, on_delete=models.CASCADE)
-    nutrient = models.ForeignKey(Nutrient, on_delete=models.CASCADE)
+    nutrient = models.ForeignKey(
+        Nutrient,
+        on_delete=models.CASCADE,
+        related_name='food_nutrition_facts')
     unique_together = [['food', 'nutrient']]
     # nutrient qty in one serving of food. unit is defined in nutrient table):
     nutrient_qty = models.DecimalField(
