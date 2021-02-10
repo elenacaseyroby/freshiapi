@@ -144,7 +144,7 @@ class Food(models.Model):
     # but 1 banana is.
     one_serving_description = models.CharField(max_length=40, null=True)
     nutrients = models.ManyToManyField(
-        Nutrient, through='FoodNutrient', blank=True)
+        Nutrient, through='NutritionFact', blank=True)
     usdafoods = models.ManyToManyField(
         USDAFood, through='FoodUSDAFood', blank=True)
     # If usda category is deleted, we do not want food to be deleted.
@@ -190,7 +190,7 @@ class FoodUSDAFood(models.Model):
         db_table = 'foods_foods_usdafoods'
 
 
-class FoodNutrient(models.Model):
+class NutritionFact(models.Model):
     food = models.ForeignKey(Food, on_delete=models.CASCADE)
     nutrient = models.ForeignKey(Nutrient, on_delete=models.CASCADE)
     unique_together = [['food', 'nutrient']]
@@ -199,7 +199,7 @@ class FoodNutrient(models.Model):
         max_digits=12, decimal_places=2)
 
     class Meta:
-        db_table = 'foods_foods_nutrients'
+        db_table = 'foods_nutrition_facts'
 
 
 class UnitConversion(models.Model):
