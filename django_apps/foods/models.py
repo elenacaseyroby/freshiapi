@@ -21,7 +21,7 @@ class Unit(models.Model):
         return self.name
 
     class Meta:
-        db_table = '"foods_units"'
+        db_table = 'foods_units'
 
 
 class USDANutrient(models.Model):
@@ -36,7 +36,7 @@ class USDANutrient(models.Model):
         return str(self.usdanutrient_id)
 
     class Meta:
-        db_table = '"foods_usdanutrients"'
+        db_table = 'foods_usdanutrients'
 
 
 class Nutrient(models.Model):
@@ -101,7 +101,7 @@ class Nutrient(models.Model):
             models.F('dv_qty').asc(nulls_last=True),
             models.F('dv_unit').asc(nulls_last=True)
         ]
-        db_table = '"foods_nutrients"'
+        db_table = 'foods_nutrients'
 
 
 class USDACategory(models.Model):
@@ -116,18 +116,19 @@ class USDACategory(models.Model):
         return self.name
 
     class Meta:
-        db_table = '"foods_usdacategories"'
+        db_table = 'foods_usdacategories'
 
 
 class USDAFood(models.Model):
     fdc_id = models.PositiveIntegerField(primary_key=True)
 
     class Meta:
-        db_table = '"foods_usdafoods"'
+        db_table = 'foods_usdafoods'
 
 
 class Food(models.Model):
-    name = models.CharField(unique=True, max_length=100)
+    name = models.CharField(
+        unique=True, max_length=100, null=False, blank=False)
     # Defines a single serving of the food
     # Example: 1 cup
     # Use these for conversions & writing recipes
@@ -176,7 +177,7 @@ class Food(models.Model):
         return self.name
 
     class Meta:
-        db_table = '"foods_foods"'
+        db_table = 'foods_foods'
 
 
 class FoodUSDAFood(models.Model):
@@ -186,7 +187,7 @@ class FoodUSDAFood(models.Model):
         USDAFood, on_delete=models.CASCADE, db_column='fdc_id')
 
     class Meta:
-        db_table = '"foods_foods_usdafoods"'
+        db_table = 'foods_foods_usdafoods'
 
 
 class FoodNutrient(models.Model):
@@ -198,7 +199,7 @@ class FoodNutrient(models.Model):
         max_digits=12, decimal_places=2)
 
     class Meta:
-        db_table = '"foods_foods_nutrients"'
+        db_table = 'foods_foods_nutrients'
 
 
 class UnitConversion(models.Model):
@@ -216,7 +217,7 @@ class UnitConversion(models.Model):
         return self.from_unit.name + ' to ' + self.to_unit.name
 
     class Meta:
-        db_table = '"foods_unit_conversions"'
+        db_table = 'foods_unit_conversions'
 
 
 # Mostly for internal record.
@@ -227,4 +228,4 @@ class UserAddedFood(models.Model):
     user = models.ForeignKey(User, on_delete=models.RESTRICT)
 
     class Meta:
-        db_table = '"foods_useraddedfoods"'
+        db_table = 'foods_useraddedfoods'
