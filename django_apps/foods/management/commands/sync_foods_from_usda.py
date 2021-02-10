@@ -1,11 +1,11 @@
 import pandas as pd
 import numpy as np
-from django.db import models, transaction
+from django.db import transaction
 from django.core.management.base import BaseCommand
 from django_apps.foods.models import (
     USDACategory,
     USDAFood,
-    Food, Unit,
+    Food,
     FoodUSDAFood,
     Nutrient,
     FoodNutrient,
@@ -13,7 +13,6 @@ from django_apps.foods.models import (
     Unit
 )
 
-import sys
 import math
 
 
@@ -365,8 +364,7 @@ class Command(BaseCommand):
         desc = desc.split(" ns ")[0].strip()
         desc = desc.split(" yes ")[0].strip()
         desc = desc.split("region")[0].strip()
-        desc = desc.split("region")[0].strip()
-        desc = desc.split("pass")[0].strip()
+        desc = desc.split(", pass ")[0].strip()
         desc = desc.split("n/a")[0].strip()
         desc = desc.split("(")[0].strip()
 
