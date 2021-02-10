@@ -81,7 +81,8 @@ INSTALLED_APPS = [
     'django_apps.website',
     'django_apps.foods',
     'django_apps.users',
-    'django_apps.recipes'
+    'django_apps.recipes',
+    'django_apps.media'
 ]
 
 MIDDLEWARE = [
@@ -156,6 +157,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTH_USER_MODEL = 'users.User'
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
@@ -184,4 +187,10 @@ STATICFILES_DIRS = (
     # back end at port 8000.
     os.path.join(BASE_DIR, 'frontend', "build", "static"),
 )
-MEDIA_ROOT = os.path.join(STATIC_ROOT, "media")
+
+# S3
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+AWS_STORAGE_BUCKET_NAME = env_var('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_REGION_NAME = env_var('AWS_S3_REGION_NAME')
+AWS_ACCESS_KEY_ID = env_var('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = env_var('AWS_SECRET_ACCESS_KEY')

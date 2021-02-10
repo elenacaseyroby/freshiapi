@@ -198,7 +198,7 @@ class FoodNutrient(models.Model):
         max_digits=12, decimal_places=2)
 
     class Meta:
-        db_table = '"food_nutrients"'
+        db_table = '"foods_foods_nutrients"'
 
 
 class UnitConversion(models.Model):

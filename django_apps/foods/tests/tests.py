@@ -75,6 +75,20 @@ class GetValidFoodTestCase(TestCase):
         self.assertEqual(
             food_name, 'lemon-lime thirst quencher powder, lemon-lime')
 
+    def test_maintain_foods_with_pass_in_name(self):
+        usda_food_description = '''PASSION FRUIT JUICE FROM CONCENTRATE, PASSION FRUIT
+        '''
+        food_name = c.get_valid_food_name(self, usda_food_description)
+        self.assertEqual(
+            food_name, 'passion fruit juice from concentrate, passion fruit')
+
+    def test_remove_name_pass_and_beyond(self):
+        usda_food_description = '''Broccoli, Pass 2, Region 1, AR1, NFY010D0L","11","2019-04-01
+        '''
+        food_name = c.get_valid_food_name(self, usda_food_description)
+        self.assertEqual(
+            food_name, 'broccoli')
+
 
 # To run:
 # python manage.py test django_apps.foods.tests.tests.BatchSyncFoodsTestCase
