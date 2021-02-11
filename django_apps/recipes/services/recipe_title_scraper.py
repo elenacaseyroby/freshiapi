@@ -25,7 +25,7 @@ def scrape_title_wprm(soup_html):
 def scrape_entry_title_wp(soup_html):
     # SEO plugin wordpress
     # <h1 class=”entry-title”>title</h1>
-    title = bs_html.find('h1', class_='entry-title')
+    title = soup_html.find('h1', class_='entry-title')
     if title:
         title = title.get_text()
     return title
@@ -33,7 +33,7 @@ def scrape_entry_title_wp(soup_html):
 
 def scrape_title(soup_html):
     # <title>title</title>
-    title = bs_html.find('title')
+    title = soup_html.find('title')
     if title:
         title = title.get_text()
     return title
