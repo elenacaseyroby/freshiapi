@@ -10,8 +10,6 @@ class Photo(models.Model):
 
     # Store in S3 bucket:
     # if user uploaded: freshi-app/media/photos/users/user_id/
-    # if scraped from internet:
-    # freshi-app/media/photos/internet/recipes/recipe_id/
     file_name = models.ImageField(
         upload_to='media/photos/', null=False, blank=False)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
@@ -58,5 +56,22 @@ class Photo(models.Model):
 
         super(Photo, self).save()
 
+    # Django admin display name
     def __str__(self):
         return str(self.file_name)
+
+    class Meta:
+        db_table = 'media_photos'
+
+
+class InternetImage(models.Model):
+    # For images from the internet that we don't legally own.
+    url = models.URLField(null=False, blank=False)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+
+    # Django admin display name
+    def __str__(self):
+        return str(self.url)
+
+    class Meta:
+        db_table = 'media_internet_images'
