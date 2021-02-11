@@ -10,6 +10,11 @@ from django_apps.recipes.services.recipe_image_scraper import (
     scrape_recipe_image_url,
 )
 
+from django_apps.recipes.services.recipe_source_scraper import (
+    scrape_recipe_source_url,
+    scrape_recipe_source_name,
+)
+
 # Create your tests here.
 
 # To run:
@@ -88,7 +93,26 @@ class ScrapeImageTestCase(TestCase):
         self.assertEqual(
             image_url, 'https://s23991.pcdn.co/wp-content/uploads/2019/04/burrata-asparagus-pine-nuts-raisins-fp.jpg.optimal.jpg')
 
-    # class ScrapeSourceTestCase(TestCase):
+
+class ScrapeSourceTestCase(TestCase):
+
+    def test_find_bon_appetit_source_name(self):
+        url = 'https://www.bonappetit.com/recipe/seared-short-ribs-with-mushrooms'
+        page = requests.get(url)
+        soup_html = BeautifulSoup(page.content, 'html.parser')
+        source_name = scrape_recipe_source_name(soup_html)
+        self.assertEqual(
+            source_name,
+            'Bon Appétit'
+        )
+
+    def test_find_bon_appetit_source_url(self):
+        url = 'https://www.bonappetit.com/recipe/seared-short-ribs-with-mushrooms'
+        source_url = scrape_recipe_source_url(url)
+        self.assertEqual(
+            source_url,
+            'bonappetit.com'
+        )
 
     # class ScrapeServingsTestCase(TestCase):
 
