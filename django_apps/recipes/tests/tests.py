@@ -15,19 +15,21 @@ from django_apps.recipes.services.recipe_source_scraper import (
     scrape_recipe_source_name,
 )
 
-# Create your tests here.
+from django_apps.recipes.services.recipe_servings_scraper import (
+    scrape_recipe_servings_count,
+)
+
 
 # To run:
 # python manage.py test django_apps.recipes.tests.tests.ScrapeTitleTestCase
-
-
 class ScrapeTitleTestCase(TestCase):
     def test_find_bon_appetit_title(self):
         url = 'https://www.bonappetit.com/recipe/seared-short-ribs-with-mushrooms'
         page = requests.get(url)
         soup_html = BeautifulSoup(page.content, 'html.parser')
         title = scrape_recipe_title(soup_html)
-        self.assertEqual(title, 'Seared Short Ribs With Mushrooms')
+        self.assertEqual(
+            title, 'Seared Short Ribs With Mushrooms Recipe | Bon Appétit')
 
     def test_find_min_baker_title(self):
         url = 'https://minimalistbaker.com/easy-baked-cheesecake-vegan-gf/'
@@ -36,7 +38,7 @@ class ScrapeTitleTestCase(TestCase):
         title = scrape_recipe_title(soup_html)
         self.assertEqual(
             title,
-            'Easy Baked Cheesecake (Vegan + GF) | Minimalist Baker Recipes'
+            'Easy Baked Cheesecake (Vegan + GF)'
         )
 
     def test_find_dinner_at_the_zoo_title(self):
@@ -46,7 +48,7 @@ class ScrapeTitleTestCase(TestCase):
         title = scrape_recipe_title(soup_html)
         self.assertEqual(
             title,
-            'Sesame Noodles - Dinner at the Zoo'
+            'Sesame Noodles'
         )
 
     def test_find_leites_title(self):
@@ -57,6 +59,16 @@ class ScrapeTitleTestCase(TestCase):
         self.assertEqual(
             title,
             'Burrata Cheese with Asparagus'
+        )
+
+    def test_find_food_title(self):
+        url = 'https://www.food.com/recipe/chili-lime-cumin-cod-131528'
+        page = requests.get(url)
+        soup_html = BeautifulSoup(page.content, 'html.parser')
+        title = scrape_recipe_title(soup_html)
+        self.assertEqual(
+            title,
+            'Chili, Lime & Cumin Cod Recipe  - Food.com'
         )
 
 
@@ -93,6 +105,14 @@ class ScrapeImageTestCase(TestCase):
         self.assertEqual(
             image_url, 'https://s23991.pcdn.co/wp-content/uploads/2019/04/burrata-asparagus-pine-nuts-raisins-fp.jpg.optimal.jpg')
 
+    def test_find_food_image(self):
+        url = 'https://www.food.com/recipe/chili-lime-cumin-cod-131528'
+        page = requests.get(url)
+        soup_html = BeautifulSoup(page.content, 'html.parser')
+        image_url = scrape_recipe_image_url(soup_html)
+        self.assertEqual(
+            image_url, 'https://img.sndimg.com:443/food/image/upload/c_thumb,q_80,w_589,h_331/v1/img/recipes/13/15/28/RKXhDGRXQpuhblHyX6Ya_14 cod.jpg')
+
 
 class ScrapeSourceTestCase(TestCase):
 
@@ -112,6 +132,59 @@ class ScrapeSourceTestCase(TestCase):
         self.assertEqual(
             source_url,
             'bonappetit.com'
+        )
+
+
+class ScrapeServingsTestCase(TestCase):
+
+    def test_find_bon_appetit_servings_count(self):
+        url = 'https://www.bonappetit.com/recipe/seared-short-ribs-with-mushrooms'
+        page = requests.get(url)
+        soup_html = BeautifulSoup(page.content, 'html.parser')
+        servings_count = scrape_recipe_servings_count(soup_html)
+        self.assertEqual(
+            servings_count,
+            4
+        )
+
+    def test_find_wordpress_recipe_maker_servings_count(self):
+        url = 'https://minimalistbaker.com/easy-baked-cheesecake-vegan-gf/'
+        page = requests.get(url)
+        soup_html = BeautifulSoup(page.content, 'html.parser')
+        servings_count = scrape_recipe_servings_count(soup_html)
+        self.assertEqual(
+            servings_count,
+            8
+        )
+
+    def test_find_dinner_at_zoo_servings_count(self):
+        url = 'https://www.dinneratthezoo.com/sesame-noodles/'
+        page = requests.get(url)
+        soup_html = BeautifulSoup(page.content, 'html.parser')
+        servings_count = scrape_recipe_servings_count(soup_html)
+        self.assertEqual(
+            servings_count,
+            4
+        )
+
+    def test_find_leites_servings_count(self):
+        url = 'https://leitesculinaria.com/80237/recipes-burrata-with-asparagus.html'
+        page = requests.get(url)
+        soup_html = BeautifulSoup(page.content, 'html.parser')
+        servings_count = scrape_recipe_servings_count(soup_html)
+        self.assertEqual(
+            servings_count,
+            4
+        )
+
+    def test_website_with_different_yield_count(self):
+        url = 'https://www.foodandwine.com/recipes/old-fashioned-banana-bread'
+        page = requests.get(url)
+        soup_html = BeautifulSoup(page.content, 'html.parser')
+        servings_count = scrape_recipe_servings_count(soup_html)
+        self.assertEqual(
+            servings_count,
+            None
         )
 
     # class ScrapeServingsTestCase(TestCase):

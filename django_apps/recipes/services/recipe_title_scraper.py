@@ -6,7 +6,7 @@ def scrape_title_ogp(soup_html):
         {'property': 'og:title'}
     )
     if title:
-        title = title['content']
+        title = title.get_text()
     return title
 
 
