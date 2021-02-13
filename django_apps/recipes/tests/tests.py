@@ -27,6 +27,10 @@ from django_apps.recipes.services.recipe_description_scraper import (
     scrape_recipe_description,
 )
 
+from django_apps.recipes.services.recipe_ingredient_scraper import (
+    scrape_recipe_ingredients,
+)
+
 
 def get_soup_html(url):
     page = requests.get(url)
@@ -367,8 +371,143 @@ class ScrapeDescriptionTestCase(TestCase):
         )
 
 
-# class ScrapeTimeTestCase(TestCase):
-#     def test_find_total_time_bon_appetit(self):
+class ScrapeIngredientsTestCase(TestCase):
+    units = [
+        'gram', 'g',
+        'milligram', 'mg',
+        'microgram', 'ug',
+        'kilogram', 'kg',
+        'cup', 'c',
+        'tablespoon', 'tbsp',
+        'teaspoon', 'tsp',
+        'pound', 'lb',
+        'ounce', 'oz',
+        'fluid ounce', 'fl oz'
+    ]
+
+    def test_find_ingredient_strings(self):
+        soup_html = get_soup_html(
+            'https://ohsheglows.com/2020/04/25/cozy-at-home-spicy-any-veggie-soup/'
+        )
+        ingredients = scrape_recipe_ingredients(soup_html)
+        expected_ingredients = [
+            '1 tablespoon (15 mL) coconut oil or olive oil',
+            '2 1/2 cups (625 mL) water',
+            '1 (14-ounce/398 mL) can light coconut milk',
+            '1 (14-ounce/398 mL) can fire-roasted diced tomatoes*',
+            '3 cups (190 g) broccoli florets (1 1/2-inch florets)**',
+            '2 cups (270 g) peeled, seeded, and chopped butternut squash (1/2-inch cubes)',
+            '1 1/2 cups (195 g) chopped peeled carrots (1/2-inch thick coins)',
+            '1 1/2 cups (160 g) frozen cut green beans***',
+            '2 teaspoons red pepper flakes, or to taste****',
+            '1 teaspoon fine sea salt, or to taste',
+            '1 teaspoon garlic powder',
+            '1 cup (170 g) uncooked red lentils',
+            '2 tablespoons (30 mL) apple cider vinegar, or to taste',
+            'Herbamare, for garnish (optional)'
+        ]
+        self.assertEqual(
+            ingredients,
+            expected_ingredients
+        )
+
+    def test_find_ingredient_strings_wprm(self):
+        soup_html = get_soup_html(
+            'https://www.101cookbooks.com/braided-onion-bread/'
+        )
+        ingredients = scrape_recipe_ingredients(soup_html)
+        expected_ingredients = [
+            '3 tablespoons extra virgin olive oil',
+            '4 cups chopped yellow onion (~2 large)',
+            'Fine grain sea salt',
+            '1 cup aged cheddar cheese, grated',
+            '1/3 cup toasted sesame seeds',
+            '4 1/2 cups / 540g unbleached all-purpose flour, plus more if needed',
+            '2 tablespoons sugar',
+            '1 1/2 teaspoons fine grain sea salt',
+            '2 1/2 teaspoon (1 packet) active dry yeast',
+            '1 1/2 cups warm milk or oat milk (120F)',
+            '1 egg, beaten',
+            '8 tablespoons unsalted butter, room temperature',
+            '1 egg yolk'
+        ]
+        self.assertEqual(
+            ingredients,
+            expected_ingredients
+        )
+
+    def test_find_ingredient_strings_jetpack(self):
+        soup_html = get_soup_html(
+            'https://smittenkitchen.com/2008/08/crisp-rosemary-flatbread/'
+        )
+        ingredients = scrape_recipe_ingredients(soup_html)
+        expected_ingredients = [
+            '1 3/4 cups (230 grams) unbleached all-purpose flour',
+            '1 tablespoon chopped rosemary plus 2 (6-inch) sprigs (optional)',
+            '1 teaspoon baking powder',
+            '3/4 teaspoon kosher salt',
+            '1/2 cup (120 ml) water',
+            '1/3 cup (80 ml) olive oil plus more for brushing',
+            'Flaky sea salt such as Maldon'
+        ]
+        self.assertEqual(
+            ingredients,
+            expected_ingredients
+        )
+
+    def test_find_ingredient_strings_tasty(self):
+        soup_html = get_soup_html(
+            'https://cookieandkate.com/veggie-sesame-noodles-recipe/'
+        )
+        ingredients = scrape_recipe_ingredients(soup_html)
+        expected_ingredients = [
+            '8 ounces soba noodles or spaghetti noodles of choice*',
+            "⅓ cup reduced sodium tamari (or soy sauce, just be sure it’s reduced sodium or it will taste too salty)",
+            '¼ cup toasted sesame oil',
+            '2 tablespoons lime juice (about 1 medium lime)',
+            '½ teaspoon red pepper flakes, to taste (scale back or omit if sensitive to spice)',
+            '2 ½ cups thinly sliced red cabbage (about 10 ounces or ¼th medium cabbage)',
+            '3 whole carrots, peeled and then sliced into ribbons with vegetable peeler (about 1 ½ cups)',
+            '1 red bell pepper, sliced into very thin strips',
+            '1 bunch green onions, chopped',
+            '½ cup chopped cilantro',
+            'Optional: 2 cups shelled edamame, steamed'
+        ]
+        self.assertEqual(
+            ingredients,
+            expected_ingredients
+        )
+
+    def test_find_ingredient_strings_bon_appetit(self):
+        soup_html = get_soup_html(
+            'https://www.bonappetit.com/recipe/seared-short-ribs-with-mushrooms'
+        )
+        ingredients = scrape_recipe_ingredients(soup_html)
+        expected_ingredients = [
+            '1',
+            'lb. 1½"-thick boneless beef short ribs 1',
+            'tsp. kosher salt, plus more',
+            'Freshly ground black pepper ½',
+            'cup finely chopped hot cherry peppers or other hot pickled chiles, plus 3 '
+            'Tbsp. brine 1½',
+            'tsp. honey 5',
+            'Tbsp. extra-virgin olive oil, divided 1¼',
+            'lb. mixed wild mushrooms (such as maitake and/or oyster), stems removed, '
+            'torn into 1½" pieces 1',
+            'large shallot, thinly sliced crosswise 5',
+            'garlic cloves, thinly sliced ½',
+            'cup finely chopped dill'
+        ]
+        self.assertEqual(
+            ingredients,
+            expected_ingredients
+        )
+
+        # def test_find_ingredient_qty(self):
+        # def test_find_ingredient_qty(self):
+
+        # class ScrapeTimeTestCase(TestCase):
+        #     def test_find_total_time_bon_appetit(self):
 
         # def test_find_prep_time_bon_appetit(self):
 
