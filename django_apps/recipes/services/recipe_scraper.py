@@ -16,6 +16,9 @@ from django_apps.recipes.services.recipe_source_scraper import (
 from django_apps.recipes.services.recipe_servings_scraper import (
     scrape_recipe_servings_count,
 )
+from django_apps.recipes.services.recipe_author_scraper import (
+    scrape_recipe_author,
+)
 
 
 def scrape_recipe(url):
@@ -26,3 +29,4 @@ def scrape_recipe(url):
     source_name = scrape_recipe_source_name(soup_html)
     source_url = scrape_recipe_source_url(soup_html)
     servings_count = scrape_recipe_servings_count(soup_html)
+    author = scrape_recipe_author(soup_html)
