@@ -1,5 +1,6 @@
 def scrape_servings_bon_appetit(soup_html):
-    # <p class="sc-iBPRYJ sc-fubCfw sc-jToBAC eLRJRO eqsdQP hemvdP">4  Servings</p>
+    # <p class="sc-iBPRYJ sc-fubCfw sc-jToBAC eLRJRO eqsdQP hemvdP">
+    # 4  Servings</p>
     servings_count = None
     servings_string = soup_html.find(
         'p', class_="sc-iBPRYJ sc-fubCfw sc-jToBAC eLRJRO eqsdQP hemvdP")
