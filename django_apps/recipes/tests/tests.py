@@ -236,6 +236,26 @@ class ScrapeServingsTestCase(TestCase):
             None
         )
 
+    def test_epicurious_yield_count(self):
+        soup_html = get_soup_html(
+            'https://www.epicurious.com/recipes/food/views/pork-and-chive-dumplings-sohui-kim'
+        )
+        servings_count = scrape_recipe_servings_count(soup_html)
+        self.assertEqual(
+            servings_count,
+            100
+        )
+
+    def test_smitten_kitchen_yield_count(self):
+        soup_html = get_soup_html(
+            'https://smittenkitchen.com/2015/09/broccoli-cheddar-soup/'
+        )
+        servings_count = scrape_recipe_servings_count(soup_html)
+        self.assertEqual(
+            servings_count,
+            4
+        )
+
 
 class ScrapeAuthorTestCase(TestCase):
 

@@ -13,7 +13,7 @@ measurements = [
 
 def is_int(val):
     try:
-        num = int(val)
+        int(val)
     except ValueError:
         return False
     return True
@@ -70,7 +70,7 @@ def scrape_servings_wprm(soup_html):
     elements = soup_html.select('span[class*="wprm-recipe-servings "]')
     if len(elements) > 0:
         # If elements returned, set title to text of first element.
-        servings_count = int(elements[0].get_text())
+        servings_count = get_servings(elements[0].get_text())
     return servings_count
 
 
@@ -82,7 +82,7 @@ def scrape_servings_leites(soup_html):
         {'itemprop': 'recipeYield'}
     )
     if servings_string:
-        servings_count = int(servings_string.get_text())
+        servings_count = get_servings(servings_string.get_text())
     return servings_count
 
 
@@ -98,10 +98,45 @@ def scrape_servings_epicurious(soup_html):
     return servings_count
 
 
+def scrape_servings_smitten_kitchen(soup_html):
+    # <li
+    # class="jetpack-recipe-servings
+    # p-yield yield"
+    # itemprop="recipeYield"><strong>Servings:
+    # </strong>4 to 6; makes just shy of 4 cups ragú</li>
+    servings_count = None
+    servings_string = soup_html.find(
+        'li',
+        {'itemprop': 'recipeYield'}
+    )
+    if servings_string:
+        servings_count = get_servings(servings_string.get_text())
+    return servings_count
+
+
+def scrape_servings_recipe_yield(soup_html):
+    # <div
+    # itemprop="recipeYield">SERVINGS</div>
+    servings_count = None
+    servings_string = soup_html.find(
+        'div',
+        {'itemprop': 'recipeYield'}
+    )
+    if servings_string:
+        servings_count = get_servings(servings_string.get_text())
+    return servings_count
+
+
 def scrape_recipe_servings_count(soup_html):
     servings_count = scrape_servings_bon_appetit(soup_html)
     if not servings_count:
         servings_count = scrape_servings_wprm(soup_html)
     if not servings_count:
         servings_count = scrape_servings_leites(soup_html)
+    if not servings_count:
+        servings_count = scrape_servings_epicurious(soup_html)
+    if not servings_count:
+        servings_count = scrape_servings_smitten_kitchen(soup_html)
+    if not servings_count:
+        servings_count = scrape_servings_recipe_yield(soup_html)
     return servings_count
