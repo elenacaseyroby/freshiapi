@@ -9,10 +9,36 @@ def scrape_image_ogp(soup_html):
         image_url = image_url['content']
     return image_url
 
-# def scrape_food_image(soup_html):
-#     image_url = soup_html.select('img', class_="recipe-image__img")
-#     if image_url:
-#         image_url = image_url['src']
+
+def scrape_epicurious_img(soup_html):
+    image_url = None
+    images = soup_html.find_all('img')
+    for image in images:
+        if (
+            'alt' in image and
+            image['alt'] != 'Epicurious' and
+            'Photo of ' not in image['alt']
+        ):
+            image_url = image['src']
+    return image_url
+
+
+def scrape_budget_bytes_img(soup_html):
+    title = soup_html.find(
+        'meta',
+        {'property': 'og:title'}
+    )
+    if title:
+        title = title.get_text()
+    image_url = None
+    images = soup_html.find_all('img')
+    for image in images:
+        if (
+            'data-pin-title' in image and
+            image['data-pin-title'] == title
+        ):
+            image_url = image['data-src']
+    return image_url
 
 
 def scrape_img(soup_html):
@@ -25,6 +51,10 @@ def scrape_img(soup_html):
 
 def scrape_recipe_image_url(soup_html):
     image_url = scrape_image_ogp(soup_html)
+    if not image_url:
+        image_url = scrape_epicurious_img(soup_html)
+    # if not image_url:
+    #     image_url = scrape_budget_bytes_img(soup_html)
     if not image_url:
         image_url = scrape_img(soup_html)
     return image_url

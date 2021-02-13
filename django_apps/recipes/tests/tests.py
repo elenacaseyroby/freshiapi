@@ -71,6 +71,26 @@ class ScrapeTitleTestCase(TestCase):
             'Chili, Lime & Cumin Cod Recipe  - Food.com'
         )
 
+    def test_find_epicurious_title(self):
+        url = 'https://www.epicurious.com/recipes-menus/sohui-kim-lunar-new-year-menu-korean-article'
+        page = requests.get(url)
+        soup_html = BeautifulSoup(page.content, 'html.parser')
+        title = scrape_recipe_title(soup_html)
+        self.assertEqual(
+            title,
+            'Sohui Kim’s Lunar New Year Menu: Silky Pork Dumplings, Good Luck Soup, and a Big Bowl of Kimchi | Epicurious'
+        )
+
+    def test_find_smitten_kitchen_title(self):
+        url = 'https://smittenkitchen.com/2020/05/simple-essential-bolognese/'
+        page = requests.get(url)
+        soup_html = BeautifulSoup(page.content, 'html.parser')
+        title = scrape_recipe_title(soup_html)
+        self.assertEqual(
+            title,
+            'simple, essential bolognese'
+        )
+
 
 class ScrapeImageTestCase(TestCase):
     def test_find_bon_appetit_image(self):
@@ -105,13 +125,33 @@ class ScrapeImageTestCase(TestCase):
         self.assertEqual(
             image_url, 'https://s23991.pcdn.co/wp-content/uploads/2019/04/burrata-asparagus-pine-nuts-raisins-fp.jpg.optimal.jpg')
 
-    def test_find_food_image(self):
-        url = 'https://www.food.com/recipe/chili-lime-cumin-cod-131528'
+    def test_find_epicurious_image(self):
+        url = 'https://www.epicurious.com/recipes-menus/sohui-kim-lunar-new-year-menu-korean-article'
         page = requests.get(url)
         soup_html = BeautifulSoup(page.content, 'html.parser')
         image_url = scrape_recipe_image_url(soup_html)
         self.assertEqual(
-            image_url, 'https://img.sndimg.com:443/food/image/upload/c_thumb,q_80,w_589,h_331/v1/img/recipes/13/15/28/RKXhDGRXQpuhblHyX6Ya_14 cod.jpg')
+            image_url, 'https://assets.epicurious.com/photos/6010782823e2f349f099cd0b/16:9/w_1280,c_limit/PorkTofuDumpling_HERO_012521_328_VOG_final.jpg')
+
+    def test_find_smitten_kitchen_image(self):
+        url = 'https://smittenkitchen.com/2020/05/simple-essential-bolognese/'
+        page = requests.get(url)
+        soup_html = BeautifulSoup(page.content, 'html.parser')
+        image_url = scrape_recipe_image_url(soup_html)
+        self.assertEqual(
+            image_url,
+            'https://i1.wp.com/smittenkitchen.com/wp-content/uploads/2020/05/IMG_5632-scaled.jpg?fit=1200%2C800&ssl=1'
+        )
+
+    def test_find_budget_bytes_image(self):
+        url = 'https://www.budgetbytes.com/mediterranean-tuna-salad/'
+        page = requests.get(url)
+        soup_html = BeautifulSoup(page.content, 'html.parser')
+        image_url = scrape_recipe_image_url(soup_html)
+        self.assertEqual(
+            image_url,
+            'https://www.budgetbytes.com/wp-content/uploads/2021/02/Mediterranean-Tuna-Salad-side.jpg'
+        )
 
 
 class ScrapeSourceTestCase(TestCase):
