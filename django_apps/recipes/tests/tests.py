@@ -256,6 +256,16 @@ class ScrapeServingsTestCase(TestCase):
             4
         )
 
+    def test_tasty_servings_count(self):
+        soup_html = get_soup_html(
+            'https://cookieandkate.com/best-granola-bars-recipe/'
+        )
+        servings_count = scrape_recipe_servings_count(soup_html)
+        self.assertEqual(
+            servings_count,
+            16
+        )
+
 
 class ScrapeAuthorTestCase(TestCase):
 

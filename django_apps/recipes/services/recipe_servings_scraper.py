@@ -1,4 +1,5 @@
 import re
+from bs4 import BeautifulSoup
 
 measurements = [
     'cup',
@@ -123,7 +124,30 @@ def scrape_servings_recipe_yield(soup_html):
         {'itemprop': 'recipeYield'}
     )
     if servings_string:
-        servings_count = get_servings(servings_string.get_text())
+        return get_servings(servings_string.get_text())
+    servings_string = soup_html.find(
+        'span',
+        {'itemprop': 'recipeYield'}
+    )
+    if servings_string:
+        return get_servings(servings_string.get_text())
+    return servings_count
+
+
+def scrape_servings_tasty(soup_html):
+    # <span
+    # data-tasty-recipes-customization="detail-value-color.color"
+    # class="tasty-recipes-yield">
+    # <span data-amount="2"
+    # data-unit="cup">2 cups
+    # </span> </span>
+    servings_count = None
+    html = str(soup_html.find('span', {'class': 'tasty-recipes-yield'}))
+    soup_html = BeautifulSoup(html, 'html.parser')
+    spans = soup_html.select('span')
+    for span in spans:
+        if 'data-amount' in str(span):
+            return get_servings(span.get_text())
     return servings_count
 
 
@@ -139,4 +163,6 @@ def scrape_recipe_servings_count(soup_html):
         servings_count = scrape_servings_smitten_kitchen(soup_html)
     if not servings_count:
         servings_count = scrape_servings_recipe_yield(soup_html)
+    if not servings_count:
+        servings_count = scrape_servings_tasty(soup_html)
     return servings_count
