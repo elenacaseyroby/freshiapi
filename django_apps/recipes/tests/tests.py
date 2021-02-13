@@ -23,6 +23,10 @@ from django_apps.recipes.services.recipe_author_scraper import (
     scrape_recipe_author,
 )
 
+from django_apps.recipes.services.recipe_description_scraper import (
+    scrape_recipe_description,
+)
+
 
 def get_soup_html(url):
     page = requests.get(url)
@@ -289,37 +293,116 @@ class ScrapeAuthorTestCase(TestCase):
             'Sohui Kim'
         )
 
-    # class ScrapeServingsTestCase(TestCase):
 
-    # class ScrapeTimeTestCase(TestCase):
+class ScrapeDescriptionTestCase(TestCase):
 
-    # class MatchIngredient(TestCase):
+    def test_find_bon_appetit_desc(self):
+        soup_html = get_soup_html(
+            'https://www.bonappetit.com/recipe/seared-short-ribs-with-mushrooms'
+        )
+        desc = scrape_recipe_description(soup_html)
+        self.assertEqual(
+            desc,
+            'When we crave beef but don’t want a capital-S steak, we opt for a smaller cut (hello, short ribs!), then pile on lots of meaty mushrooms.'
+        )
 
-    # class MatchUnitTestCase(TestCase):
+    def test_find_dinner_at_zoo_desc(self):
+        soup_html = get_soup_html(
+            'https://www.dinneratthezoo.com/sesame-noodles/'
+        )
+        desc = scrape_recipe_description(soup_html)
+        self.assertEqual(
+            desc,
+            'These sesame noodles are Asian noodles tossed in a savory peanut and sesame sauce. A quick and easy meal option!'
+        )
 
-    # class MatchSourceTestCase(TestCase):
+    def test_find_leites_desc(self):
+        soup_html = get_soup_html(
+            'https://leitesculinaria.com/80237/recipes-burrata-with-asparagus.html'
+        )
+        desc = scrape_recipe_description(soup_html)
+        self.assertEqual(
+            desc,
+            "This burrata with asparagus dish is a quick and easy appetizer that's made with burrata cheese, asparagus, raisins, pine nuts, and prosciutto."
+        )
 
-    # class ScrapeIngredientQty(TestCase):
+    def test_food_and_wine_desc(self):
+        soup_html = get_soup_html(
+            'https://www.foodandwine.com/recipes/old-fashioned-banana-bread'
+        )
+        desc = scrape_recipe_description(soup_html)
+        self.assertEqual(
+            desc,
+            'This old-fashioned banana bread is from Lisa Ritter of Los Angeles&rsquo;s Big Sugar Bakeshop. The moist center and crisp crust has been a family hit for generations.'
+        )
 
-    # class ScrapeIngredientUnit(TestCase):
+    def test_epicurious_desc(self):
+        soup_html = get_soup_html(
+            'https://www.epicurious.com/recipes/food/views/pork-and-chive-dumplings-sohui-kim'
+        )
+        desc = scrape_recipe_description(soup_html)
+        self.assertEqual(
+            desc[:116],
+            'Once you are on a national TV show called Throwdown with Bobby Flay, and you best him with these dumplings, whatever'
+        )
 
-    # class ScrapeIngredientsTestCase(TestCase):
+    def test_smitten_kitchen_desc(self):
+        soup_html = get_soup_html(
+            'https://smittenkitchen.com/2015/09/broccoli-cheddar-soup/'
+        )
+        desc = scrape_recipe_description(soup_html)
+        self.assertEqual(
+            desc,
+            None
+        )
 
-    # class ScrapeIngredientsBySubgroupTestCase(TestCase):
+    def test_tasty_desc(self):
+        soup_html = get_soup_html(
+            'https://cookieandkate.com/best-granola-bars-recipe/'
+        )
+        desc = scrape_recipe_description(soup_html)
+        self.assertEqual(
+            desc,
+            "This granola bar recipe is so easy and delicious! These wholesome granola bars are naturally sweetened, gluten free, and the perfect healthy snack."
+        )
 
-    # class ScrapeDirectionsTestCase(TestCase):
 
-    # class ScrapeDirectionsBySubgroupTestCase(TestCase):
+# class ScrapeTimeTestCase(TestCase):
+#     def test_find_total_time_bon_appetit(self):
 
-    # class CalculateRecipeNutrients(TestCase):
-    # mark incomplete if not all foods have nutrition facts
+        # def test_find_prep_time_bon_appetit(self):
 
-    # class LoginRequiredTestCase(TestCase):
+        # def test_find_cook_time_bon_appetit(self):
 
-    # class DynamicWebsiteTestCase(TestCase):
+        # class ScrapeTimeTestCase(TestCase):
 
-    # class ScrapeDietsTestCase(TestCase):
+        # class MatchIngredient(TestCase):
 
-    # class ScrapeCuisinesTestCase(TestCase):
+        # class MatchUnitTestCase(TestCase):
 
-    # class ScrapeAllergensTestCase(TestCase):
+        # class MatchSourceTestCase(TestCase):
+
+        # class ScrapeIngredientQty(TestCase):
+
+        # class ScrapeIngredientUnit(TestCase):
+
+        # class ScrapeIngredientsTestCase(TestCase):
+
+        # class ScrapeIngredientsBySubgroupTestCase(TestCase):
+
+        # class ScrapeDirectionsTestCase(TestCase):
+
+        # class ScrapeDirectionsBySubgroupTestCase(TestCase):
+
+        # class CalculateRecipeNutrients(TestCase):
+        # mark incomplete if not all foods have nutrition facts
+
+        # class LoginRequiredTestCase(TestCase):
+
+        # class DynamicWebsiteTestCase(TestCase):
+
+        # class ScrapeDietsTestCase(TestCase):
+
+        # class ScrapeCuisinesTestCase(TestCase):
+
+        # class ScrapeAllergensTestCase(TestCase):
