@@ -35,7 +35,7 @@ def get_soup_html(url):
 class ScrapeTitleTestCase(TestCase):
     def test_find_bon_appetit_title(self):
         soup_html = get_soup_html(
-            'https://www.bonappetit.com/recipe/seared-short-ribs-with-mushrooms')
+            'https://www.bonappetit.com/recipe/chocolate-biscoff-banoffee-pie')
         title = scrape_recipe_title(soup_html)
         self.assertEqual(
             title, 'Seared Short Ribs With Mushrooms Recipe | Bon Appétit')

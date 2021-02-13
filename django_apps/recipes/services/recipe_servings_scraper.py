@@ -1,9 +1,49 @@
+import re
+
+measurements = [
+    'cup',
+    'cups',
+    'teaspoons',
+    'teaspoon',
+    'tablespoons',
+    'tablespoon',
+    'ounces',
+]
+
+
+def is_int(val):
+    try:
+        num = int(val)
+    except ValueError:
+        return False
+    return True
+
+
+def get_servings(servings_str):
+    # If servings is an amount and not a count
+    # return None and calculate servings count
+    # later in the script.
+    servings_str = servings_str.lower()
+    for measurement in measurements:
+        if measurement in servings_str:
+            return None
+    # Remove number from the string
+    match = re.findall('^\D*(\d*).*', servings_str)
+    for group in match:
+        try:
+            servings_count = int(group)
+            return servings_count
+        except:
+            return None
+    return None
+
+
 def scrape_servings_bon_appetit(soup_html):
     # <p class="sc-iBPRYJ sc-fubCfw sc-jToBAC eLRJRO eqsdQP hemvdP">
     # 4  Servings</p>
     servings_count = None
     servings_string = soup_html.find(
-        'p', class_="sc-iBPRYJ sc-fubCfw sc-jToBAC eLRJRO eqsdQP hemvdP")
+        'p', class_="sc-iBPRYJ sc-fubCfw sc-jExWIn eLRJRO eqsdQP dqUvnp")
     if servings_string:
         servings_string = servings_string.get_text()
         servings_count = servings_string.lower().replace(' servings', '')
@@ -43,6 +83,18 @@ def scrape_servings_leites(soup_html):
     )
     if servings_string:
         servings_count = int(servings_string.get_text())
+    return servings_count
+
+
+def scrape_servings_epicurious(soup_html):
+    # <dd class="yield" itemprop="recipeYield">Makes about 100 dumplings</dd>
+    servings_count = None
+    servings_string = soup_html.find(
+        'dd',
+        {'itemprop': 'recipeYield'}
+    )
+    if servings_string:
+        servings_count = get_servings(servings_string.get_text())
     return servings_count
 
 
