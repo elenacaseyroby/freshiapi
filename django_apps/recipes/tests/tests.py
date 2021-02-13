@@ -31,6 +31,10 @@ from django_apps.recipes.services.recipe_ingredient_scraper import (
     scrape_recipe_ingredients,
 )
 
+from django_apps.recipes.services.recipe_directions_scraper import (
+    scrape_recipe_directions,
+)
+
 
 def get_soup_html(url):
     page = requests.get(url)
@@ -372,18 +376,6 @@ class ScrapeDescriptionTestCase(TestCase):
 
 
 class ScrapeIngredientsTestCase(TestCase):
-    units = [
-        'gram', 'g',
-        'milligram', 'mg',
-        'microgram', 'ug',
-        'kilogram', 'kg',
-        'cup', 'c',
-        'tablespoon', 'tbsp',
-        'teaspoon', 'tsp',
-        'pound', 'lb',
-        'ounce', 'oz',
-        'fluid ounce', 'fl oz'
-    ]
 
     def test_find_ingredient_strings(self):
         soup_html = get_soup_html(
@@ -503,45 +495,64 @@ class ScrapeIngredientsTestCase(TestCase):
             expected_ingredients
         )
 
-        # def test_find_ingredient_qty(self):
-        # def test_find_ingredient_qty(self):
 
-        # class ScrapeTimeTestCase(TestCase):
-        #     def test_find_total_time_bon_appetit(self):
+class ScrapeDirectionsTestCase(TestCase):
+    def test_scrape_directions_wprm(self):
+        soup_html = get_soup_html(
+            'https://www.101cookbooks.com/cavatelli/'
+        )
+        directions = scrape_recipe_directions(soup_html)
+        self.assertEqual(
+            directions[0],
+            'Preheat oven to 400F.'
+        )
 
-        # def test_find_prep_time_bon_appetit(self):
+    def test_scrape_directions_step(self):
+        soup_html = get_soup_html(
+            'https://cookieandkate.com/veggie-sesame-noodles-recipe/'
+        )
+        directions = scrape_recipe_directions(soup_html)
+        self.assertEqual(
+            directions[0],
+            "Cook the soba noodles according to the package directions. Once they’re done cooking, drain them in a colander and rinse them well under cool water. Transfer the drained noodles to a large serving bowl and set aside."
+        )
 
-        # def test_find_cook_time_bon_appetit(self):
+    # class ScrapeTimeTestCase(TestCase):
+    #     def test_find_total_time_bon_appetit(self):
 
-        # class ScrapeTimeTestCase(TestCase):
+    # def test_find_prep_time_bon_appetit(self):
 
-        # class MatchIngredient(TestCase):
+    # def test_find_cook_time_bon_appetit(self):
 
-        # class MatchUnitTestCase(TestCase):
+    # class ScrapeTimeTestCase(TestCase):
 
-        # class MatchSourceTestCase(TestCase):
+    # class MatchIngredient(TestCase):
 
-        # class ScrapeIngredientQty(TestCase):
+    # class MatchUnitTestCase(TestCase):
 
-        # class ScrapeIngredientUnit(TestCase):
+    # class MatchSourceTestCase(TestCase):
 
-        # class ScrapeIngredientsTestCase(TestCase):
+    # class ScrapeIngredientQty(TestCase):
 
-        # class ScrapeIngredientsBySubgroupTestCase(TestCase):
+    # class ScrapeIngredientUnit(TestCase):
 
-        # class ScrapeDirectionsTestCase(TestCase):
+    # class ScrapeIngredientsTestCase(TestCase):
 
-        # class ScrapeDirectionsBySubgroupTestCase(TestCase):
+    # class ScrapeIngredientsBySubgroupTestCase(TestCase):
 
-        # class CalculateRecipeNutrients(TestCase):
-        # mark incomplete if not all foods have nutrition facts
+    # class ScrapeDirectionsTestCase(TestCase):
 
-        # class LoginRequiredTestCase(TestCase):
+    # class ScrapeDirectionsBySubgroupTestCase(TestCase):
 
-        # class DynamicWebsiteTestCase(TestCase):
+    # class CalculateRecipeNutrients(TestCase):
+    # mark incomplete if not all foods have nutrition facts
 
-        # class ScrapeDietsTestCase(TestCase):
+    # class LoginRequiredTestCase(TestCase):
 
-        # class ScrapeCuisinesTestCase(TestCase):
+    # class DynamicWebsiteTestCase(TestCase):
 
-        # class ScrapeAllergensTestCase(TestCase):
+    # class ScrapeDietsTestCase(TestCase):
+
+    # class ScrapeCuisinesTestCase(TestCase):
+
+    # class ScrapeAllergensTestCase(TestCase):
