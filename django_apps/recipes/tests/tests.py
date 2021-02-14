@@ -517,6 +517,16 @@ class ScrapeDirectionsTestCase(TestCase):
             "Cook the soba noodles according to the package directions. Once they’re done cooking, drain them in a colander and rinse them well under cool water. Transfer the drained noodles to a large serving bowl and set aside."
         )
 
+    def test_scrape_directions_bon_appetit(self):
+        soup_html = get_soup_html(
+            'https://www.bonappetit.com/recipe/seared-short-ribs-with-mushrooms'
+        )
+        directions = scrape_recipe_directions(soup_html)
+        self.assertEqual(
+            directions[0],
+            "Pat short ribs dry with paper towels; season all over with kosher salt and pepper. Let sit at room temperature at least 10 minutes and up to 1 hour (go the full time if you can)."
+        )
+
     # class ScrapeTimeTestCase(TestCase):
     #     def test_find_total_time_bon_appetit(self):
 
