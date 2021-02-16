@@ -1,9 +1,6 @@
 from django.db import models
 from django.utils.functional import cached_property
 
-import requests
-from bs4 import BeautifulSoup
-
 
 class Source(models.Model):
     # Many Recipes to one Source
@@ -36,6 +33,7 @@ class Diet(models.Model):
 
 
 class Recipe(models.Model):
+    # If on scrape it finds no info, email the url and recipe id to casey
     title = models.CharField(max_length=75, null=False, blank=False)
     author = models.CharField(max_length=50, null=True)
     servings_count = models.PositiveSmallIntegerField(null=True)
@@ -50,6 +48,9 @@ class Recipe(models.Model):
         Source, on_delete=models.RESTRICT, null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, null=True)
+    ingredients = models.ManyToManyField(
+        'foods.Food', through='Ingredient', blank=True)
+
     # Uploaded by users to Freshi.
     user_photos = models.ManyToManyField(
         'media.Photo', through='RecipePhoto', blank=True)
@@ -105,21 +106,27 @@ class RecipeInternetImage(models.Model):
         db_table = 'recipes_recipes_internet_images'
 
 
-class Subgroup(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    title = models.CharField(max_length=75, null=False, blank=False)
-
-
 class Direction(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    subgroup = models.ForeignKey(Subgroup, on_delete=models.CASCADE)
     step = models.PositiveSmallIntegerField(null=False, blank=False)
     text = models.TextField(null=False, blank=False)
+
+    class Meta:
+        db_table = 'recipes_directions'
 
 
 class Ingredient(models.Model):
     food = models.ForeignKey('foods.Food', on_delete=models.CASCADE)
-    subgroup = models.ForeignKey(Subgroup, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    # qty_numerator / qty_denominator in qty_unit
+    qty_numerator = models.PositiveSmallIntegerField(null=False, blank=False)
+    qty_denominator = models.PositiveSmallIntegerField(null=True, blank=True)
+    # Leave blank for something like 1 banana
+    qty_unit = models.ForeignKey(
+        'foods.Unit', on_delete=models.CASCADE, null=True, blank=True)
+
+    class Meta:
+        db_table = 'recipes_ingredients'
 
 
 class NutritionFact(models.Model):
@@ -166,33 +173,6 @@ class RecipeDiet(models.Model):
 ################################################
 # Recipe Scraper
 ################################################
-
-
-def get_html_from_url(url):
-    page = requests.get(url)
-    html = BeautifulSoup(page.content, 'html.parser')
-    return html
-
-
-def scrape_recipe_title(beautiful_soup_html):
-    # First try getting title from
-    # Open Graph Protocol Meta tag.
-    title = beautiful_soup_html.find(
-        'meta',
-        {'property': 'og:title'}
-    )['content']
-    if not title:
-        title = beautiful_soup_html.find(
-            'meta',
-            {'property': 'og:title'}
-        )['content']
-
-    return title
-
-
-def scrape_recipe(url):
-    html = get_html_from_url(url)
-    title = scrape_recipe_title(html)
 
     ################################################
     # Recipe Nutrition Facts Functions
