@@ -42,6 +42,13 @@ from django_apps.recipes.services.recipe_time_scraper import (
     scrape_recipe_total_time,
 )
 
+from django_apps.recipes.services.recipe_tag_scraper import (
+    scrape_recipe_categories,
+    scrape_recipe_diets,
+    scrape_recipe_allergens,
+    scrape_recipe_cuisines,
+)
+
 
 def get_soup_html(url):
     page = requests.get(url)
@@ -615,3 +622,84 @@ class ScrapeTimeTestCase(TestCase):
             time,
             timedelta(minutes=45)
         )
+
+
+class ScrapeCategoriesTestCase(TestCase):
+    all_category_names = [
+        "appetizer",
+        "snack",
+        "breakfast",
+        "lunch",
+        "brunch",
+        "cocktail",
+        "beverage",
+        "dinner",
+        "dessert",
+        "soup",
+        "salad",
+        "sauce"
+    ]
+
+    def test_find_categories_soup(self):
+        soup_html = get_soup_html(
+            'https://www.dinneratthezoo.com/stuffed-pepper-soup/#wprm-recipe-container-15361'
+        )
+        categories = scrape_recipe_categories(
+            soup_html, self.all_category_names)
+        expected_categories = [
+            'soup',
+        ]
+        self.assertEqual(
+            categories,
+            expected_categories
+        )
+
+    def test_find_categories_dinner(self):
+        soup_html = get_soup_html(
+            'https://cookieandkate.com/best-vegan-lasagna-recipe/'
+        )
+        categories = scrape_recipe_categories(
+            soup_html, self.all_category_names)
+        expected_categories = [
+            'dinner',
+        ]
+        self.assertEqual(
+            categories,
+            expected_categories
+        )
+
+
+# class ScrapeCuisineTestCase(TestCase):
+#     def test_find_prep_time_wprm(self):
+#         soup_html = get_soup_html(
+#             'https://www.dinneratthezoo.com/sesame-noodles/'
+#         )
+#         time = scrape_recipe_prep_time(soup_html)
+#         self.assertEqual(
+#             time,
+#             timedelta(minutes=10)
+#         )
+
+
+# class ScrapeDietTestCase(TestCase):
+#     def test_find_prep_time_wprm(self):
+#         soup_html = get_soup_html(
+#             'https://www.dinneratthezoo.com/sesame-noodles/'
+#         )
+#         time = scrape_recipe_prep_time(soup_html)
+#         self.assertEqual(
+#             time,
+#             timedelta(minutes=10)
+#         )
+
+
+# class ScrapeAllergensTestCase(TestCase):
+#     def test_find_prep_time_wprm(self):
+#         soup_html = get_soup_html(
+#             'https://www.dinneratthezoo.com/sesame-noodles/'
+#         )
+#         time = scrape_recipe_prep_time(soup_html)
+#         self.assertEqual(
+#             time,
+#             timedelta(minutes=10)
+#         )
