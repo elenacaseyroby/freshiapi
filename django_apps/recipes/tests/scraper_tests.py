@@ -3,54 +3,54 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import timedelta
 
-from django_apps.recipes.services.recipe_title_scraper import (
+from django_apps.recipes.scraper.recipe_title_scraper import (
     scrape_recipe_title,
 )
 
-from django_apps.recipes.services.recipe_image_scraper import (
+from django_apps.recipes.scraper.recipe_image_scraper import (
     scrape_recipe_image_url,
 )
 
-from django_apps.recipes.services.recipe_source_scraper import (
+from django_apps.recipes.scraper.recipe_source_scraper import (
     scrape_recipe_source_url,
     scrape_recipe_source_name,
 )
 
-from django_apps.recipes.services.recipe_servings_scraper import (
+from django_apps.recipes.scraper.recipe_servings_scraper import (
     scrape_recipe_servings_count,
 )
 
-from django_apps.recipes.services.recipe_author_scraper import (
+from django_apps.recipes.scraper.recipe_author_scraper import (
     scrape_recipe_author,
 )
 
-from django_apps.recipes.services.recipe_description_scraper import (
+from django_apps.recipes.scraper.recipe_description_scraper import (
     scrape_recipe_description,
 )
 
-from django_apps.recipes.services.recipe_ingredient_scraper import (
+from django_apps.recipes.scraper.recipe_ingredient_scraper import (
     scrape_recipe_ingredients,
 )
 
-from django_apps.recipes.services.recipe_directions_scraper import (
+from django_apps.recipes.scraper.recipe_directions_scraper import (
     scrape_recipe_directions,
 )
 
-from django_apps.recipes.services.recipe_time_scraper import (
+from django_apps.recipes.scraper.recipe_time_scraper import (
     scrape_recipe_prep_time,
     scrape_recipe_cook_time,
     scrape_recipe_total_time,
 )
 
-from django_apps.recipes.services.recipe_category_scraper import (
+from django_apps.recipes.scraper.recipe_category_scraper import (
     scrape_recipe_categories,
 )
 
-from django_apps.recipes.services.recipe_cuisine_scraper import (
+from django_apps.recipes.scraper.recipe_cuisine_scraper import (
     scrape_recipe_cuisine,
 )
 
-from django_apps.recipes.services.recipe_diets_scraper import (
+from django_apps.recipes.scraper.recipe_diets_scraper import (
     scrape_recipe_diets,
 )
 
@@ -62,14 +62,14 @@ def get_soup_html(url):
 
 
 # To run:
-# python manage.py test django_apps.recipes.tests.tests.ScrapeTitleTestCase
+# python manage.py test django_apps.recipes.tests.scraper_tests.ScrapeTitleTestCase
 class ScrapeTitleTestCase(TestCase):
     def test_find_bon_appetit_title(self):
         soup_html = get_soup_html(
             'https://www.bonappetit.com/recipe/chocolate-biscoff-banoffee-pie')
         title = scrape_recipe_title(soup_html)
         self.assertEqual(
-            title, 'Seared Short Ribs With Mushrooms Recipe | Bon Appétit')
+            title, 'Chocolate-Biscoff Banoffee Pie Recipe | Bon Appétit')
 
     def test_find_min_baker_title(self):
         soup_html = get_soup_html(
