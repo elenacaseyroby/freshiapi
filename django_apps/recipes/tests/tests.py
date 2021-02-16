@@ -640,7 +640,7 @@ class ScrapeCategoriesTestCase(TestCase):
         "sauce"
     ]
 
-    def test_find_categories_soup(self):
+    def test_find_categories_wprm(self):
         soup_html = get_soup_html(
             'https://www.dinneratthezoo.com/stuffed-pepper-soup/#wprm-recipe-container-15361'
         )
@@ -654,7 +654,7 @@ class ScrapeCategoriesTestCase(TestCase):
             expected_categories
         )
 
-    def test_find_categories_dinner(self):
+    def test_find_categories_tasty(self):
         soup_html = get_soup_html(
             'https://cookieandkate.com/best-vegan-lasagna-recipe/'
         )
@@ -662,6 +662,20 @@ class ScrapeCategoriesTestCase(TestCase):
             soup_html, self.all_category_names)
         expected_categories = [
             'dinner',
+        ]
+        self.assertEqual(
+            categories,
+            expected_categories
+        )
+
+    def test_find_categories_meta(self):
+        soup_html = get_soup_html(
+            'https://www.bonappetit.com/recipe/chocolate-biscoff-banoffee-pie'
+        )
+        categories = scrape_recipe_categories(
+            soup_html, self.all_category_names)
+        expected_categories = [
+            'dessert',
         ]
         self.assertEqual(
             categories,

@@ -2,6 +2,8 @@
 def convert_category_name(name):
     category_conversions = {
         'main': 'dinner',
+        'entree': 'dinner',
+        'entre': 'dinner'
     }
     for conversion in category_conversions:
         if conversion in name:
