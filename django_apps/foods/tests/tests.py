@@ -89,6 +89,12 @@ class GetValidFoodTestCase(TestCase):
         self.assertEqual(
             food_name, 'broccoli')
 
+    def test_cape_cod_foods(self):
+        usda_food_description = 'CAPE COD, POPCORN DUOS'
+        food_name = c.get_valid_food_name(self, usda_food_description)
+        self.assertEqual(
+            food_name, 'cape cod, popcorn duos')
+
 
 # To run:
 # python manage.py test django_apps.foods.tests.tests.BatchSyncFoodsTestCase
