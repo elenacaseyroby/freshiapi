@@ -45,8 +45,13 @@ from django_apps.recipes.services.recipe_time_scraper import (
 from django_apps.recipes.services.recipe_category_scraper import (
     scrape_recipe_categories,
 )
+
 from django_apps.recipes.services.recipe_cuisine_scraper import (
     scrape_recipe_cuisine,
+)
+
+from django_apps.recipes.services.recipe_diets_scraper import (
+    scrape_recipe_diets,
 )
 
 
@@ -746,25 +751,38 @@ class ScrapeCuisineTestCase(TestCase):
         )
 
 
-# class ScrapeDietTestCase(TestCase):
-#     def test_find_prep_time_wprm(self):
-#         soup_html = get_soup_html(
-#             'https://www.dinneratthezoo.com/sesame-noodles/'
-#         )
-#         time = scrape_recipe_prep_time(soup_html)
-#         self.assertEqual(
-#             time,
-#             timedelta(minutes=10)
-#         )
+class ScrapeDietTestCase(TestCase):
+    all_diet_names = [
+        'low FODMAP',
+        'vegan',
+        'vegetarian',
+        'pescatarian',
+        'keto',
+        'raw',
+        'paleo',
+        'halal'
+    ]
 
+    def test_find_diets_minimalist_baker(self):
+        soup_html = get_soup_html(
+            'https://minimalistbaker.com/easy-baked-cheesecake-vegan-gf/'
+        )
+        diets = scrape_recipe_diets(soup_html, self.all_diet_names)
+        expected_diets = [
+            'vegan'
+        ]
+        self.assertEqual(
+            diets,
+            expected_diets
+        )
 
-# class ScrapeAllergensTestCase(TestCase):
-#     def test_find_prep_time_wprm(self):
-#         soup_html = get_soup_html(
-#             'https://www.dinneratthezoo.com/sesame-noodles/'
-#         )
-#         time = scrape_recipe_prep_time(soup_html)
-#         self.assertEqual(
-#             time,
-#             timedelta(minutes=10)
-#         )
+    def test_find_diets_bon_appetit(self):
+        soup_html = get_soup_html(
+            'https://www.bonappetit.com/recipe/classic-pesto-sauce'
+        )
+        diets = scrape_recipe_diets(soup_html, self.all_diet_names)
+        expected_diets = []
+        self.assertEqual(
+            diets,
+            expected_diets
+        )

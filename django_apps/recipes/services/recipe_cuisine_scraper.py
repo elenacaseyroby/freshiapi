@@ -32,7 +32,7 @@ def scrape_recipe_cuisines_meta(soup_html, all_cuisine_names):
         keywords = str(element['content']).lower().split(',')
         for keyword in keywords:
             if keyword.strip() in all_cuisine_names:
-                return keyword
+                return keyword.strip()
     return None
 
 
