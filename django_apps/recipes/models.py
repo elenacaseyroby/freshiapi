@@ -18,6 +18,13 @@ class Allergen(models.Model):
         db_table = 'recipes_allergens'
 
 
+class Category(models.Model):
+    name = models.CharField(max_length=50, null=False, blank=False)
+
+    class Meta:
+        db_table = 'recipes_categories'
+
+
 class Cuisine(models.Model):
     name = models.CharField(max_length=100, null=False, blank=False)
 
@@ -73,6 +80,12 @@ class Recipe(models.Model):
     diets = models.ManyToManyField(
         Diet,
         through='RecipeDiet',
+        blank=True
+    )
+
+    categories = models.ManyToManyField(
+        Category,
+        through='RecipeCategory',
         blank=True
     )
 
@@ -169,6 +182,16 @@ class RecipeDiet(models.Model):
 
     class Meta:
         db_table = 'recipes_recipes_diets'
+
+
+class RecipeCategory(models.Model):
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    unique_together = [['recipe', 'diet']]
+
+    class Meta:
+        db_table = 'recipes_recipes_categories'
+
 
 ################################################
 # Recipe Scraper
