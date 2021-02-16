@@ -1,6 +1,7 @@
 from django.test import TestCase
 import requests
 from bs4 import BeautifulSoup
+from datetime import timedelta
 
 from django_apps.recipes.services.recipe_title_scraper import (
     scrape_recipe_title,
@@ -33,6 +34,12 @@ from django_apps.recipes.services.recipe_ingredient_scraper import (
 
 from django_apps.recipes.services.recipe_directions_scraper import (
     scrape_recipe_directions,
+)
+
+from django_apps.recipes.services.recipe_time_scraper import (
+    scrape_recipe_prep_time,
+    scrape_recipe_cook_time,
+    scrape_recipe_total_time,
 )
 
 
@@ -527,42 +534,84 @@ class ScrapeDirectionsTestCase(TestCase):
             "Pat short ribs dry with paper towels; season all over with kosher salt and pepper. Let sit at room temperature at least 10 minutes and up to 1 hour (go the full time if you can)."
         )
 
-    # class ScrapeTimeTestCase(TestCase):
-    #     def test_find_total_time_bon_appetit(self):
 
-    # def test_find_prep_time_bon_appetit(self):
+class ScrapeTimeTestCase(TestCase):
+    def test_find_prep_time_wprm(self):
+        soup_html = get_soup_html(
+            'https://www.dinneratthezoo.com/sesame-noodles/'
+        )
+        time = scrape_recipe_prep_time(soup_html)
+        self.assertEqual(
+            time,
+            timedelta(minutes=10)
+        )
 
-    # def test_find_cook_time_bon_appetit(self):
+    def test_find_cook_time_wprm(self):
+        soup_html = get_soup_html(
+            'https://www.dinneratthezoo.com/sesame-noodles/'
+        )
+        time = scrape_recipe_cook_time(soup_html)
+        self.assertEqual(
+            time,
+            timedelta(minutes=5)
+        )
 
-    # class ScrapeTimeTestCase(TestCase):
+    def test_find_total_time_wprm(self):
+        soup_html = get_soup_html(
+            'https://www.dinneratthezoo.com/sesame-noodles/'
+        )
+        time = scrape_recipe_total_time(soup_html)
+        self.assertEqual(
+            time,
+            timedelta(minutes=15)
+        )
 
-    # class MatchIngredient(TestCase):
+    def test_find_total_time_wprm2(self):
+        soup_html = get_soup_html(
+            'https://minimalistbaker.com/easy-baked-cheesecake-vegan-gf/'
+        )
+        time = scrape_recipe_total_time(soup_html)
+        self.assertEqual(
+            time,
+            timedelta(minutes=55)
+        )
 
-    # class MatchUnitTestCase(TestCase):
+    def test_find_total_time_smitten(self):
+        soup_html = get_soup_html(
+            'https://smittenkitchen.com/2020/05/simple-essential-bolognese'
+        )
+        time = scrape_recipe_total_time(soup_html)
+        self.assertEqual(
+            time,
+            timedelta(hours=4)
+        )
 
-    # class MatchSourceTestCase(TestCase):
+    def test_find_prep_time_tasty(self):
+        soup_html = get_soup_html(
+            'https://cookieandkate.com/honey-butter-cornbread-recipe/'
+        )
+        time = scrape_recipe_prep_time(soup_html)
+        self.assertEqual(
+            time,
+            timedelta(minutes=10)
+        )
 
-    # class ScrapeIngredientQty(TestCase):
+    def test_find_cook_time_tasty(self):
+        soup_html = get_soup_html(
+            'https://cookieandkate.com/honey-butter-cornbread-recipe/'
+        )
+        time = scrape_recipe_cook_time(soup_html)
+        self.assertEqual(
+            time,
+            timedelta(minutes=35)
+        )
 
-    # class ScrapeIngredientUnit(TestCase):
-
-    # class ScrapeIngredientsTestCase(TestCase):
-
-    # class ScrapeIngredientsBySubgroupTestCase(TestCase):
-
-    # class ScrapeDirectionsTestCase(TestCase):
-
-    # class ScrapeDirectionsBySubgroupTestCase(TestCase):
-
-    # class CalculateRecipeNutrients(TestCase):
-    # mark incomplete if not all foods have nutrition facts
-
-    # class LoginRequiredTestCase(TestCase):
-
-    # class DynamicWebsiteTestCase(TestCase):
-
-    # class ScrapeDietsTestCase(TestCase):
-
-    # class ScrapeCuisinesTestCase(TestCase):
-
-    # class ScrapeAllergensTestCase(TestCase):
+    def test_find_total_time_tasty(self):
+        soup_html = get_soup_html(
+            'https://cookieandkate.com/honey-butter-cornbread-recipe/'
+        )
+        time = scrape_recipe_total_time(soup_html)
+        self.assertEqual(
+            time,
+            timedelta(minutes=45)
+        )
