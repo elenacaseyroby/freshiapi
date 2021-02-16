@@ -42,11 +42,11 @@ from django_apps.recipes.services.recipe_time_scraper import (
     scrape_recipe_total_time,
 )
 
-from django_apps.recipes.services.recipe_tag_scraper import (
+from django_apps.recipes.services.recipe_category_scraper import (
     scrape_recipe_categories,
-    scrape_recipe_diets,
-    scrape_recipe_allergens,
-    scrape_recipe_cuisines,
+)
+from django_apps.recipes.services.recipe_cuisine_scraper import (
+    scrape_recipe_cuisine,
 )
 
 
@@ -642,7 +642,7 @@ class ScrapeCategoriesTestCase(TestCase):
 
     def test_find_categories_wprm(self):
         soup_html = get_soup_html(
-            'https://www.dinneratthezoo.com/stuffed-pepper-soup/#wprm-recipe-container-15361'
+            'https://www.dinneratthezoo.com/stuffed-pepper-soup'
         )
         categories = scrape_recipe_categories(
             soup_html, self.all_category_names)
@@ -683,16 +683,67 @@ class ScrapeCategoriesTestCase(TestCase):
         )
 
 
-# class ScrapeCuisineTestCase(TestCase):
-#     def test_find_prep_time_wprm(self):
-#         soup_html = get_soup_html(
-#             'https://www.dinneratthezoo.com/sesame-noodles/'
-#         )
-#         time = scrape_recipe_prep_time(soup_html)
-#         self.assertEqual(
-#             time,
-#             timedelta(minutes=10)
-#         )
+class ScrapeCuisineTestCase(TestCase):
+    all_cuisine_names = [
+        "vietnamese"
+        "ethiopian",
+        "chinese",
+        "korean",
+        "italian",
+        "mexican",
+        "polish",
+        "german",
+        "bbq",
+        "cuban",
+        "american",
+        "hawaiian",
+        "indian",
+        "greek",
+        "hungarian",
+        "irish",
+        "kid-friendly",
+        "mediterranean",
+        "southern food",
+        "soul food",
+        "thai",
+        "spanish",
+        "swedish",
+        "japanese",
+        "french",
+        "creole",
+        "peruvian",
+        "baked goods"
+    ]
+
+    def test_find_cuisine_wprm(self):
+        soup_html = get_soup_html(
+            'https://www.dinneratthezoo.com/stuffed-pepper-soup'
+        )
+        cuisine = scrape_recipe_cuisine(soup_html, self.all_cuisine_names)
+        self.assertEqual(
+            cuisine,
+            'american'
+        )
+
+    def test_find_cuisine_tasty(self):
+        soup_html = get_soup_html(
+            'https://cookieandkate.com/best-vegan-lasagna-recipe/'
+        )
+        cuisine = scrape_recipe_cuisine(soup_html, self.all_cuisine_names)
+        self.assertEqual(
+            cuisine,
+            'italian'
+        )
+
+    def test_find_cuisine_meta(self):
+        soup_html = get_soup_html(
+            'https://www.bonappetit.com/recipe/ghormeh-sabzi'
+        )
+        cuisine = scrape_recipe_cuisine(soup_html, self.all_cuisine_names)
+        self.assertEqual(
+            cuisine,
+            'greek'
+        )
 
 
 # class ScrapeDietTestCase(TestCase):

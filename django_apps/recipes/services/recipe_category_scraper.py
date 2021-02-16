@@ -14,7 +14,7 @@ def convert_category_name(name):
 def scrape_recipe_categories_mentioned(soup_html, all_category_names):
     html_str = soup_html.get_text()
     category_names = []
-    for name in category_names:
+    for name in all_category_names:
         if name not in html_str:
             continue
         category_names.append(name)
@@ -101,8 +101,3 @@ def scrape_recipe_diets(html_str, all_diet_names):
 def scrape_recipe_allergens(html_str, all_allergy_names):
     allergy_names = []
     return allergy_names
-
-
-def scrape_recipe_cuisines(html_str, all_cuisine_names):
-    cuisine_names = []
-    return cuisine_names
