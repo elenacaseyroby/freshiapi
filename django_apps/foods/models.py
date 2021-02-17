@@ -223,6 +223,20 @@ class UnitConversion(models.Model):
         db_table = 'foods_unit_conversions'
 
 
+def get_unit_conversions_dict():
+    all_unit_conversions = UnitConversion.objects.all()
+    unit_conversions_dict = {}
+    for conv in all_unit_conversions:
+        if conv.from_unit_id not in unit_conversions_dict:
+            unit_conversions_dict[conv.from_unit_id] = {}
+        unit_conversions_dict[
+            conv.from_unit_id
+        ][
+            conv.to_unit_id
+        ] = conv.qty_conversion_coefficient
+    return unit_conversions_dict
+
+
 # Mostly for internal record.
 class UserAddedFood(models.Model):
     # Record will not be deleted if user is deleted, but it will be deleted if

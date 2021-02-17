@@ -58,8 +58,7 @@ class ParserTestCase(TestCase):
 
     def test_parse_unit(self):
         ingredient_str = '3oz. Parmesan, grated (about ¾ cup)'
-        unit = parse_unit(ingredient_str, self.units_by_name,
-                          self.units_by_name)
+        unit = parse_unit(ingredient_str, self.units_by_name)
         self.assertEqual(
             unit,
             self.units_by_name['oz']

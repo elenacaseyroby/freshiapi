@@ -66,7 +66,7 @@ from django_apps.recipes.scraper.recipe_diets_scraper import (
 )
 
 from django_apps.recipes.scraper.parse_ingredients import (
-    create_ingredient
+    parse_ingredient
 )
 
 
@@ -171,26 +171,46 @@ def scrape_recipe(url):
             for diet in diets
         ]
         RecipeDiet.objects.bulk_create(new_recipe_diets)
+        ingredients = scrape_recipe_ingredients(soup_html)
+        # If not ingredients, do nothing.
+        if not ingredients:
+            return
+        # Else, get nutrition breakdown
+        units_by_name_and_abbr = {
+            unit.name: unit for unit in Unit.objects.all()}
+        units_by_name_and_abbr.update(
+            {unit.abbr: unit for unit in Unit.objects.all()})
+        unsaved_ingredients = [
+            parse_ingredient(ingredient, units_by_name_and_abbr)
+            for ingredient in ingredients
+        ]
+        recipe.save_nutrition_facts(unsaved_ingredients)
+        recipe.save_allergens(unsaved_ingredients)
 
-    # Add ingredients.
-    ingredients = scrape_recipe_ingredients(soup_html)
-    if len(ingredients) > 0:
-        units_by_name = {
-            unit.name: unit
-            for unit in Unit.objects.all()
-        }
-        for ingredient in ingredients:
-            ingredient = create_ingredient(
-                ingredient, new_recipe, units_by_name)
-    directions = scrape_recipe_directions(soup_html)
+# TODO:
+# def add_ingredients_and_directions_to_recipe(recipe):
+#     # Get html from url
+#     page = requests.get(recipe.url)
+#     soup_html = BeautifulSoup(page.content, 'html.parser')
+#     # Add ingredients.
+#     ingredients = scrape_recipe_ingredients(soup_html)
+#     if len(ingredients) > 0:
+#         units_by_name = {
+#             unit.name: unit
+#             for unit in Unit.objects.all()
+#         }
+#         for ingredient in ingredients:
+#             ingredient = create_ingredient(
+#                 ingredient, recipe, units_by_name)
 
-    # Add directions.
-    if len(directions) > 0:
-        Direction.objects.bulk_create([
-            Direction(
-                step=count+1,
-                text=direction,
-                recipe=new_recipe
-            )
-            for count, direction in enumerate(directions)
-        ])
+#     # Add directions.
+#     directions = scrape_recipe_directions(soup_html)
+#     if len(directions) > 0:
+#         Direction.objects.bulk_create([
+#             Direction(
+#                 step=count+1,
+#                 text=direction,
+#                 recipe=recipe
+#             )
+#             for count, direction in enumerate(directions)
+#         ])

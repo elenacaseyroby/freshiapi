@@ -1,6 +1,12 @@
 from django.db import models
 from django.utils.functional import cached_property
 
+from django_apps.foods.models import (
+    get_unit_conversions_dict,
+    USDACategory,
+    NutritionFact as FoodNutritionFact
+)
+
 
 class Source(models.Model):
     # Many Recipes to one Source
@@ -57,6 +63,7 @@ class Recipe(models.Model):
     updated_at = models.DateTimeField(auto_now=True, null=True)
     ingredients = models.ManyToManyField(
         'foods.Food', through='Ingredient', blank=True)
+    nutrition_facts_complete = models.BooleanField(default=False)
 
     # Uploaded by users to Freshi.
     user_photos = models.ManyToManyField(
@@ -88,6 +95,155 @@ class Recipe(models.Model):
         through='RecipeCategory',
         blank=True
     )
+
+    def save_recipe_allergens(self, ingredients=None):
+        if not ingredients:
+            ingredients = Ingredient.objects.filter(recipe_id=self.id).all()
+        allergens_by_name = {
+            allergen.name: allergen for allergen in Allergen.objects.all()}
+        recipe_allergens = {
+            'gluten': False,
+            'dairy': False,
+            'peanut': False,
+            'egg': False,
+            'soy': False,
+            'fish': False,
+            'shellfish': False,
+            'tree nuts': False,
+        }
+        for ingredient in ingredients:
+            food = ingredient.food
+            # skip if no food
+            if not food:
+                continue
+            if (
+                food.usdacategory_id == 18 or (
+                    ' pasta ' in food.name and
+                    ' gluten-free ' not in food.name
+                )
+            ):
+                recipe_allergens['gluten'] = True
+            # 1: Dairy and Egg Products
+            if (
+                food.usdacategory_id == 1 and
+                ' egg ' not in food.name
+            ):
+                recipe_allergens['dairy'] = True
+            if (
+                ' peanut ' in food.name
+            ):
+                recipe_allergens['peanut'] = True
+            # 1: Dairy and Egg Products
+            if (
+                food.usdacategory_id == 1 and
+                ' egg ' in food.name
+            ):
+                recipe_allergens['egg'] = True
+            if (
+                ' soy ' in food.name or
+                ' tofu ' in food.name
+            ):
+                recipe_allergens['soy'] = True
+            # 15: Finfish and Shellfish Products
+            if (
+                food.usdacategory_id == 15 and
+                ' fish ' in food.name
+            ):
+                recipe_allergens['fish'] = True
+            if(
+                ' shrimp ' in food.name or
+                ' crab ' in food.name or
+                ' lobster ' in food.name or
+                ' clams ' in food.name or
+                ' mussels ' in food.name or
+                ' oysters ' in food.name or
+                ' scallops ' in food.name or
+                ' octopus ' in food.name
+            ):
+                recipe_allergens['shellfish'] = True
+            # 12: Nut and Seed Products
+            if food.usdacategory_id == 12:
+                recipe_allergens['tree nuts'] = True
+        # Delete all allergens
+        allergens = RecipeAllergen.objects.filter(recipe_id=self.id).all()
+        allergens.delete()
+        # Create new allergens
+        RecipeAllergen.objects.bulk_create(
+            [
+                RecipeAllergen(
+                    contains_allergen=allergens_by_name[allergen],
+                    recipe_id=self.id
+                ) for allergen in recipe_allergens
+                if recipe_allergens[allergen] is True
+            ]
+        )
+
+    def save_nutrition_facts(self, ingredients=None):
+        if not ingredients:
+            ingredients = Ingredient.objects.filter(recipe_id=self.id).all()
+        nutrition_facts_complete = True
+        nutrition_facts = {}
+        conversions = get_unit_conversions_dict()
+        for ingredient in ingredients:
+            # Skip and mark nutrition facts incomplete
+            # if food dne.
+            if ingredient.food is None or ingredient.numerator is None:
+                nutrition_facts_complete = False
+                continue
+            food_nutrition_facts = FoodNutritionFact.objects.filter(
+                food_id=ingredient.food_id).all()
+            for fact in food_nutrition_facts:
+                if fact.nutrient_id not in nutrition_facts:
+                    nutrition_facts[fact.nutrient_id] = 0
+                # If unit is None, add nutrient_qty for one serving of food.
+                if ingredient.unit is None:
+                    ingredient_nutrient_qty = fact.nutrient_qty
+                # Else nutrient qty per one serving food to
+                # nutrient qty per qty of food in ingredient.
+                else:
+                    numerator = float(ingredient.numerator)
+                    denominator = float(ingredient.denominator or 1)
+                    ingredient_qty = round(float(numerator/denominator), 3)
+                    food = ingredient.food
+                    # Get food qty in food serving units.
+                    ingredient_qty_in_food_unit = (
+                        ingredient_qty * conversions[
+                            ingredient.unit.id
+                        ][
+                            food.one_serving_display_unit_id
+                        ]
+                    )
+                    # Find food servings for ingredient.
+                    ingredient_food_servings = round(
+                        float(
+                            ingredient_qty_in_food_unit/food.one_serving_qty
+                        ),
+                        2
+                    )
+                    # Find nutrient qty for ingredient.
+                    ingredient_nutrient_qty = (
+                        fact.nutrient_qty * ingredient_food_servings
+                    )
+                # Store ingredient nutrient qty in nutrition facts dict.
+                nutrition_facts[
+                    fact.nutrient_id
+                ] += ingredient_nutrient_qty
+        # Delete all nutrition facts for recipe
+        recipe_nutrition_facts = NutritionFact.objects.filter(
+            recipe_id=self.id
+        ).all()
+        recipe_nutrition_facts.delete()
+        # Create new nutrition facts for recipe
+        NutritionFact.objects.bulk_create([
+            NutritionFact(
+                recipe_id=self.id,
+                nutrient_id=nutrient_id,
+                nutrient_qty=nutrition_facts[nutrient_id],
+            ) for nutrient_id in nutrition_facts
+        ])
+        # Save note about nutrition facts
+        self.nutrition_facts_complete = nutrition_facts_complete
+        self.save()
 
     @cached_property
     def is_original(self):
@@ -137,6 +293,8 @@ class Ingredient(models.Model):
     # Leave blank for something like 1 banana
     qty_unit = models.ForeignKey(
         'foods.Unit', on_delete=models.CASCADE, null=True, blank=True)
+
+    # ON SAVE REGENERATE RECIPE NUTRITION FACTS
 
     class Meta:
         db_table = 'recipes_ingredients'
