@@ -437,9 +437,9 @@ class Command(BaseCommand):
         return food
 
     def food_updated_is_true(self, updated_food, food_in_db):
+        # don't update name if changes.
         return not (
             updated_food.usdacategory_id == food_in_db.usdacategory_id and
-            updated_food.name == food_in_db.name and
             updated_food.one_serving_qty == food_in_db.one_serving_qty and
             updated_food.one_serving_unit == food_in_db.one_serving_unit and
             updated_food.upc_code == food_in_db.upc_code and
