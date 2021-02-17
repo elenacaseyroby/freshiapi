@@ -10,7 +10,8 @@ import os
 
 
 # To run:
-# python manage.py test django_apps.foods.tests.nutrition_aggregation_tests
+# python manage.py test django_apps.foods.tests
+# .nutrition_facts_aggregation_tests
 class NutritionFactsTestCase(TestCase):
     # Mock this functions for tests.
     def get_unit_by_usdanutrient_id(self):

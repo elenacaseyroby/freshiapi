@@ -2,11 +2,6 @@ from django.test import TestCase
 from django_apps.foods.management.commands.sync_foods_from_usda import (
     Command as c
 )
-from django_apps.foods.models import Unit
-
-import numpy as np
-import pandas as pd
-import os
 
 
 # To run:
