@@ -788,11 +788,26 @@ class Command(BaseCommand):
                 ][
                     usdanutrient_id
                 ]
-                from_unit_id = unit_by_usdanutrient_id[usdanutrient_id].id
+                from_unit = unit_by_usdanutrient_id[usdanutrient_id]
                 to_unit_id = nutrient.dv_unit_id
-                # Convert to nutrient unit from usdanutrient id
-                usdanutrient_qty = usdanutrient_amount * \
-                    conversions[from_unit_id][to_unit_id]
+                # If usdanutrient unit and nutrient unit exist and are
+                # different, convert to nutrient unit from usdanutrient
+                # unit.
+                if (
+                    from_unit is not None and
+                    to_unit_id is not None and
+                    from_unit.id != to_unit_id
+
+                ):
+                    usdanutrient_qty = usdanutrient_amount * \
+                        conversions[from_unit.id][to_unit_id]
+                # If usda nutrient or nutrient doesn't have unit
+                # then don't convert based on nutrient unit. Or
+                # if units are equal and no conversion is necessary
+                # Ex. Calories don't have a unit in our system
+                else:
+                    usdanutrient_qty = usdanutrient_amount
+
                 # Convert from nutrient_qty per 100g of food
                 # to nutrient_qty per one serving of food.
                 food = foods_by_id[food_id]
@@ -800,10 +815,15 @@ class Command(BaseCommand):
                 to_food_unit_id = food.one_serving_unit_id
                 from_food_qty = 100
                 from_food_unit_id = units_by_abbr['g'].id
-                from_food_qty_in_to_unit = (
-                    from_food_qty *
-                    conversions[from_food_unit_id][to_food_unit_id]
-                )
+                # If units are the same, don't convert.
+                if from_food_unit_id == to_food_unit_id:
+                    from_food_qty_in_to_unit = from_food_qty
+                # Else, convert.
+                else:
+                    from_food_qty_in_to_unit = (
+                        from_food_qty *
+                        conversions[from_food_unit_id][to_food_unit_id]
+                    )
                 nutrient_qty = usdanutrient_qty * \
                     (to_food_qty / from_food_qty_in_to_unit)
                 if nutrient.id not in nutrient_qtys[food_id]:
@@ -1047,22 +1067,22 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Prereqs: must upload csvs to /freshi-app/food-sync-csvs
-        # s3 bucket.
+        # s3 bucket./
 
-        # 1. Sync categories
-        sync_status = self.sync_categories()
-        if sync_status != 'Success':
-            return
+        # # 1. Sync categories
+        # sync_status = self.sync_categories()
+        # if sync_status != 'Success':
+        #     return
 
-        # 2. Sync foods with barcodes and serving size
-        # TODO: Currently once an fdc_id has been assigned
-        # to a food in our system, it does not get reassigned to
-        # a different food.  This could be bad if we change the
-        # get_valid_food_name function since it could create new food
-        # objects that would need their fdc_ids reassigned to them.
-        sync_status = self.sync_foods()
-        if sync_status != 'Success':
-            return
+        # # 2. Sync foods with barcodes and serving size
+        # # TODO: Currently once an fdc_id has been assigned
+        # # to a food in our system, it does not get reassigned to
+        # # a different food.  This could be bad if we change the
+        # # get_valid_food_name function since it could create new food
+        # # objects that would need their fdc_ids reassigned to them.
+        # sync_status = self.sync_foods()
+        # if sync_status != 'Success':
+        #     return
 
         # 3. Sync nutrition facts
         sync_status = self.sync_nutrition_facts()
