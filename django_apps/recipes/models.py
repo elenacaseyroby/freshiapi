@@ -183,6 +183,9 @@ class Recipe(models.Model):
     def save_nutrition_facts(self, ingredients=None):
         if not ingredients:
             ingredients = Ingredient.objects.filter(recipe_id=self.id).all()
+        # If no ingredients, then no nutrition facts to document.
+        if len(ingredients) == 0:
+            return
         nutrition_facts_complete = True
         nutrition_facts = {}
         conversions = get_unit_conversions_dict()
@@ -190,31 +193,59 @@ class Recipe(models.Model):
             # Skip and mark nutrition facts incomplete
             # if food dne.
             if not ingredient:
+                nutrition_facts_complete = False
                 continue
+
+            # Get food's nutrition facts from database.
             food_nutrition_facts = FoodNutritionFact.objects.filter(
                 food_id=ingredient.food_id).all()
+
+            # Add them to the recipe nutrition facts
             for fact in food_nutrition_facts:
+                # If nutrient hasn't been added to recipe_nutrition_facts
+                # initialize with 0.
                 if fact.nutrient_id not in nutrition_facts:
-                    nutrition_facts[fact.nutrient_id] = 0
-                # If unit is None, add nutrient_qty for one serving of food.
-                if ingredient.unit is None:
-                    ingredient_nutrient_qty = fact.nutrient_qty
+                    nutrition_facts[fact.nutrient_id] = float(0)
+
+                # ingredient_nutrient_qty = get_ingredient_nutrient_qty(
+                #     self, # recipe
+                #     ingredient,
+                #     fact.nutrient_qty
+                # )
+                # If unit is None, calculate ingredient nutrient
+                # qty by takinging the food nutrient_qty for one serving
+                # and multiplying it by the number of servings in
+                # the recipe.
+                if (
+                    ingredient.unit is None or
+                    ingredient.numerator is None or
+                    ingredient.qty_denominator is None
+                ):
+                    recipe_servings = float(
+                        1
+                        if self.servings_count is None else
+                        self.servings_count
+                    )
+                    food_nutrient_qty = float(fact.nutrient_qty)
+                    ingredient_nutrient_qty = float(
+                        food_nutrient_qty * recipe_servings
+                    )
                 # Else nutrient qty per one serving food to
                 # nutrient qty per qty of food in ingredient.
                 else:
-                    numerator = float(ingredient.numerator or 1)
-                    denominator = float(ingredient.denominator or 1)
-                    ingredient_qty = round(float(numerator/denominator), 3)
+                    numerator = float(ingredient.numerator)
+                    denominator = float(ingredient.denominator)
+                    ingredient_qty = round(float(numerator/denominator), 2)
                     food = ingredient.food
                     # Get food qty in food serving units.
                     ingredient_qty_in_food_unit = (
                         ingredient_qty * conversions[
                             ingredient.unit.id
                         ][
-                            food.one_serving_display_unit_id
+                            food.one_serving_unit_id
                         ]
                     )
-                    # Find food servings for ingredient.
+                    # Find food servings in ingredient.
                     ingredient_food_servings = round(
                         float(
                             ingredient_qty_in_food_unit/food.one_serving_qty
@@ -222,7 +253,7 @@ class Recipe(models.Model):
                         2
                     )
                     # Find nutrient qty for ingredient.
-                    ingredient_nutrient_qty = (
+                    ingredient_nutrient_qty = float(
                         fact.nutrient_qty * ingredient_food_servings
                     )
                 # Store ingredient nutrient qty in nutrition facts dict.
