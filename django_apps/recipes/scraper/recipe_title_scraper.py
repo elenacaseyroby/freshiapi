@@ -47,4 +47,4 @@ def scrape_recipe_title(soup_html):
         title = scrape_entry_title_wp(soup_html)
     if not title:
         title = scrape_title(soup_html)
-    return title
+    return title[:99]

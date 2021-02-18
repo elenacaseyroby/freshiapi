@@ -47,8 +47,8 @@ class Diet(models.Model):
 
 class Recipe(models.Model):
     # If on scrape it finds no info, email the url and recipe id to casey
-    title = models.CharField(max_length=75, null=False, blank=False)
-    author = models.CharField(max_length=50, null=True)
+    title = models.CharField(max_length=100, null=False, blank=False)
+    author = models.CharField(max_length=75, null=True)
     servings_count = models.PositiveSmallIntegerField(null=True)
     prep_time = models.DurationField(null=True)
     cook_time = models.DurationField(null=True)
