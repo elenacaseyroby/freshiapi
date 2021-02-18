@@ -89,3 +89,9 @@ class GetValidFoodTestCase(TestCase):
         food_name = c.get_valid_food_name(self, usda_food_description)
         self.assertEqual(
             food_name, 'cape cod, popcorn duos')
+
+    def test_low_fat(self):
+        usda_food_description = 'low-fat'
+        food_name = c.get_valid_food_name(self, usda_food_description)
+        self.assertEqual(
+            food_name, 'low-fat')
