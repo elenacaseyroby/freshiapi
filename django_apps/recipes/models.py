@@ -235,11 +235,19 @@ class Recipe(models.Model):
         ).all()
         recipe_nutrition_facts.delete()
         # Create new nutrition facts for recipe
+        # divide nutrient qty by number of servings in recipe to
+        # get nutrition facts by serving.
+        servings = (
+            1
+            if self.servings_count is None else
+            self.servings_count
+        )
         NutritionFact.objects.bulk_create([
             NutritionFact(
                 recipe_id=self.id,
                 nutrient_id=nutrient_id,
-                nutrient_qty=nutrition_facts[nutrient_id],
+                nutrient_qty=round(
+                    float(nutrition_facts[nutrient_id]/servings), 2),
             ) for nutrient_id in nutrition_facts
         ])
         # Save note about nutrition facts

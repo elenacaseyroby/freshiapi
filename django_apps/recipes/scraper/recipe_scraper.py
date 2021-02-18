@@ -179,19 +179,17 @@ def scrape_recipe(url):
         RecipeDiet.objects.bulk_create(new_recipe_diets)
     # Get ingredients. DON'T SAVE.
     ingredients = scrape_recipe_ingredients(soup_html)
-    print(ingredients)
     # If not ingredients, do nothing.
     if not ingredients:
         return
     # Else, get nutrition breakdown
-    units_by_name_and_abbr = {
+    units_by_name = {
         unit.name: unit for unit in Unit.objects.all()}
-    units_by_name_and_abbr.update(
-        {unit.abbr: unit for unit in Unit.objects.all()})
+    units_by_abbr = {
+        unit.abbr: unit for unit in Unit.objects.all()}
     unsaved_ingredients = []
     for ingredient in ingredients:
-        ingredient = parse_ingredient(ingredient, units_by_name_and_abbr)
-        print(ingredient)
+        ingredient = parse_ingredient(ingredient, units_by_name, units_by_abbr)
         unsaved_ingredients.append(ingredient)
     # Save nutrition facts & allergens
     new_recipe.save_nutrition_facts(unsaved_ingredients)

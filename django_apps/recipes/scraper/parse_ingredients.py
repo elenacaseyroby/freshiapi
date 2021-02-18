@@ -6,10 +6,12 @@ from django_apps.foods.models import Food
 from django_apps.recipes.models import Ingredient
 
 
-def parse_numerator(ingredient_str, units_by_name_and_abbr):
+def parse_numerator(ingredient_str, units_by_name, units_by_abbr):
     # 3oz. Parmesan, grated (about ¾ cup)
     # 1 cup shelled fresh peas (from about 1 pound pods) or frozen peas, thawed
     # 1 1/2cup beans"
+    units_by_name.update(units_by_abbr)
+    units_by_name_and_abbr = units_by_name
     numerator = None
     for unit_name in units_by_name_and_abbr:
         matches = re.match(
@@ -27,7 +29,9 @@ def parse_numerator(ingredient_str, units_by_name_and_abbr):
     return numerator
 
 
-def parse_denominator(ingredient_str, units_by_name_and_abbr):
+def parse_denominator(ingredient_str, units_by_name, units_by_abbr):
+    units_by_name.update(units_by_abbr)
+    units_by_name_and_abbr = units_by_name
     denominator = None
     for unit_name in units_by_name_and_abbr:
         matches = re.match(
@@ -43,7 +47,9 @@ def parse_denominator(ingredient_str, units_by_name_and_abbr):
     return denominator
 
 
-def parse_unit(ingredient_str, units_by_name_and_abbr):
+def parse_unit(ingredient_str, units_by_name, units_by_abbr):
+    units_by_name.update(units_by_abbr)
+    units_by_name_and_abbr = units_by_name
     for unit_name in units_by_name_and_abbr:
         matches = re.match(
             f'^(\d+)( *)(\d*)(/*)(\d*)( *){unit_name}(.*)', ingredient_str)
@@ -52,30 +58,67 @@ def parse_unit(ingredient_str, units_by_name_and_abbr):
     return None
 
 
-def parse_food_str(ingredient_str, units_by_name_and_abbr):
-    for unit_name in units_by_name_and_abbr:
+def remove_modifiers(food_str):
+    common_modifiers = [
+        'shelled', 'fresh', 'skinned', 'chopped', 'grated', 'finely', 'coursely', 'pinch']
+    food_str = food_str.split(',')[0].replace('.', '').lower()
+    # remove all parens
+    cleaned_str = ''
+    skip_char = False
+    for char in food_str:
+        if char == '(':
+            skip_char = True
+        elif char == ')':
+            skip_char = False
+        elif skip_char is False:
+            cleaned_str = cleaned_str + char
+    food_str = cleaned_str
+    # remove "plus more for bon appetit"
+    food_str = food_str.split('plus more')[0]
+    # remove anything after "or"
+    food_str = food_str.split('or')[0]
+    for mod in common_modifiers:
+        food_str = food_str.replace(mod, '')
+    return food_str.strip()
+
+
+def parse_food_str(ingredient_str, units_by_name, units_by_abbr):
+    # units_by_name.update(units_by_abbr)
+    # units_by_name_and_abbr = units_by_name
+    # Try complicated match for instances where we don't want
+    # 'g' to catch 'grated' or
+    # 'oz' to catch 'frozen'
+    for unit_name in units_by_abbr:
         matches = re.match(
-            f'^(\d+)( *)(\d*)(/*)(\d*)( *){unit_name}([ +]|[,+]|[\.+])(.+)[(*]',
+            f'^(\d+)( *)(\d*)(/*)(\d*)( *){unit_name}([ +]|[,+]|[\.+])(.+)',
             ingredient_str
         )
         if matches:
             food_str = matches[8]
-            # remove any modifiers:
-            food_str = food_str.split(',')[0].replace('.', '').strip().lower()
-            # find paren
-            match = re.match(f'^(.*)[(+](.*)[)+](.*)', food_str)
-            # if paren, remove
-            if match:
-                paren = f'({match[2]})'
-                food_str = food_str.replace(paren, '').strip()
-            return food_str
-    return None
+            return remove_modifiers(food_str)
+    # Then try simplier match
+    for unit_name in units_by_name:
+        matches = re.match(
+            f'^(\d+)( *)(\d*)(/*)(\d*)( *){unit_name}(.*)', ingredient_str)
+        if matches:
+            food_str = matches[7]
+            return remove_modifiers(food_str)
+    # Try matching without unit
+    matches = re.match(f'^(\d*)(.*)', ingredient_str)
+    if matches:
+        food_str = matches[2]
+        return remove_modifiers(food_str)
+    # Otherwise just return string assuming there are no unit
+    # or qty specifications
+    return remove_modifiers(ingredient_str)
 
 
 def get_closest_matching_food(food_str):
     foods_with_ingredient_name = Food.objects.filter(
         name__contains=food_str,
         usdacategory__search_order__lte=15).all()
+    print(
+        f'there are {len(foods_with_ingredient_name)} foods w ingredient name')
     highest_match_score = 0
     food_with_highest_match_score = None
     for food in foods_with_ingredient_name:
@@ -86,16 +129,23 @@ def get_closest_matching_food(food_str):
     return food_with_highest_match_score
 
 
-def parse_food(ingredient_str, units_by_name_and_abbr):
+def parse_food(ingredient_str, units_by_name, units_by_abbr):
+    units_by_name.update(units_by_abbr)
+    units_by_name_and_abbr = units_by_name
+    print("parse food:")
+    print(ingredient_str)
     food_str = parse_food_str(ingredient_str, units_by_name_and_abbr)
     print(food_str)
     if not food_str:
         return None
-    food = get_closest_matching_food(food_str) or None
+    food = get_closest_matching_food(food_str)
+    print(food)
     return food
 
 
-def parse_ingredient(ingredient_str, units_by_name_and_abbr):
+def parse_ingredient(ingredient_str, units_by_name, units_by_abbr):
+    units_by_name.update(units_by_abbr)
+    units_by_name_and_abbr = units_by_name
     # Create ingredient but DO NOT SAVE.
     ingredient = Ingredient()
     ingredient.numerator = parse_numerator(
