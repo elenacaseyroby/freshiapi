@@ -96,7 +96,7 @@ class Recipe(models.Model):
         blank=True
     )
 
-    def save_recipe_allergens(self, ingredients=None):
+    def save_allergens(self, ingredients=None):
         if not ingredients:
             ingredients = Ingredient.objects.filter(recipe_id=self.id).all()
         allergens_by_name = {
@@ -112,6 +112,8 @@ class Recipe(models.Model):
             'tree nuts': False,
         }
         for ingredient in ingredients:
+            if not ingredient:
+                continue
             food = ingredient.food
             # skip if no food
             if not food:
@@ -187,8 +189,7 @@ class Recipe(models.Model):
         for ingredient in ingredients:
             # Skip and mark nutrition facts incomplete
             # if food dne.
-            if ingredient.food is None or ingredient.numerator is None:
-                nutrition_facts_complete = False
+            if not ingredient:
                 continue
             food_nutrition_facts = FoodNutritionFact.objects.filter(
                 food_id=ingredient.food_id).all()
@@ -201,7 +202,7 @@ class Recipe(models.Model):
                 # Else nutrient qty per one serving food to
                 # nutrient qty per qty of food in ingredient.
                 else:
-                    numerator = float(ingredient.numerator)
+                    numerator = float(ingredient.numerator or 1)
                     denominator = float(ingredient.denominator or 1)
                     ingredient_qty = round(float(numerator/denominator), 3)
                     food = ingredient.food

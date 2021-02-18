@@ -65,7 +65,7 @@ def parse_food(ingredient_str, units_by_name_and_abbr):
     food_str = parse_food_str(ingredient_str, units_by_name_and_abbr)
     if not food_str:
         return None
-    food = get_closest_matching_food(food_str)
+    food = get_closest_matching_food(food_str) or None
     return food
 
 
@@ -77,5 +77,8 @@ def parse_ingredient(ingredient_str, units_by_name_and_abbr):
     ingredient.denominator = parse_denominator(
         ingredient_str, units_by_name_and_abbr)
     ingredient.unit = parse_unit(ingredient_str, units_by_name_and_abbr)
-    ingredient.food = parse_food(ingredient_str, units_by_name_and_abbr)
+    food = parse_food(ingredient_str, units_by_name_and_abbr)
+    if food is None:
+        return None
+    ingredient.food = food
     return ingredient
