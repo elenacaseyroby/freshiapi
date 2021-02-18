@@ -252,6 +252,9 @@ class Recipe(models.Model):
     def update_nutrition_facts(self):
         return 'placeholder'
 
+    def __str__(self):
+        return self.title
+
     class Meta:
         db_table = 'recipes_recipes'
 
