@@ -735,6 +735,7 @@ class Command(BaseCommand):
         foods_by_fdc_id,
         nutrients_by_usdanutrient_id
     ):
+        nutrient_amounts = {}
         for row in food_nutrient_df.index:
             fdc_id = int(food_nutrient_df['fdc_id'][row])
             usdanutrient_id = int(food_nutrient_df['nutrient_id'][row])
@@ -752,7 +753,6 @@ class Command(BaseCommand):
             ):
                 continue
             food = foods_by_fdc_id[fdc_id]
-            nutrient_amounts = {}
             if food.id not in nutrient_amounts:
                 nutrient_amounts[food.id] = {}
             # Flatten so only most recent amount for usdanutrient and food
@@ -1017,7 +1017,7 @@ class Command(BaseCommand):
         )
         print("finished processing food_nutrient.csv!")
 
-        nutrition_facts_dict = self.get_nutrition_facts_dict()
+        nutrition_facts = self.get_nutrition_facts_dict()
         nutrition_facts_to_create = []
         nutrition_facts_to_update = []
         for food_id in nutrient_qtys:
@@ -1027,9 +1027,9 @@ class Command(BaseCommand):
                 if nutrient_qty is None or nutrient_qty == 0:
                     continue
                 existing_fact = None
-                if food_id in nutrition_facts_dict:
-                    if nutrient_id in nutrition_facts_dict[food_id]:
-                        existing_fact = nutrition_facts_dict[
+                if food_id in nutrition_facts:
+                    if nutrient_id in nutrition_facts[food_id]:
+                        existing_fact = nutrition_facts[
                             food_id
                         ][
                             nutrient_id
