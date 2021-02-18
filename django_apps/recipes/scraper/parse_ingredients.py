@@ -61,7 +61,16 @@ def parse_unit(ingredient_str, units_by_name, units_by_abbr):
 def remove_modifiers(food_str):
     common_modifiers = [
         'shelled', 'fresh', 'skinned', 'chopped', 'grated', 'finely', 'coursely', 'pinch']
-    food_str = food_str.split(',')[0].replace('.', '').lower()
+    # remove "plus more for bon appetit"
+    food_str = food_str.split('plus more')[0]
+    # remove anything after "or"
+    food_str = food_str.split('or')[0]
+    # remove anything after ","
+    food_str = food_str.split(',')[0]
+    # remove "."
+    food_str = food_str.replace('.', '')
+    # make lowercase
+    food_str = food_str.lower()
     # remove all parens
     cleaned_str = ''
     skip_char = False
@@ -73,10 +82,6 @@ def remove_modifiers(food_str):
         elif skip_char is False:
             cleaned_str = cleaned_str + char
     food_str = cleaned_str
-    # remove "plus more for bon appetit"
-    food_str = food_str.split('plus more')[0]
-    # remove anything after "or"
-    food_str = food_str.split('or')[0]
     for mod in common_modifiers:
         food_str = food_str.replace(mod, '')
     return food_str.strip()
