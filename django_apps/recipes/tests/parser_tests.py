@@ -176,7 +176,7 @@ class ParserTestCase(TestCase):
             ingredient_str, self.units_by_name, self.units_by_abbr)
         self.assertEqual(
             food_str,
-            'large eggs'
+            'eggs'
         )
 
     def test_parse_food_plural_unit(self):

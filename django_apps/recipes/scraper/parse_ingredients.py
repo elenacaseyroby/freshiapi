@@ -60,7 +60,8 @@ def parse_unit(ingredient_str, units_by_name, units_by_abbr):
 
 def remove_modifiers(food_str):
     common_modifiers = [
-        'shelled', 'fresh', 'skinned', 'chopped', 'grated', 'finely', 'coursely', 'pinch']
+        'shelled', 'fresh', 'skinned', 'chopped', 'grated',
+        'finely', 'coursely', 'pinch', 'large', 'small', 'medium']
     cleaned_str = ''
     skip_char = False
     for char in food_str:
@@ -100,9 +101,6 @@ def parse_food_str(ingredient_str, units_by_name, units_by_abbr):
         )
         if matches:
             food_str = matches[8]
-            print(unit_name)
-            print(food_str)
-            print(remove_modifiers(food_str))
             return remove_modifiers(food_str)
     # Then try simplier match
     for unit_name in units_by_name:
