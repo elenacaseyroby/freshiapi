@@ -10,16 +10,17 @@ def scrape_ingredients_bon_appetit(soup_html):
         soup_html = BeautifulSoup(ingredients_container, 'html.parser')
         items = soup_html.select('.sc-iBPRYJ')
         ingredient = ""
-        for count, item in enumerate(items):
-            item = item.get_text()
+        for item in items:
+            item_text = item.get_text()
             if (
-                'servings' in item.lower() or
-                'ingredients' in item.lower()
+                'servings' in item_text.lower() or
+                'ingredients' in item_text.lower()
             ):
                 continue
-            ingredient = f'{ingredient} {item}'
-            # if even, add ingredient to list and clear for next round
-            if count % 2 == 0:
+            ingredient = f'{ingredient} {item_text}'
+            # qty in <p> and ingredient in <div>
+            # if div add ingredient to list and clear for next round
+            if '<div' in str(item):
                 ingredients.append(ingredient.strip())
                 ingredient = ""
     return ingredients

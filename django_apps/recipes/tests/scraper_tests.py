@@ -503,19 +503,17 @@ class ScrapeIngredientsTestCase(TestCase):
         )
         ingredients = scrape_recipe_ingredients(soup_html)
         expected_ingredients = [
-            '1',
-            'lb. 1½"-thick boneless beef short ribs 1',
-            'tsp. kosher salt, plus more',
-            'Freshly ground black pepper ½',
-            'cup finely chopped hot cherry peppers or other hot pickled chiles, plus 3 '
-            'Tbsp. brine 1½',
-            'tsp. honey 5',
-            'Tbsp. extra-virgin olive oil, divided 1¼',
-            'lb. mixed wild mushrooms (such as maitake and/or oyster), stems removed, '
-            'torn into 1½" pieces 1',
-            'large shallot, thinly sliced crosswise 5',
-            'garlic cloves, thinly sliced ½',
-            'cup finely chopped dill'
+            '1 lb. 1½"-thick boneless beef short ribs',
+            '1 tsp. kosher salt, plus more',
+            'Freshly ground black pepper',
+            '½ cup finely chopped hot cherry peppers or other hot pickled chiles, plus 3 Tbsp. brine',
+            '1½ tsp. honey',
+            '5 Tbsp. extra-virgin olive oil, divided',
+            '1¼ lb. mixed wild mushrooms (such as maitake and/or oyster), stems removed, torn into 1½" pieces',
+            '1 large shallot, thinly sliced crosswise',
+            '5 garlic cloves, thinly sliced',
+            '½ cup finely chopped dill',
+            'Flaky sea salt'
         ]
         self.assertEqual(
             ingredients,
