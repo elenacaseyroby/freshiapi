@@ -61,17 +61,6 @@ def parse_unit(ingredient_str, units_by_name, units_by_abbr):
 def remove_modifiers(food_str):
     common_modifiers = [
         'shelled', 'fresh', 'skinned', 'chopped', 'grated', 'finely', 'coursely', 'pinch']
-    # remove "plus more for bon appetit"
-    food_str = food_str.split('plus more')[0]
-    # remove anything after "or"
-    food_str = food_str.split('or')[0]
-    # remove anything after ","
-    food_str = food_str.split(',')[0]
-    # remove "."
-    food_str = food_str.replace('.', '')
-    # make lowercase
-    food_str = food_str.lower()
-    # remove all parens
     cleaned_str = ''
     skip_char = False
     for char in food_str:
@@ -84,6 +73,17 @@ def remove_modifiers(food_str):
     food_str = cleaned_str
     for mod in common_modifiers:
         food_str = food_str.replace(mod, '')
+    # remove "plus more for bon appetit"
+    food_str = food_str.split('plus more')[0]
+    # remove anything after "or"
+    food_str = food_str.split('or')[0]
+    # remove anything after ","
+    food_str = food_str.split(',')[0]
+    # remove "."
+    food_str = food_str.replace('.', '')
+    # make lowercase
+    food_str = food_str.lower()
+    # remove all parens
     return food_str.strip()
 
 
@@ -100,6 +100,9 @@ def parse_food_str(ingredient_str, units_by_name, units_by_abbr):
         )
         if matches:
             food_str = matches[8]
+            print(unit_name)
+            print(food_str)
+            print(remove_modifiers(food_str))
             return remove_modifiers(food_str)
     # Then try simplier match
     for unit_name in units_by_name:
@@ -107,6 +110,10 @@ def parse_food_str(ingredient_str, units_by_name, units_by_abbr):
             f'^(\d+)( *)(\d*)(/*)(\d*)( *){unit_name}(.*)', ingredient_str)
         if matches:
             food_str = matches[7]
+            # Remove 's' from front if unit was plural.
+            matches = re.match(f'^s (.*)', food_str)
+            if matches:
+                food_str = matches[1]
             return remove_modifiers(food_str)
     # Try matching without unit
     matches = re.match(f'^(\d*)(.*)', ingredient_str)
@@ -135,11 +142,9 @@ def get_closest_matching_food(food_str):
 
 
 def parse_food(ingredient_str, units_by_name, units_by_abbr):
-    units_by_name.update(units_by_abbr)
-    units_by_name_and_abbr = units_by_name
     print("parse food:")
     print(ingredient_str)
-    food_str = parse_food_str(ingredient_str, units_by_name_and_abbr)
+    food_str = parse_food_str(ingredient_str, units_by_name, units_by_abbr)
     print(food_str)
     if not food_str:
         return None
@@ -149,16 +154,14 @@ def parse_food(ingredient_str, units_by_name, units_by_abbr):
 
 
 def parse_ingredient(ingredient_str, units_by_name, units_by_abbr):
-    units_by_name.update(units_by_abbr)
-    units_by_name_and_abbr = units_by_name
     # Create ingredient but DO NOT SAVE.
     ingredient = Ingredient()
     ingredient.numerator = parse_numerator(
-        ingredient_str, units_by_name_and_abbr)
+        ingredient_str, units_by_name, units_by_abbr)
     ingredient.denominator = parse_denominator(
-        ingredient_str, units_by_name_and_abbr)
-    ingredient.unit = parse_unit(ingredient_str, units_by_name_and_abbr)
-    food = parse_food(ingredient_str, units_by_name_and_abbr)
+        ingredient_str, units_by_name, units_by_abbr)
+    ingredient.unit = parse_unit(ingredient_str, units_by_name, units_by_abbr)
+    food = parse_food(ingredient_str, units_by_name, units_by_abbr)
     if food is None:
         return None
     ingredient.food = food

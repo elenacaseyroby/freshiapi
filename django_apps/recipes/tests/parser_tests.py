@@ -6,7 +6,8 @@ from django_apps.recipes.scraper.parse_ingredients import (
     parse_numerator,
     parse_denominator,
     parse_unit,
-    parse_food_str
+    parse_food_str,
+    remove_modifiers
 )
 
 
@@ -176,4 +177,21 @@ class ParserTestCase(TestCase):
         self.assertEqual(
             food_str,
             'large eggs'
+        )
+
+    def test_parse_food_plural_unit(self):
+        ingredient_str = '2 tablespoons vegetable oil plus more for skillet'
+        food_str = parse_food_str(
+            ingredient_str, self.units_by_name, self.units_by_abbr)
+        self.assertEqual(
+            food_str,
+            'vegetable oil'
+        )
+
+    def test_remove_modifiers(self):
+        food_str = '(or 3/4 cup) shelled fresh peas (from about 1 pound pods) or frozen peas, thawed'
+        food_str = remove_modifiers(food_str)
+        self.assertEqual(
+            food_str,
+            'peas'
         )
