@@ -94,9 +94,6 @@ def scrape_recipe(url):
     # Scrape source info.
     source_name = scrape_recipe_source_name(soup_html)
     source_url = scrape_recipe_source_url(cleaned_url)
-    print("~~~~~~~~~")
-    print(source_name)
-    print(source_url)
 
     Source.objects.get_or_create(
         website=source_url,
