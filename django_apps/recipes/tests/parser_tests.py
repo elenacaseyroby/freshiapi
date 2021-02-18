@@ -29,7 +29,9 @@ class ParserTestCase(TestCase):
     ounce = Unit(
         name='ounce'
     )
-
+    liter = Unit(
+        name='liter'
+    )
     units_by_name = {
         'gram': gram,
         'cup': cup,
@@ -42,6 +44,7 @@ class ParserTestCase(TestCase):
         'tbsp': tbsp,
         'tspn': tspn,
         'oz': ounce,
+        'l': liter
     }
 
     def test_parse_numerator(self):
@@ -113,7 +116,7 @@ class ParserTestCase(TestCase):
                           self.units_by_abbr)
         self.assertEqual(
             unit,
-            self.units_by_name['oz']
+            self.units_by_abbr['oz']
         )
 
     def test_parse_unit2(self):
@@ -122,7 +125,7 @@ class ParserTestCase(TestCase):
                           self.units_by_abbr)
         self.assertEqual(
             unit,
-            self.units_by_name['oz']
+            self.units_by_abbr['oz']
         )
 
     def test_parse_food(self):
@@ -141,6 +144,15 @@ class ParserTestCase(TestCase):
         self.assertEqual(
             food_str,
             'kosher salt'
+        )
+
+    def test_parse_food3(self):
+        ingredient_str = '3 large eggs'
+        food_str = parse_food_str(
+            ingredient_str, self.units_by_name, self.units_by_abbr)
+        self.assertEqual(
+            food_str,
+            'large eggs'
         )
 
     def test_parse_food_with_paren(self):
@@ -163,8 +175,8 @@ class ParserTestCase(TestCase):
 
     def test_parse_unit_no_unit(self):
         ingredient_str = '3 large eggs'
-        unit = parse_unit(ingredient_str, self.units_by_name,
-                          self.units_by_abbr)
+        unit = parse_unit(
+            ingredient_str, self.units_by_name, self.units_by_abbr)
         self.assertEqual(
             unit,
             None
@@ -176,7 +188,7 @@ class ParserTestCase(TestCase):
             ingredient_str, self.units_by_name, self.units_by_abbr)
         self.assertEqual(
             food_str,
-            'eggs'
+            'large eggs'
         )
 
     def test_parse_food_plural_unit(self):

@@ -10,58 +10,65 @@ def parse_numerator(ingredient_str, units_by_name, units_by_abbr):
     # 3oz. Parmesan, grated (about ¾ cup)
     # 1 cup shelled fresh peas (from about 1 pound pods) or frozen peas, thawed
     # 1 1/2cup beans"
-    units_by_name.update(units_by_abbr)
-    units_by_name_and_abbr = units_by_name
+    unit_dicts_list = [units_by_name, units_by_abbr]
     numerator = None
-    for unit_name in units_by_name_and_abbr:
-        matches = re.match(
-            f'^(\d+)( *)(\d*)(/*)(\d*)( *){unit_name}(.*)', ingredient_str)
-        if not matches:
-            continue
-        whole_number = matches[1]
-        numerator = matches[3]
-        denominator = matches[5]
-        if numerator != '' and denominator != '':
-            numerator = int(whole_number) * int(denominator) + int(numerator)
-        else:
-            numerator = int(whole_number)
-        return numerator
+    for unit_dict in unit_dicts_list:
+        for unit_name in unit_dict:
+            matches = re.match(
+                f'^(\d+)( *)(\d*)(/*)(\d*)( *){unit_name}(.*)', ingredient_str)
+            if not matches:
+                continue
+            whole_number = matches[1]
+            numerator = matches[3]
+            denominator = matches[5]
+            if numerator != '' and denominator != '':
+                numerator = int(whole_number) * \
+                    int(denominator) + int(numerator)
+            else:
+                numerator = int(whole_number)
+            return numerator
     return numerator
 
 
 def parse_denominator(ingredient_str, units_by_name, units_by_abbr):
-    units_by_name.update(units_by_abbr)
-    units_by_name_and_abbr = units_by_name
+    unit_dicts_list = [units_by_name, units_by_abbr]
     denominator = None
-    for unit_name in units_by_name_and_abbr:
-        matches = re.match(
-            f'^(\d+)( *)(\d*)(/*)(\d*)( *){unit_name}(.*)', ingredient_str)
-        if not matches:
-            continue
-        denominator = (
-            1
-            if matches[5] == ''
-            else int(matches[5])
-        )
-        return denominator
+    for unit_dict in unit_dicts_list:
+        for unit_name in unit_dict:
+            matches = re.match(
+                f'^(\d+)( *)(\d*)(/*)(\d*)( *){unit_name}(.*)', ingredient_str)
+            if not matches:
+                continue
+            denominator = (
+                1
+                if matches[5] == ''
+                else int(matches[5])
+            )
+            return denominator
     return denominator
 
 
 def parse_unit(ingredient_str, units_by_name, units_by_abbr):
-    units_by_name.update(units_by_abbr)
-    units_by_name_and_abbr = units_by_name
-    for unit_name in units_by_name_and_abbr:
+    for unit_name in units_by_name:
         matches = re.match(
             f'^(\d+)( *)(\d*)(/*)(\d*)( *){unit_name}(.*)', ingredient_str)
         if matches:
-            return units_by_name_and_abbr[unit_name]
+            return units_by_name[unit_name]
+    for unit_name in units_by_abbr:
+        matches = re.match(
+            f'^(\d+)( *)(\d*)(/*)(\d*)( *){unit_name}(\s|,|[.])',
+            ingredient_str
+        )
+        if matches:
+            return units_by_abbr[unit_name]
     return None
 
 
 def remove_modifiers(food_str):
     common_modifiers = [
         'shelled', 'fresh', 'skinned', 'chopped', 'grated',
-        'finely', 'coursely', 'pinch', 'large', 'small', 'medium']
+        'finely', 'coursely', 'pinch', 'low-fat', 'lowfat',
+        'low fat', 'fat free', 'fat-free']
     cleaned_str = ''
     skip_char = False
     for char in food_str:
@@ -96,7 +103,7 @@ def parse_food_str(ingredient_str, units_by_name, units_by_abbr):
     # 'oz' to catch 'frozen'
     for unit_name in units_by_abbr:
         matches = re.match(
-            f'^(\d+)( *)(\d*)(/*)(\d*)( *){unit_name}([ +]|[,+]|[\.+])(.+)',
+            f'^(\d+)( *)(\d*)(/*)(\d*)( *){unit_name}(\s|,|[.])(.+)',
             ingredient_str
         )
         if matches:
@@ -127,6 +134,14 @@ def get_closest_matching_food(food_str):
     foods_with_ingredient_name = Food.objects.filter(
         name__contains=food_str,
         usdacategory__search_order__lte=15).all()
+    if len(foods_with_ingredient_name) == 0:
+        foods_with_ingredient_name = Food.objects.filter(
+            name__contains=food_str,
+            usdacategory__search_order__gt=15).all()
+    if len(foods_with_ingredient_name) == 0:
+        foods_with_ingredient_name = Food.objects.filter(
+            name__contains=food_str,
+            usdacategory__search_order__isnull=True).all()
     print(
         f'there are {len(foods_with_ingredient_name)} foods w ingredient name')
     highest_match_score = 0
