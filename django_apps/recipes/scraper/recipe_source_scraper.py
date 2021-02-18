@@ -14,7 +14,7 @@ def scrape_source_name_ogp(soup_html):
 
 
 def scrape_source_url_regex(url):
-    source_url = re.match('^(?:.*://)?(?:www\.)?([^:/]*).*$', url)
+    source_url = re.match('^(?:.*://)?(?:www\.)?([^:/]*).*$', str(url))
     if source_url:
         source_url = source_url[1]
     return source_url

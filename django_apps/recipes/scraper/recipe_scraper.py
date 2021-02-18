@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from django.db import transaction
 
-from models import (
+from django_apps.recipes.models import (
     Category,
     Cuisine,
     Diet,
@@ -10,8 +10,7 @@ from models import (
     Source,
     RecipeCategory,
     RecipeCuisine,
-    RecipeDiet,
-    Direction
+    RecipeDiet
 )
 
 from django_apps.media.models import InternetImage
@@ -43,10 +42,6 @@ from django_apps.recipes.scraper.recipe_ingredient_scraper import (
     scrape_recipe_ingredients,
 )
 
-from django_apps.recipes.scraper.recipe_directions_scraper import (
-    scrape_recipe_directions,
-)
-
 from django_apps.recipes.scraper.recipe_time_scraper import (
     scrape_recipe_prep_time,
     scrape_recipe_cook_time,
@@ -71,6 +66,7 @@ from django_apps.recipes.scraper.parse_ingredients import (
 
 
 def clean_url(url):
+    url = str(url)
     end_of_string = len(url) - 1
     if url[end_of_string] == '/':
         url = url[:end_of_string]
@@ -97,8 +93,17 @@ def scrape_recipe(url):
 
     # Scrape source info.
     source_name = scrape_recipe_source_name(soup_html)
-    source_url = scrape_recipe_source_url(soup_html)
-    source = Source.objects.get_or_create(
+    source_url = scrape_recipe_source_url(cleaned_url)
+    print("~~~~~~~~~")
+    print(source_name)
+    print(source_url)
+
+    Source.objects.get_or_create(
+        website=source_url,
+        name=source_name
+    )
+
+    source = Source.objects.get(
         website=source_url,
         name=source_name
     )
@@ -114,26 +119,30 @@ def scrape_recipe(url):
     new_recipe.author = scrape_recipe_author(soup_html)
     new_recipe.description = scrape_recipe_description(soup_html)
     new_recipe.source = source
-    new_recipe = new_recipe.save()
+    new_recipe.save()
+    new_recipe = Recipe.objects.get(url=cleaned_url)
 
     # Store image url
     image_url = scrape_recipe_image_url(soup_html)
     if image_url:
         # Create internet image record to store url
-        internet_image = InternetImage.objects.get_or_create(
+        InternetImage.objects.get_or_create(
+            url=image_url
+        )
+        internet_image = InternetImage.objects.get(
             url=image_url
         )
         # Add image to recipe
         new_recipe.internet_images.add(internet_image)
 
     # Add categories
+    categories_by_name = {
+        category.name: category for category in
+        Category.objects.all()
+    }
     categories = scrape_recipe_categories(
         soup_html, categories_by_name)
     if len(categories) > 0:
-        categories_by_name = {
-            category.name: category for category in
-            Category.objects.all()
-        }
         new_recipe_categories = [
             RecipeCategory(
                 category=categories_by_name[category],
@@ -141,16 +150,16 @@ def scrape_recipe(url):
             )
             for category in categories
         ]
-        RecipeCategory.objects.bulk_update(new_recipe_categories)
+        RecipeCategory.objects.bulk_create(new_recipe_categories)
 
     # Add cuisine
+    cuisines_by_name = {
+        cuisine.name: cuisine for cuisine in
+        Cuisine.objects.all()
+    }
     cuisine = scrape_recipe_cuisine(
         soup_html, cuisines_by_name)
     if cuisine:
-        cuisines_by_name = {
-            cuisine.name: cuisine for cuisine in
-            Cuisine.objects.all()
-        }
         recipe_cuisine = RecipeCuisine(
             cuisine=cuisines_by_name[cuisine],
             recipe=new_recipe

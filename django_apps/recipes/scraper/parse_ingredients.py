@@ -3,7 +3,7 @@ from fuzzywuzzy import fuzz
 
 from django_apps.foods.models import Food
 
-from models import Ingredient
+from django_apps.recipes.models import Ingredient
 
 
 def parse_numerator(ingredient_str, units_by_name_and_abbr):

@@ -214,6 +214,14 @@ class ScrapeSourceTestCase(TestCase):
             'bonappetit.com'
         )
 
+    def test_find_bon_appetit_source_url2(self):
+        url = 'https://www.bonappetit.com/recipe/pea-pancakes'
+        source_url = scrape_recipe_source_url(url)
+        self.assertEqual(
+            source_url,
+            'bonappetit.com'
+        )
+
 
 class ScrapeServingsTestCase(TestCase):
 
