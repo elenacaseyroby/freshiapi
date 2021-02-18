@@ -292,8 +292,8 @@ class Ingredient(models.Model):
     food = models.ForeignKey('foods.Food', on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     # qty_numerator / qty_denominator in qty_unit
-    qty_numerator = models.PositiveSmallIntegerField(null=False, blank=False)
-    qty_denominator = models.PositiveSmallIntegerField(default=1)
+    qty_numerator = models.PositiveSmallIntegerField(null=True, blank=True)
+    qty_denominator = models.PositiveSmallIntegerField(null=True, blank=True)
     # Leave blank for something like 1 banana
     qty_unit = models.ForeignKey(
         'foods.Unit', on_delete=models.CASCADE, null=True, blank=True)
