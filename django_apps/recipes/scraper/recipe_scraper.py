@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from django.db import transaction
+from datetime import timedelta
 
 from django_apps.recipes.models import (
     Category,
@@ -134,6 +135,18 @@ def scrape_recipe(url):
     new_recipe.prep_time = scrape_recipe_prep_time(soup_html)
     new_recipe.cook_time = scrape_recipe_cook_time(soup_html)
     new_recipe.total_time = scrape_recipe_total_time(soup_html)
+    # Make sure total time makes sense.
+    # We only need to check if prep or cook time is set.
+    if (new_recipe.prep_time is not None or new_recipe.cook_time is not None):
+        prep = new_recipe.prep_time or timedelta(minutes=float(0))
+        cook = new_recipe.cook_time or timedelta(minutes=float(0))
+        # If total is none or smaller than prep and cook combine,
+        # then set total to the sum of prep and cook.
+        if (
+            new_recipe.total_time is None or
+            new_recipe.total_time < (prep + cook)
+        ):
+            new_recipe.total_time = prep + cook
     new_recipe.servings_count = scrape_recipe_servings_count(soup_html)
     new_recipe.author = scrape_recipe_author(soup_html)
     new_recipe.description = scrape_recipe_description(soup_html)
