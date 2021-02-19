@@ -2,15 +2,10 @@ from django.test import TestCase
 from django_apps.foods.management.commands.sync_foods_from_usda import (
     Command as c
 )
-from django_apps.foods.models import Unit
-
-import numpy as np
-import pandas as pd
-import os
 
 
 # To run:
-# python manage.py test django_apps.foods.tests.tests.GetValidFoodTestCase
+# python manage.py test django_apps.foods.tests.name_validation_tests
 class GetValidFoodTestCase(TestCase):
     # def setUp(self):
 
@@ -89,66 +84,14 @@ class GetValidFoodTestCase(TestCase):
         self.assertEqual(
             food_name, 'broccoli')
 
+    def test_cape_cod_foods(self):
+        usda_food_description = 'CAPE COD, POPCORN DUOS'
+        food_name = c.get_valid_food_name(self, usda_food_description)
+        self.assertEqual(
+            food_name, 'cape cod, popcorn duos')
 
-# To run:
-# python manage.py test django_apps.foods.tests.tests.BatchSyncFoodsTestCase
-class BatchSyncFoodsTestCase(TestCase):
-    # def setUp(self):
-
-    def test_foods_with_same_first_4_descriptors_are_collapsed(self):
-        food_cols = ['fdc_id', 'description',
-                     'data_type', 'food_category_id']
-        food_dtypes = {
-            'fdc_id': np.float,
-            'description': np.str,
-            'data_type': np.str,
-            'food_category_id': np.float
-        }
-        food_batch_df = pd.read_csv(
-            os.path.join(
-                os.path.dirname(__file__),
-                '../tests/data/collapse_names_tests/food.csv'
-            ),
-            usecols=food_cols,
-            dtype=food_dtypes,
-            sep=',',
-            quotechar='"')
-        upc_by_fdc = {}
-        servings_by_fdc = {}
-        foods_by_fdc = {}
-        foods_by_name = {}
-        # In real sync this will be a list of
-        # all the foods with rows in the
-        # food_nutrient.csv.  We only sync foods with
-        # rows in this csv.  For this test, we will add
-        # all foods from the food_batch_df to this list
-        # so they all sync.
-        fdc_ids_with_nutrition_facts = [
-            food_batch_df['fdc_id'][row] for row in
-            food_batch_df.index
-        ]
-        gram = Unit(
-            id=1,
-            name='gram',
-            abbr='g'
-        )
-        gram.save()
-        c.batch_sync_foods(
-            self,
-            food_batch_df,
-            upc_by_fdc,
-            servings_by_fdc,
-            fdc_ids_with_nutrition_facts,
-            gram,
-            foods_by_fdc,
-            foods_by_name
-        )
-        collapsed_food = Food.objects.get(
-            name="squash, summer, yellow or green, cooked")
-        collapsed_food_fdc_ids = [
-            usdafood.fdc_id for usdafood in collapsed_food.usdafoods.all()]
-        expected_fdc_ids = [
-            343332, 343333, 343334, 343335, 343336, 343337, 343338, 343339,
-            343340, 343341, 343342, 343343, 343344, 343345, 343346, 343347,
-            343348, 343349, 343350, 343351, 343352, 343353, 343354, 343355]
-        self.assertEqual(expected_fdc_ids, collapsed_food_fdc_ids)
+    def test_low_fat(self):
+        usda_food_description = 'low-fat'
+        food_name = c.get_valid_food_name(self, usda_food_description)
+        self.assertEqual(
+            food_name, 'low-fat')
