@@ -4,8 +4,11 @@ from django.utils.functional import cached_property
 from django_apps.foods.models import (
     get_unit_conversions_dict,
     USDACategory,
+    Nutrient,
     NutritionFact as FoodNutritionFact
 )
+
+from math import floor
 
 
 class Source(models.Model):
@@ -263,13 +266,14 @@ class Recipe(models.Model):
                     # Find food servings in ingredient.
                     ingredient_food_servings = round(
                         float(
-                            ingredient_qty_in_food_unit/food.one_serving_qty
+                            ingredient_qty_in_food_unit /
+                            float(food.one_serving_qty)
                         ),
                         2
                     )
                     # Find nutrient qty for ingredient.
                     ingredient_nutrient_qty = float(
-                        fact.nutrient_qty * ingredient_food_servings
+                        float(fact.nutrient_qty) * ingredient_food_servings
                     )
                 # Store ingredient nutrient qty in nutrition facts dict.
                 nutrition_facts[
@@ -280,27 +284,33 @@ class Recipe(models.Model):
             recipe_id=self.id
         ).all()
         recipe_nutrition_facts.delete()
-        # Create new nutrition facts for recipe
-        # divide nutrient qty by number of servings in recipe to
-        # get nutrition facts by serving.
-        servings = (
-            1
-            if self.servings_count is None else
-            self.servings_count
-        )
+
+        # Create new nutrition facts for recipe.
+        # 1. Get servings count
+        # Set servings count 1, if no calories or servings count for recipe:
+        calories = Nutrient.objects.get(name='calories')
+        if calories.id not in nutrition_facts and self.servings_count is None:
+            self.servings_count = 1
+        # Set servings count to break recipe very roughly into
+        # ~400 cal serving sizes.
+        elif self.servings_count is None:
+            self.servings_count = floor(
+                int(nutrition_facts[calories.id]) / 400)
+        # Else servings_count is already set.
+
         NutritionFact.objects.bulk_create([
             NutritionFact(
                 recipe_id=self.id,
                 nutrient_id=nutrient_id,
                 nutrient_qty=round(
-                    float(nutrition_facts[nutrient_id]/servings), 2),
+                    float(nutrition_facts[nutrient_id]/self.servings_count), 2),
             ) for nutrient_id in nutrition_facts
         ])
         # Save note about nutrition facts
         self.nutrition_facts_complete = nutrition_facts_complete
         self.save()
 
-    @cached_property
+    @ cached_property
     def is_original(self):
         return self.owner is not None
 

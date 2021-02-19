@@ -233,7 +233,7 @@ def get_unit_conversions_dict():
             conv.from_unit_id
         ][
             conv.to_unit_id
-        ] = conv.qty_conversion_coefficient
+        ] = float(conv.qty_conversion_coefficient)
     return unit_conversions_dict
 
 
