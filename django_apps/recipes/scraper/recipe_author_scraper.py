@@ -29,4 +29,6 @@ def scrape_recipe_author(soup_html):
     author = scrape_author_meta(soup_html)
     if not author:
         author = scrape_epicurious_author(soup_html)
-    return author[:74]
+    if author:
+        author = author[:74]
+    return author

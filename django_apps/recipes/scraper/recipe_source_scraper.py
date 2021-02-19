@@ -22,7 +22,9 @@ def scrape_source_url_regex(url):
 
 def scrape_recipe_source_name(soup_html):
     source_name = scrape_source_name_ogp(soup_html)
-    return source_name[:99]
+    if source_name:
+        source_name = source_name[:99]
+    return source_name
 
 
 def scrape_recipe_source_url(url):
