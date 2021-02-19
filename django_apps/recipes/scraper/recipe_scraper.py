@@ -64,19 +64,20 @@ from django_apps.recipes.scraper.parse_ingredients import (
     parse_ingredient
 )
 
+import re
+
 
 def clean_url(url):
     url = str(url)
-    end_of_string = len(url) - 1
-    if url[end_of_string] == '/':
-        url = url[:end_of_string]
-    if url[:8] == 'https://':
-        url = url[5:]
-    if url[:7] == 'http://':
-        url = url[4:]
-    if url[:4] == 'www.':
-        url = url[4:]
-    return url
+    matches = re.match('https://www.(.+)', url)
+    if matches:
+        return matches[1]
+    matches = re.match('http://www.(.+)', url)
+    if matches:
+        return matches[1]
+    matches = re.match('www.(.+)', url)
+    if matches:
+        return matches[1]
 
 
 @transaction.atomic
