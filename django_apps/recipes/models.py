@@ -232,8 +232,8 @@ class Recipe(models.Model):
                 # and multiplying it by the number of servings in
                 # the recipe.
                 if (
-                    ingredient.unit is None or
-                    ingredient.numerator is None or
+                    ingredient.qty_unit is None or
+                    ingredient.qty_numerator is None or
                     ingredient.qty_denominator is None
                 ):
                     recipe_servings = float(
@@ -248,14 +248,14 @@ class Recipe(models.Model):
                 # Else nutrient qty per one serving food to
                 # nutrient qty per qty of food in ingredient.
                 else:
-                    numerator = float(ingredient.numerator)
-                    denominator = float(ingredient.denominator)
+                    numerator = float(ingredient.qty_numerator)
+                    denominator = float(ingredient.qty_denominator)
                     ingredient_qty = round(float(numerator/denominator), 2)
                     food = ingredient.food
                     # Get food qty in food serving units.
                     ingredient_qty_in_food_unit = (
                         ingredient_qty * conversions[
-                            ingredient.unit.id
+                            ingredient.qty_unit.id
                         ][
                             food.one_serving_unit_id
                         ]

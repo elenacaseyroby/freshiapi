@@ -169,11 +169,12 @@ def parse_food(ingredient_str, units_by_name, units_by_abbr):
 def parse_ingredient(ingredient_str, units_by_name, units_by_abbr):
     # Create ingredient but DO NOT SAVE.
     ingredient = Ingredient()
-    ingredient.numerator = parse_numerator(
+    ingredient.qty_numerator = parse_numerator(
         ingredient_str, units_by_name, units_by_abbr)
-    ingredient.denominator = parse_denominator(
+    ingredient.qty_denominator = parse_denominator(
         ingredient_str, units_by_name, units_by_abbr)
-    ingredient.unit = parse_unit(ingredient_str, units_by_name, units_by_abbr)
+    ingredient.qty_unit = parse_unit(
+        ingredient_str, units_by_name, units_by_abbr)
     food = parse_food(ingredient_str, units_by_name, units_by_abbr)
     if food is None:
         return None
