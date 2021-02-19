@@ -118,7 +118,7 @@ class ScrapeTitleTestCase(TestCase):
         title = scrape_recipe_title(soup_html)
         self.assertEqual(
             title,
-            'Sohui Kim’s Lunar New Year Menu: Silky Pork Dumplings, Good Luck Soup, and a Big Bowl of Kimchi | Epicurious'
+            'Sohui Kim’s Lunar New Year Menu: Silky Pork Dumplings, Good Luck Soup, and a Big Bowl of Kimchi | E'
         )
 
     def test_find_smitten_kitchen_title(self):
@@ -224,16 +224,6 @@ class ScrapeSourceTestCase(TestCase):
 
 
 class ScrapeServingsTestCase(TestCase):
-
-    def test_find_bon_appetit_servings_count(self):
-        soup_html = get_soup_html(
-            'https://www.bonappetit.com/recipe/seared-short-ribs-with-mushrooms'
-        )
-        servings_count = scrape_recipe_servings_count(soup_html)
-        self.assertEqual(
-            servings_count,
-            4
-        )
 
     def test_find_wordpress_recipe_maker_servings_count(self):
         soup_html = get_soup_html(
@@ -791,4 +781,27 @@ class ScrapeDietTestCase(TestCase):
         self.assertEqual(
             diets,
             expected_diets
+        )
+
+
+class ToFixTestCase(TestCase):
+    def test_find_bon_appetit_servings_count(self):
+        soup_html = get_soup_html(
+            'https://www.bonappetit.com/recipe/seared-short-ribs-with-mushrooms'
+        )
+        servings_count = scrape_recipe_servings_count(soup_html)
+        self.assertEqual(
+            servings_count,
+            4
+        )
+
+    def test_find_ingredient_strings_tasty2(self):
+        soup_html = get_soup_html(
+            'https://cookieandkate.com/best-vegan-lasagna-recipe/'
+        )
+        ingredients = scrape_recipe_ingredients(soup_html)
+        expected_first_ingredient = '2 cups raw cashews, soaked for at least 4 hours if you do not have a high-powered blender'
+        self.assertEqual(
+            ingredients[0],
+            expected_first_ingredient
         )
