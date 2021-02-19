@@ -207,6 +207,8 @@ class Recipe(models.Model):
         nutrition_facts_complete = True
         nutrition_facts = {}
         conversions = get_unit_conversions_dict()
+        if len(ingredients) == 0:
+            nutrition_facts_complete = False
         for ingredient in ingredients:
             # Skip and mark nutrition facts incomplete
             # if food dne.
