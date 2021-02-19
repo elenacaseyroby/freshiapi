@@ -69,15 +69,32 @@ import re
 
 def clean_url(url):
     url = str(url)
-    matches = re.match('https://www.(.+)', url)
+    cleaned_url = None
+    matches = re.match('^https://www.(.+)', url)
     if matches:
-        return matches[1]
-    matches = re.match('http://www.(.+)', url)
+        cleaned_url = matches[1]
+    if not cleaned_url:
+        matches = re.match('^http://www.(.+)', url)
+        if matches:
+            cleaned_url = matches[1]
+    if not cleaned_url:
+        matches = re.match('^www.(.+)', url)
+        if matches:
+            cleaned_url = matches[1]
+    if not cleaned_url:
+        matches = re.match('^https://(.+)', url)
+        if matches:
+            cleaned_url = matches[1]
+    if not cleaned_url:
+        matches = re.match('^http://(.+)', url)
+        if matches:
+            cleaned_url = matches[1]
+    matches = re.match('(.+)/$', cleaned_url)
     if matches:
-        return matches[1]
-    matches = re.match('www.(.+)', url)
-    if matches:
-        return matches[1]
+        cleaned_url = matches[1]
+    if cleaned_url is None:
+        cleaned_url = url
+    return cleaned_url
 
 
 @transaction.atomic
