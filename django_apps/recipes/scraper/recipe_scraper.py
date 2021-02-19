@@ -149,6 +149,8 @@ def scrape_recipe(url):
             new_recipe.total_time = prep + cook
     new_recipe.servings_count = scrape_recipe_servings_count(soup_html)
     new_recipe.author = scrape_recipe_author(soup_html)
+    if new_recipe.author is None:
+        new_recipe.author = source_name
     new_recipe.description = scrape_recipe_description(soup_html)
     new_recipe.source = source
     new_recipe.save()
