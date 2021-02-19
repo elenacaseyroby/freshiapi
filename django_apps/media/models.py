@@ -66,7 +66,8 @@ class Photo(models.Model):
 
 class InternetImage(models.Model):
     # For images from the internet that we don't legally own.
-    url = models.URLField(null=False, blank=False)
+    # urlfield too short to be useful.
+    url = models.TextField(null=False, blank=False)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
 
     # Django admin display name
