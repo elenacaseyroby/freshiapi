@@ -12,7 +12,7 @@ class RecipeAllergenInline(admin.TabularInline):
     extra = 0
 
     def allergen_name(self, obj):
-        return obj.allergen.name or '--'
+        return obj.contains_allergen.name or '--'
 
     fields = (
         'allergen_name',
