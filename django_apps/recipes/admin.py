@@ -2,7 +2,7 @@ from django.contrib import admin
 # from django import forms
 
 from .models import (
-    Recipe, Direction, Ingredient, NutritionFact)
+    Recipe, Direction, Ingredient, NutritionFact, RecipeInternetImage)
 from .scraper.recipe_scraper import scrape_recipe
 
 
@@ -23,6 +23,21 @@ class IngredientInline(admin.TabularInline):
         'qty_numerator',
         'qty_denominator',
         'qty_unit',
+    )
+
+
+class RecipeInternetImageInline(admin.TabularInline):
+    model = RecipeInternetImage
+    extra = 0
+
+    def url(self, obj):
+        return obj.internet_image.url or '--'
+
+    fields = (
+        'url',
+    )
+    readonly_fields = (
+        'url',
     )
 
 
@@ -64,7 +79,8 @@ class RecipeAdmin(admin.ModelAdmin):
 
     inlines = [
         DirectionInline,
-        NutritionFactInline
+        RecipeInternetImageInline,
+        NutritionFactInline,
     ]
 
     fields = (
