@@ -340,6 +340,7 @@ class Direction(models.Model):
 
     class Meta:
         db_table = 'recipes_directions'
+        ordering = ('step',)
 
 
 class Ingredient(models.Model):
