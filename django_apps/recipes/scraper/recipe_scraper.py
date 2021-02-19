@@ -110,8 +110,10 @@ def scrape_recipe(url):
     soup_html = BeautifulSoup(page.content, 'html.parser')
 
     # Scrape source info.
-    source_name = scrape_recipe_source_name(soup_html)
     source_url = scrape_recipe_source_url(cleaned_url)
+    source_name = scrape_recipe_source_name(soup_html)
+    if not source_name:
+        source_name = source_url[:99]
 
     Source.objects.get_or_create(
         website=source_url,
@@ -125,8 +127,10 @@ def scrape_recipe(url):
 
     # Create recipe instance.
     new_recipe = Recipe()
-    new_recipe.title = scrape_recipe_title(soup_html)
     new_recipe.url = cleaned_url
+    new_recipe.title = scrape_recipe_title(soup_html)
+    if new_recipe.title is None:
+        new_recipe.title = cleaned_url[:99]
     new_recipe.prep_time = scrape_recipe_prep_time(soup_html)
     new_recipe.cook_time = scrape_recipe_cook_time(soup_html)
     new_recipe.total_time = scrape_recipe_total_time(soup_html)

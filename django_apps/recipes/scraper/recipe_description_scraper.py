@@ -27,4 +27,6 @@ def scrape_recipe_description(soup_html):
     description = scrape_description_ogp(soup_html)
     if not description:
         description = scrape_description_meta(soup_html)
+    if description:
+        description = description.strip()
     return description

@@ -48,5 +48,7 @@ def scrape_recipe_title(soup_html):
     if not title:
         title = scrape_title(soup_html)
     if title:
-        title = title[:99]
+        title = title.strip()[:99]
+    if title == '':
+        title = None
     return title

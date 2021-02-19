@@ -30,5 +30,5 @@ def scrape_recipe_author(soup_html):
     if not author:
         author = scrape_epicurious_author(soup_html)
     if author:
-        author = author[:74]
+        author = author.strip()[:74]
     return author

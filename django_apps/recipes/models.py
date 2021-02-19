@@ -296,6 +296,8 @@ class Recipe(models.Model):
         elif self.servings_count is None:
             self.servings_count = floor(
                 int(nutrition_facts[calories.id]) / 400)
+            if self.servings_count == 0:
+                self.servings_count = 1
         # Else servings_count is already set.
 
         NutritionFact.objects.bulk_create([
