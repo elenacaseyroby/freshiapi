@@ -16,12 +16,18 @@ class Source(models.Model):
     class Meta:
         db_table = 'recipes_recipe_sources'
 
+    def __str__(self):
+        return self.name
+
 
 class Allergen(models.Model):
     name = models.CharField(max_length=50, null=False, blank=False)
 
     class Meta:
         db_table = 'recipes_allergens'
+
+    def __str__(self):
+        return self.name
 
 
 class Category(models.Model):
@@ -30,6 +36,9 @@ class Category(models.Model):
     class Meta:
         db_table = 'recipes_categories'
 
+    def __str__(self):
+        return self.name
+
 
 class Cuisine(models.Model):
     name = models.CharField(max_length=100, null=False, blank=False)
@@ -37,12 +46,18 @@ class Cuisine(models.Model):
     class Meta:
         db_table = 'recipes_cuisines'
 
+    def __str__(self):
+        return self.name
+
 
 class Diet(models.Model):
     name = models.CharField(max_length=50, null=False, blank=False)
 
     class Meta:
         db_table = 'recipes_diets'
+
+    def __str__(self):
+        return self.name
 
 
 class Recipe(models.Model):
@@ -63,7 +78,7 @@ class Recipe(models.Model):
     updated_at = models.DateTimeField(auto_now=True, null=True)
     ingredients = models.ManyToManyField(
         'foods.Food', through='Ingredient', blank=True)
-    nutrition_facts_complete = models.BooleanField(default=False)
+    nutrition_facts_complete = models.BooleanField(default=True)
 
     # Uploaded by users to Freshi.
     user_photos = models.ManyToManyField(
