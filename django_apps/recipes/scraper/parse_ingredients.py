@@ -173,10 +173,15 @@ def parse_ingredient(ingredient_str, units_by_name, units_by_abbr):
         ingredient_str, units_by_name, units_by_abbr)
     ingredient.qty_denominator = parse_denominator(
         ingredient_str, units_by_name, units_by_abbr)
+    # If numerator exists and denominator dne,
+    # set denominator to 1.
+    if (
+        ingredient.qty_numerator is not None and
+        ingredient.qty_denominator is None
+    ):
+        ingredient.qty_denominator = 1
     ingredient.qty_unit = parse_unit(
         ingredient_str, units_by_name, units_by_abbr)
     food = parse_food(ingredient_str, units_by_name, units_by_abbr)
-    if food is None:
-        return None
     ingredient.food = food
     return ingredient
