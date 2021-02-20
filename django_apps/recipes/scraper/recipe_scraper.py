@@ -7,11 +7,12 @@ from django_apps.recipes.models import (
     Category,
     Cuisine,
     Diet,
+    Ingredient,
     Recipe,
-    Source,
     RecipeCategory,
     RecipeCuisine,
-    RecipeDiet
+    RecipeDiet,
+    Source,
 )
 
 from django_apps.media.models import InternetImage
@@ -215,22 +216,38 @@ def scrape_recipe(url):
         ]
         RecipeDiet.objects.bulk_create(new_recipe_diets)
     # Get ingredients. DON'T SAVE.
-    ingredients = scrape_recipe_ingredients(soup_html)
+    ingredient_strings = scrape_recipe_ingredients(soup_html)
     # If not ingredients, do nothing.
-    if not ingredients:
+    if not ingredient_strings:
+        new_recipe.nutrition_facts_completed = float(0)
         return
     # Else, get nutrition breakdown
     units_by_name = {
         unit.name: unit for unit in Unit.objects.all()}
     units_by_abbr = {
         unit.abbr: unit for unit in Unit.objects.all()}
-    unsaved_ingredients = []
-    for ingredient in ingredients:
+
+    ingredients = []
+    # Parse ingredient from scraped ingredient string.
+    for ingredient in ingredient_strings:
         ingredient = parse_ingredient(ingredient, units_by_name, units_by_abbr)
-        unsaved_ingredients.append(ingredient)
+        ingredients.append(ingredient)
+
+    # Save ingredients.
+    ingredients_to_create = []
+    for ingredient in ingredients:
+        # Skip ingredients without matched food, since we aren't
+        # publishing anyway.
+        if ingredient.food_id is None:
+            continue
+        # Set recipe_id
+        ingredient.recipe_id = new_recipe.id
+        ingredients_to_create.append(ingredient)
+    Ingredient.objects.bulk_create(ingredients_to_create)
+
     # Save nutrition facts & allergens
-    new_recipe.save_nutrition_facts(unsaved_ingredients)
-    new_recipe.save_allergens(unsaved_ingredients)
+    new_recipe.save_nutrition_facts(ingredients)
+    new_recipe.save_allergens(ingredients)
 
 # TODO:
 # def add_ingredients_and_directions_to_recipe(recipe):
