@@ -2,8 +2,16 @@ from django.contrib import admin
 # from django import forms
 
 from .models import (
-    Recipe, Direction, Ingredient, NutritionFact, RecipeInternetImage,
-    RecipeAllergen, RecipeCategory, RecipeCuisine, RecipeDiet)
+    Direction,
+    Ingredient,
+    NutritionFact,
+    Recipe,
+    RecipeAllergen,
+    RecipeCategory,
+    RecipeCuisine,
+    RecipeDiet,
+    RecipeInternetImage,
+)
 from .scraper.recipe_scraper import scrape_recipe
 
 
@@ -69,7 +77,7 @@ class RecipeDietInline(admin.TabularInline):
 
 class DirectionInline(admin.TabularInline):
     model = Direction
-    extra = 1
+    extra = 0
     fields = (
         'step',
         'text'
@@ -78,12 +86,15 @@ class DirectionInline(admin.TabularInline):
 
 class IngredientInline(admin.TabularInline):
     model = Ingredient
-    extra = 1
+    extra = 0
     fields = (
         'food',
         'qty_numerator',
         'qty_denominator',
         'qty_unit',
+    )
+    readonly_fields = (
+        'food',
     )
 
 
@@ -139,6 +150,7 @@ class NutritionFactInline(admin.TabularInline):
 class RecipeAdmin(admin.ModelAdmin):
 
     inlines = [
+        IngredientInline,
         DirectionInline,
         RecipeInternetImageInline,
         NutritionFactInline,
@@ -147,6 +159,12 @@ class RecipeAdmin(admin.ModelAdmin):
         RecipeDietInline,
         RecipeCuisineInline,
     ]
+
+    def percent_nutrition_facts_completed(self, obj):
+        if not obj.nutrition_facts_completed:
+            return '--'
+        else:
+            return f'{round(float(obj.nutrition_facts_completed) * float(100))}%'
 
     fields = (
         'url',
@@ -158,6 +176,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'cook_time',
         'total_time',
         'source',
+        'percent_nutrition_facts_completed',
     )
     readonly_fields = (
         'title',
@@ -168,6 +187,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'cook_time',
         'total_time',
         'source',
+        'percent_nutrition_facts_completed',
     )
     # ingredients
     # directions
