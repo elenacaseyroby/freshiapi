@@ -17,7 +17,7 @@ class Source(models.Model):
     website = models.URLField(null=False, blank=False)
 
     class Meta:
-        db_table = 'recipes_recipe_sources'
+        db_table = 'recipes_sources'
 
     def __str__(self):
         return self.name
@@ -361,11 +361,12 @@ class Ingredient(models.Model):
     food = models.ForeignKey('foods.Food', on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     # qty_numerator / qty_denominator in qty_unit
-    qty_numerator = models.PositiveSmallIntegerField(null=True, blank=True)
-    qty_denominator = models.PositiveSmallIntegerField(null=True, blank=True)
+    qty_numerator = models.PositiveSmallIntegerField(null=True)
+    qty_denominator = models.PositiveSmallIntegerField(null=True)
+    notes = models.CharField(max_length=100, null=True)
     # Leave blank for something like 1 banana
     qty_unit = models.ForeignKey(
-        'foods.Unit', on_delete=models.CASCADE, null=True, blank=True)
+        'foods.Unit', on_delete=models.CASCADE, null=True)
 
     # ON SAVE REGENERATE RECIPE NUTRITION FACTS
 
