@@ -158,7 +158,6 @@ class RecipeAdmin(admin.ModelAdmin):
         'cook_time',
         'total_time',
         'source',
-        'nutrition_facts_complete',
     )
     readonly_fields = (
         'title',
@@ -169,8 +168,6 @@ class RecipeAdmin(admin.ModelAdmin):
         'cook_time',
         'total_time',
         'source',
-        'nutrition_facts_complete',
-        'nutrition_facts_complete',
     )
     # ingredients
     # directions

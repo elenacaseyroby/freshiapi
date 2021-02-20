@@ -81,7 +81,8 @@ class Recipe(models.Model):
     updated_at = models.DateTimeField(auto_now=True, null=True)
     ingredients = models.ManyToManyField(
         'foods.Food', through='Ingredient', blank=True)
-    nutrition_facts_complete = models.BooleanField(default=True)
+    nutrition_facts_completed = models.DecimalField(
+        max_digits=3, decimal_places=2, null=True)
 
     # Uploaded by users to Freshi.
     user_photos = models.ManyToManyField(
