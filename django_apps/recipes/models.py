@@ -203,20 +203,24 @@ class Recipe(models.Model):
         if not ingredients:
             ingredients = Ingredient.objects.filter(recipe_id=self.id).all()
         # If no ingredients, then no nutrition facts to document.
+        # Set nutrition_facts_completed to 0%.
+        self.nutrition_facts_completed = 0
         if len(ingredients) == 0:
+            self.save()
             return
-        nutrition_facts_complete = True
+        # Track ingredients parsed to later document
+        # nutrition_facts_completed %.
+        ingredients_parsed = 0
+        total_ingredients = len(ingredients)
+
         nutrition_facts = {}
         conversions = get_unit_conversions_dict()
-        if len(ingredients) == 0:
-            nutrition_facts_complete = False
         for ingredient in ingredients:
             # Skip and mark nutrition facts incomplete
             # if food dne.
-            if not ingredient:
-                nutrition_facts_complete = False
+            if not ingredient.food_id:
                 continue
-
+            ingredients_parsed += 1
             # Get food's nutrition facts from database.
             food_nutrition_facts = FoodNutritionFact.objects.filter(
                 food_id=ingredient.food_id).all()
@@ -228,11 +232,6 @@ class Recipe(models.Model):
                 if fact.nutrient_id not in nutrition_facts:
                     nutrition_facts[fact.nutrient_id] = float(0)
 
-                # ingredient_nutrient_qty = get_ingredient_nutrient_qty(
-                #     self, # recipe
-                #     ingredient,
-                #     fact.nutrient_qty
-                # )
                 # If unit is None, calculate ingredient nutrient
                 # qty by takinging the food nutrient_qty for one serving
                 # and multiplying it by the number of servings in
@@ -312,7 +311,10 @@ class Recipe(models.Model):
             ) for nutrient_id in nutrition_facts
         ])
         # Save note about nutrition facts
-        self.nutrition_facts_complete = nutrition_facts_complete
+        nutrition_facts_percent = float(
+            ingredients_parsed)/float(total_ingredients)
+        self.nutrition_facts_completed = round(
+            float(nutrition_facts_percent), 2)
         self.save()
 
     @ cached_property
@@ -364,13 +366,12 @@ class Ingredient(models.Model):
     # qty_numerator / qty_denominator in qty_unit
     qty_numerator = models.PositiveSmallIntegerField(null=True)
     qty_denominator = models.PositiveSmallIntegerField(null=True)
-    notes = models.CharField(max_length=100, null=True)
     # Leave blank for something like 1 banana
     qty_unit = models.ForeignKey(
         'foods.Unit', on_delete=models.CASCADE, null=True)
+    notes = models.CharField(max_length=100, null=True)
 
     # ON SAVE REGENERATE RECIPE NUTRITION FACTS
-
     class Meta:
         db_table = 'recipes_ingredients'
 
