@@ -184,4 +184,7 @@ def parse_ingredient(ingredient_str, units_by_name, units_by_abbr):
         ingredient_str, units_by_name, units_by_abbr)
     food = parse_food(ingredient_str, units_by_name, units_by_abbr)
     ingredient.food = food
+    # if food not matched, make note
+    if not food:
+        ingredient.notes = ingredient_str
     return ingredient

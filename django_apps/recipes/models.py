@@ -81,7 +81,7 @@ class Recipe(models.Model):
     updated_at = models.DateTimeField(auto_now=True, null=True)
     ingredients = models.ManyToManyField(
         'foods.Food', through='Ingredient', blank=True)
-    nutrition_facts_completed = models.DecimalField(
+    ingredients_in_nutrition_facts = models.DecimalField(
         max_digits=3, decimal_places=2, null=True)
 
     # Uploaded by users to Freshi.
@@ -203,22 +203,30 @@ class Recipe(models.Model):
         if not ingredients:
             ingredients = Ingredient.objects.filter(recipe_id=self.id).all()
         # If no ingredients, then no nutrition facts to document.
-        # Set nutrition_facts_completed to 0%.
-        self.nutrition_facts_completed = 0
+        # Set ingredients_in_nutrition_facts to 0%.
+        self.ingredients_in_nutrition_facts = 0
         if len(ingredients) == 0:
             self.save()
             return
         # Track ingredients parsed to later document
-        # nutrition_facts_completed %.
+        # ingredients_in_nutrition_facts %.
         ingredients_parsed = 0
         total_ingredients = len(ingredients)
 
         nutrition_facts = {}
         conversions = get_unit_conversions_dict()
         for ingredient in ingredients:
+            qty_numerator = ingredient.qty_numerator
+            qty_denominator = ingredient.qty_denominator
+            unit = ingredient.qty_unit
+            if qty_numerator and not qty_denominator:
+                qty_denominator = 1
             # Skip and mark nutrition facts incomplete
             # if food dne.
-            if not ingredient.food_id:
+            if not ingredient.food_id or (
+                not qty_numerator and
+                not unit
+            ):
                 continue
             ingredients_parsed += 1
             # Get food's nutrition facts from database.
@@ -227,35 +235,40 @@ class Recipe(models.Model):
 
             # Add them to the recipe nutrition facts
             for fact in food_nutrition_facts:
+                food_nutrient_qty = float(fact.nutrient_qty)
                 # If nutrient hasn't been added to recipe_nutrition_facts
                 # initialize with 0.
                 if fact.nutrient_id not in nutrition_facts:
                     nutrition_facts[fact.nutrient_id] = float(0)
-
-                # If unit is None, calculate ingredient nutrient
-                # qty by takinging the food nutrient_qty for one serving
-                # and multiplying it by the number of servings in
-                # the recipe.
-                if (
-                    ingredient.qty_unit is None or
-                    ingredient.qty_numerator is None or
-                    ingredient.qty_denominator is None
-                ):
-                    recipe_servings = float(
-                        1
-                        if self.servings_count is None else
-                        self.servings_count
-                    )
-                    food_nutrient_qty = float(fact.nutrient_qty)
+                # If qty and no unit, then we will take
+                # the qty to be the number of servings of the food
+                # in the recipe (ex. '3 onions' would be 3 servings of onion).
+                # Multiply nutrient qty in one serving of food
+                # by number of food servings.
+                if qty_numerator and not unit:
+                    food_servings = float(qty_numerator)/float(qty_denominator)
                     ingredient_nutrient_qty = float(
-                        food_nutrient_qty * recipe_servings
+                        food_nutrient_qty * food_servings
                     )
+                # Commenting this out cause salt dv is 100g in our db :/
+                # If no ingredient qty and no unit, calculate ingredient
+                # nutrient qty by takinging the food nutrient_qty for
+                # one serving and multiplying it by the number of servings in
+                # the recipe.
+                # elif not qty_numerator and not unit:
+                #     recipe_servings = float(
+                #         1
+                #         if self.servings_count is None else
+                #         self.servings_count
+                #     )
+                #     ingredient_nutrient_qty = float(
+                #         food_nutrient_qty * recipe_servings
+                #     )
                 # Else nutrient qty per one serving food to
                 # nutrient qty per qty of food in ingredient.
                 else:
-                    numerator = float(ingredient.qty_numerator)
-                    denominator = float(ingredient.qty_denominator)
-                    ingredient_qty = round(float(numerator/denominator), 2)
+                    ingredient_qty = round(
+                        float(qty_numerator)/float(qty_denominator), 2)
                     food = ingredient.food
                     # Get food qty in food serving units.
                     ingredient_qty_in_food_unit = (
@@ -313,11 +326,11 @@ class Recipe(models.Model):
         # Save note about nutrition facts
         nutrition_facts_percent = float(
             ingredients_parsed)/float(total_ingredients)
-        self.nutrition_facts_completed = round(
+        self.ingredients_in_nutrition_facts = round(
             float(nutrition_facts_percent), 2)
         self.save()
 
-    @ cached_property
+    @cached_property
     def is_original(self):
         return self.owner is not None
 
@@ -361,7 +374,7 @@ class Direction(models.Model):
 
 
 class Ingredient(models.Model):
-    food = models.ForeignKey('foods.Food', on_delete=models.CASCADE)
+    food = models.ForeignKey('foods.Food', on_delete=models.CASCADE, null=True)
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     # qty_numerator / qty_denominator in qty_unit
     qty_numerator = models.PositiveSmallIntegerField(null=True)

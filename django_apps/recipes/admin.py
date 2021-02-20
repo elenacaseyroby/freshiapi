@@ -87,14 +87,17 @@ class DirectionInline(admin.TabularInline):
 class IngredientInline(admin.TabularInline):
     model = Ingredient
     extra = 0
+
     fields = (
         'food',
+        'notes',
         'qty_numerator',
         'qty_denominator',
         'qty_unit',
     )
     readonly_fields = (
         'food',
+        'notes',
     )
 
 
@@ -160,11 +163,11 @@ class RecipeAdmin(admin.ModelAdmin):
         RecipeCuisineInline,
     ]
 
-    def percent_nutrition_facts_completed(self, obj):
-        if not obj.nutrition_facts_completed:
+    def percent_ingredients_in_nutrition_facts(self, obj):
+        if not obj.ingredients_in_nutrition_facts:
             return '--'
         else:
-            return f'{round(float(obj.nutrition_facts_completed) * float(100))}%'
+            return f'{round(float(obj.ingredients_in_nutrition_facts) * float(100))}%'
 
     fields = (
         'url',
@@ -176,7 +179,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'cook_time',
         'total_time',
         'source',
-        'percent_nutrition_facts_completed',
+        'percent_ingredients_in_nutrition_facts',
     )
     readonly_fields = (
         'title',
@@ -187,7 +190,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'cook_time',
         'total_time',
         'source',
-        'percent_nutrition_facts_completed',
+        'percent_ingredients_in_nutrition_facts',
     )
     # ingredients
     # directions

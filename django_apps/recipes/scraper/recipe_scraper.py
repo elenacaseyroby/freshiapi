@@ -236,10 +236,10 @@ def scrape_recipe(url):
     # Save ingredients.
     ingredients_to_create = []
     for ingredient in ingredients:
-        # Skip ingredients without matched food, since we aren't
-        # publishing anyway.
-        if ingredient.food_id is None:
-            continue
+        # # Skip ingredients without matched food, since we aren't
+        # # publishing anyway.
+        # if ingredient.food_id is None:
+        #     continue
         # Set recipe_id
         ingredient.recipe_id = new_recipe.id
         ingredients_to_create.append(ingredient)
