@@ -66,23 +66,23 @@ class Diet(models.Model):
 class Recipe(models.Model):
     # If on scrape it finds no info, email the url and recipe id to casey
     title = models.CharField(max_length=100, null=False, blank=False)
-    author = models.CharField(max_length=75, null=True)
-    servings_count = models.PositiveSmallIntegerField(null=True)
-    prep_time = models.DurationField(null=True)
-    cook_time = models.DurationField(null=True)
-    total_time = models.DurationField(null=True)
-    description = models.TextField(null=True)
-    url = models.URLField(null=True)
+    author = models.CharField(max_length=75, null=True, blank=True)
+    servings_count = models.PositiveSmallIntegerField(null=True, blank=True)
+    prep_time = models.DurationField(null=True, blank=True)
+    cook_time = models.DurationField(null=True, blank=True)
+    total_time = models.DurationField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    url = models.URLField(null=True, blank=True)
     owner = models.ForeignKey(
-        'users.User', on_delete=models.RESTRICT, null=True)
+        'users.User', on_delete=models.RESTRICT, null=True, blank=True)
     source = models.ForeignKey(
-        Source, on_delete=models.RESTRICT, null=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True)
+        Source, on_delete=models.RESTRICT, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     ingredients = models.ManyToManyField(
         'foods.Food', through='Ingredient', blank=True)
     ingredients_in_nutrition_facts = models.DecimalField(
-        max_digits=3, decimal_places=2, null=True)
+        max_digits=3, decimal_places=2, null=True, blank=True)
 
     # Uploaded by users to Freshi.
     user_photos = models.ManyToManyField(
@@ -374,15 +374,16 @@ class Direction(models.Model):
 
 
 class Ingredient(models.Model):
-    food = models.ForeignKey('foods.Food', on_delete=models.CASCADE, null=True)
+    food = models.ForeignKey(
+        'foods.Food', on_delete=models.CASCADE, null=True, blank=True)
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     # qty_numerator / qty_denominator in qty_unit
-    qty_numerator = models.PositiveSmallIntegerField(null=True)
-    qty_denominator = models.PositiveSmallIntegerField(null=True)
+    qty_numerator = models.PositiveSmallIntegerField(null=True, blank=True)
+    qty_denominator = models.PositiveSmallIntegerField(null=True, blank=True)
     # Leave blank for something like 1 banana
     qty_unit = models.ForeignKey(
-        'foods.Unit', on_delete=models.CASCADE, null=True)
-    notes = models.CharField(max_length=100, null=True)
+        'foods.Unit', on_delete=models.CASCADE, null=True, blank=True)
+    notes = models.CharField(max_length=100, null=True, blank=True)
 
     # ON SAVE REGENERATE RECIPE NUTRITION FACTS
     class Meta:

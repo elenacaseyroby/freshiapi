@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django import forms
-# from django import forms
+# from django.forms.models import BaseInlineFormSet
 
 from .models import (
     Direction,
@@ -14,6 +14,7 @@ from .models import (
     RecipeInternetImage,
 )
 from .scraper.recipe_scraper import scrape_recipe
+# from .scraper.parse_ingredients import get_closest_matching_food
 
 
 class RecipeAllergenInline(admin.TabularInline):
@@ -85,13 +86,27 @@ class DirectionInline(admin.TabularInline):
     )
 
 
+# class IngredientForm(forms.ModelForm):
+#     update_food = forms.CharField(required=False)
+#     fields = ('update_food', )
+
+#     def save(self, obj, commit=True):
+#         return super(IngredientForm, self).save(commit=commit)
+
+#     class Meta:
+#         fields = '__all__'
+#         model = Ingredient
+
+
 class IngredientInline(admin.TabularInline):
     model = Ingredient
+    # form = IngredientForm
     extra = 0
 
     fields = (
         'food',
         'notes',
+        # 'update_food',
         'qty_numerator',
         'qty_denominator',
         'qty_unit',
@@ -100,6 +115,41 @@ class IngredientInline(admin.TabularInline):
         'food',
         'notes',
     )
+
+
+# class IngredientInlineFormSet(BaseInlineFormSet):
+#     # def save_new_objects(self, commit=True):
+#     #     saved_instances = super(BookInlineFormSet, self).save_new_objects(commit)
+#     #     if commit:
+#     #         # create book for press
+#     #     return saved_instances
+
+#     def save_existing_objects(self, commit=True):
+#         saved_instances = super(
+#             IngredientInlineFormSet,
+#             self
+#         ).save_existing_objects(commit)
+#         if commit:
+#             for form in self.initial_forms:
+#             pk_name = self._pk_field.name
+#             raw_pk_value = form._raw_value(pk_name)
+
+#             # clean() for different types of PK fields can sometimes return
+#             # the model instance, and sometimes the PK. Handle either.
+#             pk_value = form.fields[pk_name].clean(raw_pk_value)
+#             pk_value = getattr(pk_value, 'pk', pk_value)
+
+#             obj = self._existing_object(pk_value)
+#             if self.can_delete and self._should_delete_form(form):
+#                 self.deleted_objects.append(obj)
+#                 obj.delete()
+#                 # problem here causes `clean` 6 lines up to fail next round
+
+#                 # patched line here for future save()
+#                 # to not attempt a second delete
+#                 self.forms.remove(form)
+
+#       return saved_instances
 
 
 class RecipeInternetImageInline(admin.TabularInline):
@@ -151,12 +201,7 @@ class NutritionFactInline(admin.TabularInline):
 
 
 class RecipeForm(forms.ModelForm):
-    scrape_recipe_from_url = forms.BooleanField()
-    help_texts = {
-        'scrape_recipe_from_url':
-        'Check this box to regenerate recipe from URL. \
-            Be careful, this will reset all existing information.''',
-    }
+    scrape_recipe_from_url = forms.BooleanField(required=False)
     fields = ('scrape_recipe_from_url', )
 
     def save(self, commit=True):
@@ -165,14 +210,6 @@ class RecipeForm(forms.ModelForm):
     class Meta:
         fields = '__all__'
         model = Recipe
-
-
-# class ScrapeRecipeForm(forms.BaseModelForm):
-#     scrape_recipe_from_url = forms.BooleanField()
-#     declared_fields = ('scrape_recipe_from_url', )
-
-#     class Meta:
-#         model = Recipe
 
 
 @admin.register(Recipe)

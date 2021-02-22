@@ -43,19 +43,20 @@ class Nutrient(models.Model):
     name = models.CharField(
         unique=True, max_length=40, null=False, blank=False)
     dv_qty = models.DecimalField(
-        max_digits=7, decimal_places=2, null=True)
+        max_digits=7, decimal_places=2, null=True, blank=True)
     dv_unit = models.ForeignKey(
-        Unit, on_delete=models.RESTRICT, null=True)
+        Unit, on_delete=models.RESTRICT, null=True, blank=True)
     usdanutrients = models.ManyToManyField(
         USDANutrient,
         blank=True
     )
-    article_url = models.URLField(null=True)
-    description = models.TextField(null=True)
-    description_citations = models.TextField(null=True)
-    description_src_note = models.CharField(max_length=255, null=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True)
+    article_url = models.URLField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    description_citations = models.TextField(null=True, blank=True)
+    description_src_note = models.CharField(
+        max_length=255, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     @cached_property
     def usdanutrient_ids(self):
@@ -109,7 +110,7 @@ class USDACategory(models.Model):
     # usdacategory_id stores the category id from the USDA FoodData Central
     # Database.
     usdacategory_id = models.PositiveSmallIntegerField(primary_key=True)
-    search_order = models.PositiveSmallIntegerField(null=True)
+    search_order = models.PositiveSmallIntegerField(null=True, blank=True)
 
     # object label in admin
     def __str__(self):
@@ -133,27 +134,28 @@ class Food(models.Model):
     # Example: 1 cup
     # Use these for conversions & writing recipes
     one_serving_qty = models.DecimalField(
-        max_digits=32, decimal_places=2, null=True)
+        max_digits=32, decimal_places=2, null=True, blank=True)
     # If unit is deleted we do not want food record to be deleted.
     one_serving_unit = models.ForeignKey(
-        Unit, on_delete=models.RESTRICT, null=True)
+        Unit, on_delete=models.RESTRICT, null=True, blank=True)
     # If one serving is 100 grams.
     # We might want one serving to be displayed as 1 slice or 5 crackers.
     # Use these for tracking foods.
     # Ex. I ate 2 cups of banana is not appropriate for food tracker,
     # but 1 banana is.
-    one_serving_description = models.CharField(max_length=40, null=True)
+    one_serving_description = models.CharField(
+        max_length=40, null=True, blank=True)
     nutrients = models.ManyToManyField(
         Nutrient, through='NutritionFact', blank=True)
     usdafoods = models.ManyToManyField(
         USDAFood, through='FoodUSDAFood', blank=True)
     # If usda category is deleted, we do not want food to be deleted.
     usdacategory = models.ForeignKey(
-        USDACategory, on_delete=models.RESTRICT, null=True)
+        USDACategory, on_delete=models.RESTRICT, null=True, blank=True)
     # upc_code is bar code.
-    upc_code = models.PositiveBigIntegerField(null=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True)
+    upc_code = models.PositiveBigIntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     @cached_property
     def citation(self):
