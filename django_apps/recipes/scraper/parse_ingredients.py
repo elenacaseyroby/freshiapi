@@ -30,6 +30,13 @@ def parse_numerator(ingredient_str, units_by_name, units_by_abbr):
             else:
                 numerator = int(whole_number)
             return numerator
+    if not numerator:
+        matches = re.match(
+            f'^(\d+) (.*)',
+            ingredient_str
+        )
+        if matches:
+            numerator = matches[1]
     return numerator
 
 
@@ -68,6 +75,16 @@ def parse_unit(ingredient_str, units_by_name, units_by_abbr):
         )
         if matches:
             return units_by_abbr[unit_name]
+    # If still no match, check for full unit name
+    # appearing in string.
+    for unit_name in units_by_name:
+        unit = f' {unit_name} '
+        units = f' {unit_name}s '
+        if (
+            unit in ingredient_str or
+            units in ingredient_str
+        ):
+            return units_by_name[unit_name]
     return None
 
 
@@ -147,9 +164,9 @@ def get_closest_matching_food(food_str):
             name__contains=food_str,
             usdacategory__search_order__gt=15).all()
     if len(foods_with_ingredient_name) == 0:
+        words_in_name = food_str.split(' ')
         foods_with_ingredient_name = Food.objects.filter(
-            name__contains=food_str,
-            usdacategory__search_order__isnull=True).all()
+            name__in=words_in_name).all()
     print(
         f'there are {len(foods_with_ingredient_name)} foods w ingredient name')
     highest_match_score = 0
@@ -178,22 +195,19 @@ def parse_ingredient(ingredient_str, units_by_name, units_by_abbr):
     ingredient = Ingredient()
     # If food matched, add parse all attributes.
     food = parse_food(ingredient_str, units_by_name, units_by_abbr)
-    if food:
-        ingredient.food = food
-        ingredient.qty_numerator = parse_numerator(
-            ingredient_str, units_by_name, units_by_abbr)
-        ingredient.qty_denominator = parse_denominator(
-            ingredient_str, units_by_name, units_by_abbr)
-        # If numerator exists and denominator dne,
-        # set denominator to 1.
-        if (
-            ingredient.qty_numerator is not None and
-            ingredient.qty_denominator is None
-        ):
-            ingredient.qty_denominator = 1
-        ingredient.qty_unit = parse_unit(
-            ingredient_str, units_by_name, units_by_abbr)
-    # If food not matched, make note
-    else:
-        ingredient.notes = ingredient_str
+    ingredient.food = food
+    ingredient.qty_numerator = parse_numerator(
+        ingredient_str, units_by_name, units_by_abbr)
+    ingredient.qty_denominator = parse_denominator(
+        ingredient_str, units_by_name, units_by_abbr)
+    # If numerator exists and denominator dne,
+    # set denominator to 1.
+    if (
+        ingredient.qty_numerator is not None and
+        ingredient.qty_denominator is None
+    ):
+        ingredient.qty_denominator = 1
+    ingredient.qty_unit = parse_unit(
+        ingredient_str, units_by_name, units_by_abbr)
+    ingredient.notes = ingredient_str[:99]
     return ingredient
