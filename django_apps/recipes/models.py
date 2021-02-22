@@ -348,6 +348,7 @@ class RecipePhoto(models.Model):
     # Many Recipes to Many Photos
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     photo = models.ForeignKey('media.Photo', on_delete=models.CASCADE)
+    unique_together = [['recipe', 'photo']]
 
     class Meta:
         db_table = 'recipes_recipes_photos'
@@ -358,6 +359,7 @@ class RecipeInternetImage(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     internet_image = models.ForeignKey(
         'media.InternetImage', on_delete=models.CASCADE)
+    unique_together = [['recipe', 'internet_image']]
 
     class Meta:
         db_table = 'recipes_recipes_internet_images'
@@ -435,7 +437,7 @@ class RecipeDiet(models.Model):
 class RecipeCategory(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    unique_together = [['recipe', 'diet']]
+    unique_together = [['recipe', 'category']]
 
     class Meta:
         db_table = 'recipes_recipes_categories'
