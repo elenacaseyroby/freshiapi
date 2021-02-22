@@ -136,10 +136,14 @@ def scrape_recipe(url, recipe_id=None):
         name=source_name
     )
 
-    # Create or update recipe instance.
+    # Create/update recipe
     recipe = Recipe()
     # If recipe_id passed, update recipe.
     if (recipe_id):
+        # delete recipe ingredients
+        ingredients = Ingredient.objects.filter(recipe_id=recipe_id).all()
+        ingredients.delete()
+        # set recipe_id so updates are made to existing recipe.
         recipe.id = recipe_id
     recipe.url = cleaned_url
     recipe.title = scrape_recipe_title(soup_html)
@@ -169,64 +173,66 @@ def scrape_recipe(url, recipe_id=None):
     recipe.save()
     recipe = Recipe.objects.get(url=cleaned_url)
 
-    # Store image url
-    image_url = scrape_recipe_image_url(soup_html)
-    if image_url:
-        # Create internet image record to store url
-        InternetImage.objects.get_or_create(
-            url=image_url
-        )
-        internet_image = InternetImage.objects.get(
-            url=image_url
-        )
-        # Add image to recipe
-        recipe.internet_images.add(internet_image)
+    # Only add tags if recipe is new.
+    if not recipe_id:
+        # Store image url
+        image_url = scrape_recipe_image_url(soup_html)
+        if image_url:
+            # Create internet image record to store url
+            InternetImage.objects.get_or_create(
+                url=image_url
+            )
+            internet_image = InternetImage.objects.get(
+                url=image_url
+            )
+            # Add image to recipe
+            recipe.internet_images.add(internet_image)
 
-    # Add categories
-    categories_by_name = {
-        category.name: category for category in
-        Category.objects.all()
-    }
-    categories = scrape_recipe_categories(
-        soup_html, categories_by_name)
-    if len(categories) > 0:
-        recipe_categories = [
-            RecipeCategory(
-                category=categories_by_name[category],
+        # Add categories
+        categories_by_name = {
+            category.name: category for category in
+            Category.objects.all()
+        }
+        categories = scrape_recipe_categories(
+            soup_html, categories_by_name)
+        if len(categories) > 0:
+            recipe_categories = [
+                RecipeCategory(
+                    category=categories_by_name[category],
+                    recipe=recipe
+                )
+                for category in categories
+            ]
+            RecipeCategory.objects.bulk_create(recipe_categories)
+
+        # Add cuisine
+        cuisines_by_name = {
+            cuisine.name: cuisine for cuisine in
+            Cuisine.objects.all()
+        }
+        cuisine = scrape_recipe_cuisine(
+            soup_html, cuisines_by_name)
+        if cuisine:
+            recipe_cuisine = RecipeCuisine(
+                cuisine=cuisines_by_name[cuisine],
                 recipe=recipe
             )
-            for category in categories
-        ]
-        RecipeCategory.objects.bulk_create(recipe_categories)
+            recipe_cuisine.save()
 
-    # Add cuisine
-    cuisines_by_name = {
-        cuisine.name: cuisine for cuisine in
-        Cuisine.objects.all()
-    }
-    cuisine = scrape_recipe_cuisine(
-        soup_html, cuisines_by_name)
-    if cuisine:
-        recipe_cuisine = RecipeCuisine(
-            cuisine=cuisines_by_name[cuisine],
-            recipe=recipe
-        )
-        recipe_cuisine.save()
-
-    # Add diets.
-    diets_by_name = {
-        diet.name: diet for diet in Diet.objects.all()
-    }
-    diets = scrape_recipe_diets(soup_html, diets_by_name)
-    if len(diets) > 0:
-        recipe_diets = [
-            RecipeDiet(
-                diet=diets_by_name[diet],
-                recipe=recipe
-            )
-            for diet in diets
-        ]
-        RecipeDiet.objects.bulk_create(recipe_diets)
+        # Add diets.
+        diets_by_name = {
+            diet.name: diet for diet in Diet.objects.all()
+        }
+        diets = scrape_recipe_diets(soup_html, diets_by_name)
+        if len(diets) > 0:
+            recipe_diets = [
+                RecipeDiet(
+                    diet=diets_by_name[diet],
+                    recipe=recipe
+                )
+                for diet in diets
+            ]
+            RecipeDiet.objects.bulk_create(recipe_diets)
     # Get ingredients. DON'T SAVE.
     ingredient_strings = scrape_recipe_ingredients(soup_html)
     # If not ingredients, do nothing.
