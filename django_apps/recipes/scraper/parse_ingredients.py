@@ -167,24 +167,26 @@ def parse_food(ingredient_str, units_by_name, units_by_abbr):
 
 
 def parse_ingredient(ingredient_str, units_by_name, units_by_abbr):
-    # Create ingredient but DO NOT SAVE.
     ingredient = Ingredient()
-    ingredient.qty_numerator = parse_numerator(
-        ingredient_str, units_by_name, units_by_abbr)
-    ingredient.qty_denominator = parse_denominator(
-        ingredient_str, units_by_name, units_by_abbr)
-    # If numerator exists and denominator dne,
-    # set denominator to 1.
-    if (
-        ingredient.qty_numerator is not None and
-        ingredient.qty_denominator is None
-    ):
-        ingredient.qty_denominator = 1
-    ingredient.qty_unit = parse_unit(
-        ingredient_str, units_by_name, units_by_abbr)
+    # If food matched, add parse all attributes.
     food = parse_food(ingredient_str, units_by_name, units_by_abbr)
-    ingredient.food = food
-    # if food not matched, make note
-    if not food:
-        ingredient.notes = ingredient_str
+    if food:
+        ingredient.food = food
+        ingredient.qty_numerator = parse_numerator(
+            ingredient_str, units_by_name, units_by_abbr)
+        ingredient.qty_denominator = parse_denominator(
+            ingredient_str, units_by_name, units_by_abbr)
+        # If numerator exists and denominator dne,
+        # set denominator to 1.
+        if (
+            ingredient.qty_numerator is not None and
+            ingredient.qty_denominator is None
+        ):
+            ingredient.qty_denominator = 1
+        ingredient.qty_unit = parse_unit(
+            ingredient_str, units_by_name, units_by_abbr)
+    # If food not matched, make note
+    else:
+        food_str = parse_food_str(ingredient_str, units_by_name, units_by_abbr)
+        ingredient.notes = food_str or ingredient_str
     return ingredient
