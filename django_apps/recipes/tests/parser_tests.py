@@ -92,6 +92,15 @@ class ParserTestCase(TestCase):
             1
         )
 
+    def test_parse_numerator_w_dash(self):
+        ingredient_str = '1-2 Tbsp olive oil'
+        numerator = parse_numerator(
+            ingredient_str, self.units_by_name, self.units_by_abbr)
+        self.assertEqual(
+            numerator,
+            1
+        )
+
     def test_parse_denominator(self):
         ingredient_str = '3oz. Parmesan, grated (about ¾ cup)'
         denominator = parse_denominator(
@@ -117,6 +126,15 @@ class ParserTestCase(TestCase):
         self.assertEqual(
             unit,
             self.units_by_abbr['oz']
+        )
+
+    def test_parse_unit_w_dash(self):
+        ingredient_str = '1-2 Tbsp olive oil'
+        unit = parse_unit(ingredient_str, self.units_by_name,
+                          self.units_by_abbr)
+        self.assertEqual(
+            unit,
+            self.units_by_abbr['tbsp']
         )
 
     def test_parse_unit2(self):

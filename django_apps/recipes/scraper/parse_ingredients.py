@@ -10,12 +10,15 @@ def parse_numerator(ingredient_str, units_by_name, units_by_abbr):
     # 3oz. Parmesan, grated (about ¾ cup)
     # 1 cup shelled fresh peas (from about 1 pound pods) or frozen peas, thawed
     # 1 1/2cup beans"
+    ingredient_str = ingredient_str.lower()
     unit_dicts_list = [units_by_name, units_by_abbr]
     numerator = None
     for unit_dict in unit_dicts_list:
         for unit_name in unit_dict:
             matches = re.match(
-                f'^(\d+)( *)(\d*)(/*)(\d*)( *){unit_name}(.*)', ingredient_str)
+                f'^(\d+)(\s|-|)(\d*)(/*)(\d*)( *){unit_name}(.*)',
+                ingredient_str
+            )
             if not matches:
                 continue
             whole_number = matches[1]
@@ -31,12 +34,15 @@ def parse_numerator(ingredient_str, units_by_name, units_by_abbr):
 
 
 def parse_denominator(ingredient_str, units_by_name, units_by_abbr):
+    ingredient_str = ingredient_str.lower()
     unit_dicts_list = [units_by_name, units_by_abbr]
     denominator = None
     for unit_dict in unit_dicts_list:
         for unit_name in unit_dict:
             matches = re.match(
-                f'^(\d+)( *)(\d*)(/*)(\d*)( *){unit_name}(.*)', ingredient_str)
+                f'^(\d+)(\s|-|)(\d*)(/*)(\d*)( *){unit_name}(.*)',
+                ingredient_str
+            )
             if not matches:
                 continue
             denominator = (
@@ -49,14 +55,15 @@ def parse_denominator(ingredient_str, units_by_name, units_by_abbr):
 
 
 def parse_unit(ingredient_str, units_by_name, units_by_abbr):
+    ingredient_str = ingredient_str.lower()
     for unit_name in units_by_name:
         matches = re.match(
-            f'^(\d+)( *)(\d*)(/*)(\d*)( *){unit_name}(.*)', ingredient_str)
+            f'^(\d+)(\s|-|)(\d*)(/*)(\d*)( *){unit_name}(.*)', ingredient_str)
         if matches:
             return units_by_name[unit_name]
     for unit_name in units_by_abbr:
         matches = re.match(
-            f'^(\d+)( *)(\d*)(/*)(\d*)( *){unit_name}(\s|,|[.])',
+            f'^(\d+)(\s|-|)(\d*)(/*)(\d*)( *){unit_name}(\s|,|[.])',
             ingredient_str
         )
         if matches:
@@ -101,6 +108,7 @@ def parse_food_str(ingredient_str, units_by_name, units_by_abbr):
     # Try complicated match for instances where we don't want
     # 'g' to catch 'grated' or
     # 'oz' to catch 'frozen'
+    ingredient_str = ingredient_str.lower()
     for unit_name in units_by_abbr:
         matches = re.match(
             f'^(\d+)( *)(\d*)(/*)(\d*)( *){unit_name}(\s|,|[.])(.+)',
