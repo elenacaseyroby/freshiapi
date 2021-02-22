@@ -91,7 +91,7 @@ def remove_modifiers(food_str):
     # remove "plus more for bon appetit"
     food_str = food_str.split('plus more')[0]
     # remove anything after "or"
-    food_str = food_str.split('or')[0]
+    food_str = food_str.split(' or ')[0]
     # remove anything after ","
     food_str = food_str.split(',')[0]
     # remove "."
@@ -195,6 +195,5 @@ def parse_ingredient(ingredient_str, units_by_name, units_by_abbr):
             ingredient_str, units_by_name, units_by_abbr)
     # If food not matched, make note
     else:
-        food_str = parse_food_str(ingredient_str, units_by_name, units_by_abbr)
-        ingredient.notes = food_str or ingredient_str
+        ingredient.notes = ingredient_str
     return ingredient
