@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django import forms
 # from django import forms
 
 from .models import (
@@ -149,9 +150,33 @@ class NutritionFactInline(admin.TabularInline):
     )
 
 
+class RecipeForm(forms.ModelForm):
+    scrape_recipe_from_url = forms.BooleanField()
+    help_texts = {
+        'scrape_recipe_from_url':
+        'Check this box to regenerate recipe from URL. \
+            Be careful, this will reset all existing information.''',
+    }
+    fields = ('scrape_recipe_from_url', )
+
+    def save(self, commit=True):
+        return super(RecipeForm, self).save(commit=commit)
+
+    class Meta:
+        fields = '__all__'
+        model = Recipe
+
+
+# class ScrapeRecipeForm(forms.BaseModelForm):
+#     scrape_recipe_from_url = forms.BooleanField()
+#     declared_fields = ('scrape_recipe_from_url', )
+
+#     class Meta:
+#         model = Recipe
+
+
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
-
     inlines = [
         IngredientInline,
         DirectionInline,
@@ -162,15 +187,20 @@ class RecipeAdmin(admin.ModelAdmin):
         RecipeDietInline,
         RecipeCuisineInline,
     ]
+    form = RecipeForm
 
     def percent_ingredients_in_nutrition_facts(self, obj):
         if not obj.ingredients_in_nutrition_facts:
             return '--'
         else:
-            return f'{round(float(obj.ingredients_in_nutrition_facts) * float(100))}%'
+            return f'''{
+                round(float(obj.ingredients_in_nutrition_facts) *
+                      float(100))
+            }%'''
 
     fields = (
         'url',
+        'scrape_recipe_from_url',
         'title',
         'servings_count',
         'author',
@@ -192,18 +222,21 @@ class RecipeAdmin(admin.ModelAdmin):
         'source',
         'percent_ingredients_in_nutrition_facts',
     )
-    # ingredients
-    # directions
-    # allergens
-    # categories
-    # diets
 
     def save_model(self, request, obj, form, change):
-        # this will double save so must be commented:
-        # super().save_model(request, obj, form, change)
-        scrape_recipe(obj.url)
-
-
-# show recipes and allow edits
-# add custom recipe - don't show url
-# scrape recipe - only show url
+        if request.method == 'POST':
+            url = form.cleaned_data['url']
+            scrape_recipe_from_url = form.cleaned_data[
+                'scrape_recipe_from_url']
+            # If recipe doesn't exist, scrape info from url
+            # and save new instance.
+            if not obj.id and url:
+                scrape_recipe(obj.url)
+            # If recipe exists and box is checked to scrape url, scrape
+            # info and store to existing recipe instance.
+            elif url and scrape_recipe_from_url:
+                scrape_recipe(obj.url, obj.id)
+                # and box is not checked to scrape url, save all other info.
+            # Else save recipe info.
+            else:
+                super().save_model(request, obj, form, change)
