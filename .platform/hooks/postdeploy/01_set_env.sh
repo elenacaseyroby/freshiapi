@@ -11,4 +11,4 @@ chmod 644 /opt/elasticbeanstalk/deployment/custom_env_var
 rm -f /opt/elasticbeanstalk/deployment/*.bak
 
 # Source env vars
-echo 'source <(sed -E -n 's/[^\#]+/export &/ p' /opt/elasticbeanstalk/deployment/custom_env_var)' >> /root/.bash_profile
+echo "source <(sed -E -n 's/[^\#]+/export &/ p' /opt/elasticbeanstalk/deployment/custom_env_var)" >> ~/.bash_profile
