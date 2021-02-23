@@ -6,37 +6,25 @@ from django_apps.foods.models import Food
 from django_apps.recipes.models import Ingredient
 
 
-def parse_numerator(ingredient_str, units_by_name, units_by_abbr):
+def parse_numerator(ingredient_str):
     # 3oz. Parmesan, grated (about ¾ cup)
     # 1 cup shelled fresh peas (from about 1 pound pods) or frozen peas, thawed
     # 1 1/2cup beans"
     ingredient_str = ingredient_str.lower()
-    unit_dicts_list = [units_by_name, units_by_abbr]
-    numerator = None
-    for unit_dict in unit_dicts_list:
-        for unit_name in unit_dict:
-            matches = re.match(
-                f'^(\d+)(\s|-|)(\d*)(/*)(\d*)( *){unit_name}(.*)',
-                ingredient_str
-            )
-            if not matches:
-                continue
-            whole_number = matches[1]
-            numerator = matches[3]
-            denominator = matches[5]
-            if numerator != '' and denominator != '':
-                numerator = int(whole_number) * \
-                    int(denominator) + int(numerator)
-            else:
-                numerator = int(whole_number)
-            return numerator
-    if not numerator:
-        matches = re.match(
-            f'^(\d+) (.*)',
-            ingredient_str
-        )
-        if matches:
-            numerator = matches[1]
+    matches = re.match(
+        f'^(\d+)(\s|-|)(\d*)(/*)(\d*)( *)(.*)',
+        ingredient_str
+    )
+    if not matches:
+        return None
+    whole_number = matches[1]
+    numerator = matches[3]
+    denominator = matches[5]
+    if numerator != '' and denominator != '':
+        numerator = int(whole_number) * \
+            int(denominator) + int(numerator)
+    else:
+        numerator = int(whole_number)
     return numerator
 
 
@@ -58,6 +46,17 @@ def parse_denominator(ingredient_str, units_by_name, units_by_abbr):
                 else int(matches[5])
             )
             return denominator
+    if not denominator:
+        matches = re.match(
+            f'^(\d+)(\s|-|)(\d*)(/*)(\d*)(.*)',
+            ingredient_str
+        )
+        if matches:
+            denominator = (
+                1
+                if matches[5] == ''
+                else int(matches[5])
+            )
     return denominator
 
 
@@ -196,8 +195,7 @@ def parse_ingredient(ingredient_str, units_by_name, units_by_abbr):
     # If food matched, add parse all attributes.
     food = parse_food(ingredient_str, units_by_name, units_by_abbr)
     ingredient.food = food
-    ingredient.qty_numerator = parse_numerator(
-        ingredient_str, units_by_name, units_by_abbr)
+    ingredient.qty_numerator = parse_numerator(ingredient_str)
     ingredient.qty_denominator = parse_denominator(
         ingredient_str, units_by_name, units_by_abbr)
     # If numerator exists and denominator dne,
