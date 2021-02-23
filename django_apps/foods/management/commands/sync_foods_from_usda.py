@@ -44,7 +44,7 @@ class Command(BaseCommand):
         # Dairy
         category_ids_by_keyword['milk'] = 1
         category_ids_by_keyword['yogurt'] = 1
-        category_ids_by_keyword['egg'] = 1
+        category_ids_by_keyword['egg '] = 1
         category_ids_by_keyword['cream'] = 1
         category_ids_by_keyword['kefir'] = 1
         category_ids_by_keyword['cheese'] = 1
@@ -55,7 +55,7 @@ class Command(BaseCommand):
         category_ids_by_keyword['chickpea'] = 16
         # Pork
         category_ids_by_keyword['pork'] = 10
-        category_ids_by_keyword['hog'] = 10
+        category_ids_by_keyword[' hog '] = 10
         category_ids_by_keyword['bacon'] = 10
         # Fish
         category_ids_by_keyword['pork'] = 15
@@ -74,7 +74,7 @@ class Command(BaseCommand):
         category_ids_by_keyword['mackerel'] = 15
         category_ids_by_keyword['mullet'] = 15
         category_ids_by_keyword['perch'] = 15
-        category_ids_by_keyword['ray'] = 15
+        category_ids_by_keyword[' ray'] = 15
         category_ids_by_keyword['sturgeon'] = 15
         category_ids_by_keyword['salmon'] = 15
         category_ids_by_keyword['trout'] = 15
@@ -94,8 +94,8 @@ class Command(BaseCommand):
         category_ids_by_keyword['porgy'] = 15
         category_ids_by_keyword['pike'] = 15
         category_ids_by_keyword['pompano'] = 15
-        category_ids_by_keyword['cod'] = 15
-        category_ids_by_keyword['eel'] = 15
+        category_ids_by_keyword[' cod'] = 15
+        category_ids_by_keyword[' eel'] = 15
         category_ids_by_keyword['croaker'] = 15
         # Baked
         category_ids_by_keyword['bread'] = 18
@@ -108,12 +108,12 @@ class Command(BaseCommand):
         category_ids_by_keyword['turkey'] = 5
         category_ids_by_keyword['quail'] = 5
         category_ids_by_keyword['goose'] = 5
-        category_ids_by_keyword['hen'] = 5
+        category_ids_by_keyword[' hen'] = 5
         category_ids_by_keyword['pheasant'] = 5
         category_ids_by_keyword['dove'] = 5
         # Snack
-        category_ids_by_keyword['dip'] = 23
-        category_ids_by_keyword['chip'] = 23
+        category_ids_by_keyword[' dip'] = 23
+        category_ids_by_keyword['chips'] = 23
         category_ids_by_keyword['cracker'] = 23
         category_ids_by_keyword['hummus'] = 23
         category_ids_by_keyword['puff'] = 23
@@ -132,7 +132,7 @@ class Command(BaseCommand):
         # Lunchmeat & Sausages
         category_ids_by_keyword['lunch meat'] = 7
         category_ids_by_keyword['salami'] = 7
-        category_ids_by_keyword['ham'] = 7
+        category_ids_by_keyword[' ham '] = 7
         category_ids_by_keyword['bologna'] = 7
         category_ids_by_keyword['sausage'] = 7
         category_ids_by_keyword['franfurter'] = 7
@@ -158,7 +158,7 @@ class Command(BaseCommand):
         category_ids_by_keyword['formula'] = 3
         category_ids_by_keyword['baby food'] = 3
         # Breakfast
-        category_ids_by_keyword['bar'] = 8
+        category_ids_by_keyword[' bar'] = 8
         category_ids_by_keyword['smoothie'] = 8
         category_ids_by_keyword['oatmeal'] = 8
         category_ids_by_keyword['granola'] = 8
@@ -173,7 +173,7 @@ class Command(BaseCommand):
         category_ids_by_keyword['pasta'] = 20
         category_ids_by_keyword['macaroni'] = 20
         category_ids_by_keyword['spaghetti'] = 20
-        category_ids_by_keyword['rice'] = 20
+        category_ids_by_keyword[' rice'] = 20
         category_ids_by_keyword['grits'] = 20
         category_ids_by_keyword['quinoa'] = 20
         # Sweets
@@ -186,11 +186,11 @@ class Command(BaseCommand):
         category_ids_by_keyword['cake'] = 19
         category_ids_by_keyword['cookie'] = 19
         category_ids_by_keyword['crisp'] = 19
-        category_ids_by_keyword['pie'] = 19
+        category_ids_by_keyword[' pie'] = 19
         category_ids_by_keyword['turnover'] = 19
         category_ids_by_keyword['cobbler'] = 19
         # Nut and seed
-        category_ids_by_keyword['nut'] = 12
+        category_ids_by_keyword[' nut'] = 12
         category_ids_by_keyword['seed'] = 12
         # Beverage
         category_ids_by_keyword['tea'] = 14
@@ -211,7 +211,7 @@ class Command(BaseCommand):
             'lettuce', 'spinach', 'pepper', 'onion', 'collard', 'greens',
             'turnip', 'radish', 'watercress', 'carrot', 'pea', 'potato',
             'cucumber', 'celery', 'fennel', 'squash', 'seaweed', 'artichoke',
-            'asparagus', 'sprouts', 'cauliflower', 'okra', 'plantain', 'yam',
+            'asparagus', 'sprouts', 'cauliflower', 'okra', 'plantain', ' yam',
             'sweet potato'
         ]
         for veggie in veggies:
