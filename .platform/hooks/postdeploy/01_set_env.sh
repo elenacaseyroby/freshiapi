@@ -5,6 +5,3 @@ sudo cp /opt/elasticbeanstalk/deployment/env /var/app/current/backend/.env
 # Set permissions to the .env file so this file can be accessed 
 # by any user on the instance. You can restrict permissions as per your requirements.
 chmod 755 /var/app/current/backend/.env
-
-# Remove duplicate files upon deployment.
-rm -f /opt/elasticbeanstalk/deployment/*.bak
