@@ -30,34 +30,21 @@ def parse_numerator(ingredient_str):
 
 def parse_denominator(ingredient_str, units_by_name, units_by_abbr):
     ingredient_str = ingredient_str.lower()
-    unit_dicts_list = [units_by_name, units_by_abbr]
-    denominator = None
-    for unit_dict in unit_dicts_list:
-        for unit_name in unit_dict:
-            matches = re.match(
-                f'^(\d+)(\s|-|)(\d*)(/*)(\d*)( *){unit_name}(.*)',
-                ingredient_str
-            )
-            if not matches:
-                continue
-            denominator = (
-                1
-                if matches[5] == ''
-                else int(matches[5])
-            )
-            return denominator
-    if not denominator:
-        matches = re.match(
-            f'^(\d+)(\s|-|)(\d*)(/*)(\d*)(.*)',
-            ingredient_str
-        )
-        if matches:
-            denominator = (
-                1
-                if matches[5] == ''
-                else int(matches[5])
-            )
-    return denominator
+    matches = re.match(
+        f'^(\d+)(\s|-|)(\d*)(/*)(\d*)( *)(.*)',
+        ingredient_str
+    )
+    if not matches:
+        return None
+    denominator = matches[5]
+    numerator = matches[1]
+    if denominator != '':
+        return int(matches[5])
+    # If numerator exists, but denominator dne, set denom as 1.
+    elif numerator != '':
+        return 1
+    else:
+        None
 
 
 def parse_unit(ingredient_str, units_by_name, units_by_abbr):
