@@ -9,8 +9,3 @@ chmod 644 /opt/elasticbeanstalk/deployment/custom_env_var
 
 # Remove duplicate files upon deployment.
 rm -f /opt/elasticbeanstalk/deployment/*.bak
-
-# Set execution permissions on both .platform/hooks/postdeploy/01_set_env.sh. and 
-# .platform/confighooks/postdeploy/01_set_env.sh files.
-chmod +x .platform/hooks/postdeploy/01_set_env.sh
-chmod +x .platform/confighooks/postdeploy/01_set_env.sh
