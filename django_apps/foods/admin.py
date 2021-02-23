@@ -60,7 +60,6 @@ class NutritionFactInline(admin.TabularInline):
     )
     readonly_fields = (
         'nutrient',
-        'nutrient_qty',
         'nutrient_unit',
         'nutrient_dv_qty',
         'nutrient_dv_unit',
@@ -74,11 +73,6 @@ class FoodAdmin(admin.ModelAdmin):
         NutritionFactInline,
     ]
 
-    def usdacategory(self, obj):
-        if obj.usdacategory_id:
-            return '--'
-        return obj.usdacategory.name
-
     def one_serving(self, obj):
         if obj.one_serving_description:
             return obj.one_serving_description
@@ -87,7 +81,7 @@ class FoodAdmin(admin.ModelAdmin):
         return f'{qty} {unit}'
 
     fields = ('name', 'usdacategory', 'one_serving',)
-    readonly_fields = ('usdacategory', 'one_serving',)
+    readonly_fields = ('one_serving',)
     search_fields = ['name', ]
 
     def save_model(self, request, obj, form, change):
