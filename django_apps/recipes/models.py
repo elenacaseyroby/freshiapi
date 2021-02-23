@@ -17,7 +17,7 @@ class Source(models.Model):
     website = models.URLField(null=False, blank=False)
 
     class Meta:
-        db_table = 'recipes_recipe_sources'
+        db_table = 'recipes_sources'
 
     def __str__(self):
         return self.name
@@ -66,22 +66,23 @@ class Diet(models.Model):
 class Recipe(models.Model):
     # If on scrape it finds no info, email the url and recipe id to casey
     title = models.CharField(max_length=100, null=False, blank=False)
-    author = models.CharField(max_length=75, null=True)
-    servings_count = models.PositiveSmallIntegerField(null=True)
-    prep_time = models.DurationField(null=True)
-    cook_time = models.DurationField(null=True)
-    total_time = models.DurationField(null=True)
-    description = models.TextField(null=True)
-    url = models.URLField(null=True)
+    author = models.CharField(max_length=75, null=True, blank=True)
+    servings_count = models.PositiveSmallIntegerField(null=True, blank=True)
+    prep_time = models.DurationField(null=True, blank=True)
+    cook_time = models.DurationField(null=True, blank=True)
+    total_time = models.DurationField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    url = models.URLField(null=True, blank=True)
     owner = models.ForeignKey(
-        'users.User', on_delete=models.RESTRICT, null=True)
+        'users.User', on_delete=models.RESTRICT, null=True, blank=True)
     source = models.ForeignKey(
-        Source, on_delete=models.RESTRICT, null=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True)
+        Source, on_delete=models.RESTRICT, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     ingredients = models.ManyToManyField(
         'foods.Food', through='Ingredient', blank=True)
-    nutrition_facts_complete = models.BooleanField(default=True)
+    ingredients_in_nutrition_facts = models.DecimalField(
+        max_digits=3, decimal_places=2, null=True, blank=True)
 
     # Uploaded by users to Freshi.
     user_photos = models.ManyToManyField(
@@ -202,60 +203,72 @@ class Recipe(models.Model):
         if not ingredients:
             ingredients = Ingredient.objects.filter(recipe_id=self.id).all()
         # If no ingredients, then no nutrition facts to document.
+        # Set ingredients_in_nutrition_facts to 0%.
+        self.ingredients_in_nutrition_facts = 0
         if len(ingredients) == 0:
+            self.save()
             return
-        nutrition_facts_complete = True
+        # Track ingredients parsed to later document
+        # ingredients_in_nutrition_facts %.
+        ingredients_parsed = 0
+        total_ingredients = len(ingredients)
+
         nutrition_facts = {}
         conversions = get_unit_conversions_dict()
-        if len(ingredients) == 0:
-            nutrition_facts_complete = False
         for ingredient in ingredients:
+            qty_numerator = ingredient.qty_numerator
+            qty_denominator = ingredient.qty_denominator
+            unit = ingredient.qty_unit
+            if qty_numerator and not qty_denominator:
+                qty_denominator = 1
             # Skip and mark nutrition facts incomplete
             # if food dne.
-            if not ingredient:
-                nutrition_facts_complete = False
+            if not ingredient.food_id or (
+                not qty_numerator and
+                not unit
+            ):
                 continue
-
+            ingredients_parsed += 1
             # Get food's nutrition facts from database.
             food_nutrition_facts = FoodNutritionFact.objects.filter(
                 food_id=ingredient.food_id).all()
 
             # Add them to the recipe nutrition facts
             for fact in food_nutrition_facts:
+                food_nutrient_qty = float(fact.nutrient_qty)
                 # If nutrient hasn't been added to recipe_nutrition_facts
                 # initialize with 0.
                 if fact.nutrient_id not in nutrition_facts:
                     nutrition_facts[fact.nutrient_id] = float(0)
-
-                # ingredient_nutrient_qty = get_ingredient_nutrient_qty(
-                #     self, # recipe
-                #     ingredient,
-                #     fact.nutrient_qty
-                # )
-                # If unit is None, calculate ingredient nutrient
-                # qty by takinging the food nutrient_qty for one serving
-                # and multiplying it by the number of servings in
-                # the recipe.
-                if (
-                    ingredient.qty_unit is None or
-                    ingredient.qty_numerator is None or
-                    ingredient.qty_denominator is None
-                ):
-                    recipe_servings = float(
-                        1
-                        if self.servings_count is None else
-                        self.servings_count
-                    )
-                    food_nutrient_qty = float(fact.nutrient_qty)
+                # If qty and no unit, then we will take
+                # the qty to be the number of servings of the food
+                # in the recipe (ex. '3 onions' would be 3 servings of onion).
+                # Multiply nutrient qty in one serving of food
+                # by number of food servings.
+                if qty_numerator and not unit:
+                    food_servings = float(qty_numerator)/float(qty_denominator)
                     ingredient_nutrient_qty = float(
-                        food_nutrient_qty * recipe_servings
+                        food_nutrient_qty * food_servings
                     )
+                # Commenting this out cause salt dv is 100g in our db :/
+                # If no ingredient qty and no unit, calculate ingredient
+                # nutrient qty by takinging the food nutrient_qty for
+                # one serving and multiplying it by the number of servings in
+                # the recipe.
+                # elif not qty_numerator and not unit:
+                #     recipe_servings = float(
+                #         1
+                #         if self.servings_count is None else
+                #         self.servings_count
+                #     )
+                #     ingredient_nutrient_qty = float(
+                #         food_nutrient_qty * recipe_servings
+                #     )
                 # Else nutrient qty per one serving food to
                 # nutrient qty per qty of food in ingredient.
                 else:
-                    numerator = float(ingredient.qty_numerator)
-                    denominator = float(ingredient.qty_denominator)
-                    ingredient_qty = round(float(numerator/denominator), 2)
+                    ingredient_qty = round(
+                        float(qty_numerator)/float(qty_denominator), 2)
                     food = ingredient.food
                     # Get food qty in food serving units.
                     ingredient_qty_in_food_unit = (
@@ -311,10 +324,13 @@ class Recipe(models.Model):
             ) for nutrient_id in nutrition_facts
         ])
         # Save note about nutrition facts
-        self.nutrition_facts_complete = nutrition_facts_complete
+        nutrition_facts_percent = float(
+            ingredients_parsed)/float(total_ingredients)
+        self.ingredients_in_nutrition_facts = round(
+            float(nutrition_facts_percent), 2)
         self.save()
 
-    @ cached_property
+    @cached_property
     def is_original(self):
         return self.owner is not None
 
@@ -332,6 +348,7 @@ class RecipePhoto(models.Model):
     # Many Recipes to Many Photos
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     photo = models.ForeignKey('media.Photo', on_delete=models.CASCADE)
+    unique_together = [['recipe', 'photo']]
 
     class Meta:
         db_table = 'recipes_recipes_photos'
@@ -342,6 +359,7 @@ class RecipeInternetImage(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     internet_image = models.ForeignKey(
         'media.InternetImage', on_delete=models.CASCADE)
+    unique_together = [['recipe', 'internet_image']]
 
     class Meta:
         db_table = 'recipes_recipes_internet_images'
@@ -358,7 +376,8 @@ class Direction(models.Model):
 
 
 class Ingredient(models.Model):
-    food = models.ForeignKey('foods.Food', on_delete=models.CASCADE)
+    food = models.ForeignKey(
+        'foods.Food', on_delete=models.CASCADE, null=True, blank=True)
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     # qty_numerator / qty_denominator in qty_unit
     qty_numerator = models.PositiveSmallIntegerField(null=True, blank=True)
@@ -366,9 +385,9 @@ class Ingredient(models.Model):
     # Leave blank for something like 1 banana
     qty_unit = models.ForeignKey(
         'foods.Unit', on_delete=models.CASCADE, null=True, blank=True)
+    notes = models.CharField(max_length=100, null=True, blank=True)
 
     # ON SAVE REGENERATE RECIPE NUTRITION FACTS
-
     class Meta:
         db_table = 'recipes_ingredients'
 
@@ -418,7 +437,7 @@ class RecipeDiet(models.Model):
 class RecipeCategory(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    unique_together = [['recipe', 'diet']]
+    unique_together = [['recipe', 'category']]
 
     class Meta:
         db_table = 'recipes_recipes_categories'

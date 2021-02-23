@@ -49,8 +49,7 @@ class ParserTestCase(TestCase):
 
     def test_parse_numerator(self):
         ingredient_str = '3oz. Parmesan, grated (about ¾ cup)'
-        numerator = parse_numerator(
-            ingredient_str, self.units_by_name, self.units_by_abbr)
+        numerator = parse_numerator(ingredient_str)
         self.assertEqual(
             numerator,
             3
@@ -58,8 +57,7 @@ class ParserTestCase(TestCase):
 
     def test_parse_numerator2(self):
         ingredient_str = '1 teaspoon kosher salt plus more'
-        numerator = parse_numerator(
-            ingredient_str, self.units_by_name, self.units_by_abbr)
+        numerator = parse_numerator(ingredient_str)
         self.assertEqual(
             numerator,
             1
@@ -67,8 +65,7 @@ class ParserTestCase(TestCase):
 
     def test_parse_numerator3(self):
         ingredient_str = '1 oz (or 3/4 cup) shelled fresh peas (from about 1 pound pods) or frozen peas, thawed'
-        numerator = parse_numerator(
-            ingredient_str, self.units_by_name, self.units_by_abbr)
+        numerator = parse_numerator(ingredient_str)
         self.assertEqual(
             numerator,
             1
@@ -76,8 +73,7 @@ class ParserTestCase(TestCase):
 
     def test_parse_numerator_with_whole_number_and_fraction(self):
         ingredient_str = '1 1/2cup Parmesan, grated'
-        numerator = parse_numerator(
-            ingredient_str, self.units_by_name, self.units_by_abbr)
+        numerator = parse_numerator(ingredient_str)
         self.assertEqual(
             numerator,
             3
@@ -85,8 +81,23 @@ class ParserTestCase(TestCase):
 
     def test_parse_numerator_with_fraction(self):
         ingredient_str = '1/2cup Parmesan, grated'
-        numerator = parse_numerator(
-            ingredient_str, self.units_by_name, self.units_by_abbr)
+        numerator = parse_numerator(ingredient_str)
+        self.assertEqual(
+            numerator,
+            1
+        )
+
+    def test_parse_numerator_without_unit(self):
+        ingredient_str = '1 1/2 small cantaloupe or Honey Kiss melon(about 1½ lb.)'
+        numerator = parse_numerator(ingredient_str)
+        self.assertEqual(
+            numerator,
+            3
+        )
+
+    def test_parse_numerator_w_dash(self):
+        ingredient_str = '1-2 Tbsp olive oil'
+        numerator = parse_numerator(ingredient_str)
         self.assertEqual(
             numerator,
             1
@@ -110,6 +121,15 @@ class ParserTestCase(TestCase):
             2
         )
 
+    def test_parse_denominator_without_unit(self):
+        ingredient_str = '1/2 small cantaloupe or Honey Kiss melon(about 1½ lb.)'
+        denominator = parse_denominator(
+            ingredient_str, self.units_by_name, self.units_by_abbr)
+        self.assertEqual(
+            denominator,
+            2
+        )
+
     def test_parse_unit(self):
         ingredient_str = '3oz. Parmesan, grated (about ¾ cup)'
         unit = parse_unit(ingredient_str, self.units_by_name,
@@ -117,6 +137,15 @@ class ParserTestCase(TestCase):
         self.assertEqual(
             unit,
             self.units_by_abbr['oz']
+        )
+
+    def test_parse_unit_w_dash(self):
+        ingredient_str = '1-2 Tbsp olive oil'
+        unit = parse_unit(ingredient_str, self.units_by_name,
+                          self.units_by_abbr)
+        self.assertEqual(
+            unit,
+            self.units_by_abbr['tbsp']
         )
 
     def test_parse_unit2(self):
@@ -153,6 +182,15 @@ class ParserTestCase(TestCase):
         self.assertEqual(
             food_str,
             'large eggs'
+        )
+
+    def test_parse_food4(self):
+        ingredient_str = '2 ripe tomatoes, sliced (optional // organic when possible)'
+        food_str = parse_food_str(
+            ingredient_str, self.units_by_name, self.units_by_abbr)
+        self.assertEqual(
+            food_str,
+            'ripe tomatoes'
         )
 
     def test_parse_food_with_paren(self):
