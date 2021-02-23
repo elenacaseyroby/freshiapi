@@ -18,14 +18,13 @@ import environ
 
 
 def env_var(VAR_NAME):
-    # If prod, retrieve env
-    if VAR_NAME in os.environ:
-        return os.environ[VAR_NAME]
     env = environ.Env()
     env.read_env()
     # If local, set env vars
     if VAR_NAME not in os.environ:
         os.environ[VAR_NAME] = env(VAR_NAME)
+    # If prod, retrieve env
+    return os.environ[VAR_NAME]
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
