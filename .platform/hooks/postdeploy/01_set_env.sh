@@ -9,3 +9,6 @@ chmod 644 /opt/elasticbeanstalk/deployment/custom_env_var
 
 # Remove duplicate files upon deployment.
 rm -f /opt/elasticbeanstalk/deployment/*.bak
+
+# Source env vars
+echo 'source <(sed -E -n 's/[^\#]+/export &/ p' /opt/elasticbeanstalk/deployment/custom_env_var)' >> ~/.bash_profile
