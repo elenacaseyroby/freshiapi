@@ -74,7 +74,18 @@ class NutritionFactInline(admin.TabularInline):
     model = NutritionFact
     extra = 0
 
+    def usdanutrient_ids(self, obj):
+        label = ''
+        for index, nid in enumerate(obj.nutrient.usdanutrient_ids):
+            label = (
+                f'{label}, {nid}'
+                if index != 0 else
+                str(nid)
+            )
+        return label
+
     # custom fields must be in readonly_fields
+
     def dv_percent(self, obj):
         if not obj.nutrient.dv_qty:
             return '--'
@@ -103,6 +114,7 @@ class NutritionFactInline(admin.TabularInline):
 
     fields = (
         'nutrient',
+        'usdanutrient_ids',
         'nutrient_qty',
         'nutrient_unit',
         'nutrient_dv_qty',
@@ -110,6 +122,7 @@ class NutritionFactInline(admin.TabularInline):
         'dv_percent'
     )
     readonly_fields = (
+        'usdanutrient_ids',
         'nutrient_unit',
         'nutrient_dv_qty',
         'nutrient_dv_unit',
@@ -123,6 +136,16 @@ class FoodAdmin(admin.ModelAdmin):
         NutritionFactInline,
     ]
 
+    def fdc_ids(self, obj):
+        label = ''
+        for index, usdafood in enumerate(obj.usdafoods.all()):
+            label = (
+                f'{label}, {usdafood.fdc_id}'
+                if index != 0 else
+                str(usdafood.fdc_id)
+            )
+        return label
+
     def one_serving(self, obj):
         if obj.one_serving_description:
             return obj.one_serving_description
@@ -130,8 +153,8 @@ class FoodAdmin(admin.ModelAdmin):
         unit = obj.one_serving_unit or ''
         return f'{qty} {unit}'
 
-    fields = ('name', 'usdacategory', 'one_serving',)
-    readonly_fields = ('one_serving',)
+    fields = ('name', 'usdacategory', 'one_serving', 'fdc_ids', )
+    readonly_fields = ('one_serving', 'fdc_ids', )
     search_fields = ['name', ]
 
     def save_model(self, request, obj, form, change):
