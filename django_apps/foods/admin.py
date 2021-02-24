@@ -6,7 +6,7 @@ from .models import (
 )
 
 
-class NutrientHealthBenefitInline(admin.TabularInline):
+class HealthBenefitInlineNutrient(admin.TabularInline):
     model = NutrientHealthBenefit
     extra = 0
 
@@ -15,16 +15,26 @@ class NutrientHealthBenefitInline(admin.TabularInline):
     )
 
 
+class NutrientHealthBenefitInline(admin.TabularInline):
+    model = NutrientHealthBenefit
+    extra = 0
+
+    fields = (
+        'health_benefit',
+    )
+
+
 @admin.register(HealthBenefit)
 class HealthBenefit(admin.ModelAdmin):
     fields = ('description', )
-    inlines = [NutrientHealthBenefitInline, ]
+    inlines = [HealthBenefitInlineNutrient, ]
 
 
 @admin.register(Nutrient)
 class NutrientAdmin(admin.ModelAdmin):
     fields = ('name', 'dv_qty', 'dv_unit')
     exclude = ['usdanutrients']
+    inlines = [NutrientHealthBenefitInline, ]
 
 
 @admin.register(Unit)
