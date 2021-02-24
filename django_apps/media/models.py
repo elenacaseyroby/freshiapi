@@ -62,17 +62,3 @@ class Photo(models.Model):
 
     class Meta:
         db_table = 'media_photos'
-
-
-class InternetImage(models.Model):
-    # For images from the internet that we don't legally own.
-    # urlfield too short to be useful.
-    url = models.TextField(null=False, blank=False)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-
-    # Django admin display name
-    def __str__(self):
-        return str(self.url)
-
-    class Meta:
-        db_table = 'media_internet_images'

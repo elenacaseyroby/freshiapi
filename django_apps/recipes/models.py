@@ -87,9 +87,6 @@ class Recipe(models.Model):
     # Uploaded by users to Freshi.
     user_photos = models.ManyToManyField(
         'media.Photo', through='RecipePhoto', blank=True)
-    # Urls of images for scraped recipes.
-    internet_images = models.ManyToManyField(
-        'media.InternetImage', through='RecipeInternetImage', blank=True)
 
     contains_allergens = models.ManyToManyField(
         Allergen,
@@ -355,14 +352,19 @@ class RecipePhoto(models.Model):
 
 
 class RecipeInternetImage(models.Model):
-    # Many Recipes to Many Images
+    # For images from the internet that we don't legally own.
+    # urlfield too short to be useful.
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    internet_image = models.ForeignKey(
-        'media.InternetImage', on_delete=models.CASCADE)
-    unique_together = [['recipe', 'internet_image']]
+    url = models.TextField(null=False, blank=False)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    unique_together = [['recipe', 'url']]
+
+    # Django admin display name
+    def __str__(self):
+        return str(self.url)
 
     class Meta:
-        db_table = 'recipes_recipes_internet_images'
+        db_table = 'recipes_internet_images'
 
 
 class Direction(models.Model):

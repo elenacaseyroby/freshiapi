@@ -12,10 +12,9 @@ from django_apps.recipes.models import (
     RecipeCategory,
     RecipeCuisine,
     RecipeDiet,
+    RecipeInternetImage,
     Source,
 )
-
-from django_apps.media.models import InternetImage
 from django_apps.foods.models import Unit
 
 from django_apps.recipes.scraper.recipe_title_scraper import (
@@ -179,14 +178,10 @@ def scrape_recipe(url, recipe_id=None):
         image_url = scrape_recipe_image_url(soup_html)
         if image_url:
             # Create internet image record to store url
-            InternetImage.objects.get_or_create(
-                url=image_url
+            RecipeInternetImage.objects.get_or_create(
+                url=image_url,
+                recipe_id=recipe.id
             )
-            internet_image = InternetImage.objects.get(
-                url=image_url
-            )
-            # Add image to recipe
-            recipe.internet_images.add(internet_image)
 
         # Add categories
         categories_by_name = {
