@@ -153,8 +153,9 @@ class FoodAdmin(admin.ModelAdmin):
         unit = obj.one_serving_unit or ''
         return f'{qty} {unit}'
 
-    fields = ('name', 'usdacategory', 'one_serving', 'fdc_ids', )
-    readonly_fields = ('one_serving', 'fdc_ids', )
+    fields = ('name', 'id', 'usdacategory',
+              'one_serving', 'upc_code', 'fdc_ids', )
+    readonly_fields = ('id', 'one_serving', 'fdc_ids', )
     search_fields = ['name', ]
 
     def save_model(self, request, obj, form, change):
