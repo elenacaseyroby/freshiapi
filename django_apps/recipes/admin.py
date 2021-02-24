@@ -156,13 +156,7 @@ class RecipeInternetImageInline(admin.TabularInline):
     model = RecipeInternetImage
     extra = 0
 
-    def url(self, obj):
-        return obj.internet_image.url or '--'
-
     fields = (
-        'url',
-    )
-    readonly_fields = (
         'url',
     )
 

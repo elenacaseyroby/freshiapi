@@ -18,10 +18,9 @@ import environ
 
 
 def env_var(VAR_NAME):
-    env = environ.Env()
-    env.read_env()
-    # If local, set env vars
     if VAR_NAME not in os.environ:
+        env = environ.Env()
+        env.read_env()
         os.environ[VAR_NAME] = env(VAR_NAME)
     return os.environ[VAR_NAME]
 

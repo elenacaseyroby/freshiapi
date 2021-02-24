@@ -12,6 +12,20 @@ from django_apps.users.models import User
 # Exception: many to many tables.
 
 
+class HealthBenefit(models.Model):
+    # examples: menstrual cramp relief, brain health,
+    # memory function, brain tissue regeneration, energy,
+    # fights issues related to [alzheimer's]
+    description = models.CharField(unique=True, max_length=100)
+
+    # object label in admin
+    def __str__(self):
+        return self.description
+
+    class Meta:
+        db_table = 'foods_health_benefits'
+
+
 class Unit(models.Model):
     name = models.CharField(unique=True, max_length=50)
     abbr = models.CharField(max_length=10)
@@ -48,6 +62,11 @@ class Nutrient(models.Model):
         Unit, on_delete=models.RESTRICT, null=True, blank=True)
     usdanutrients = models.ManyToManyField(
         USDANutrient,
+        blank=True
+    )
+    health_benefits = models.ManyToManyField(
+        HealthBenefit,
+        through='NutrientHealthBenefit',
         blank=True
     )
     article_url = models.URLField(null=True, blank=True)
@@ -180,6 +199,20 @@ class Food(models.Model):
 
     class Meta:
         db_table = 'foods_foods'
+
+
+class NutrientHealthBenefit(models.Model):
+    # examples: menstrual cramp relief, brain health,
+    # memory function, brain tissue regeneration, energy,
+    # fights issues related to [alzheimer's]
+    nutrient = models.ForeignKey(
+        Nutrient, on_delete=models.CASCADE, db_column='nutrient_id')
+    health_benefit = models.ForeignKey(
+        HealthBenefit, on_delete=models.CASCADE, db_column='health_benefit_id')
+    unique_together = [['nutrient', 'health_benefit']]
+
+    class Meta:
+        db_table = 'foods_nutrients_health_benefits'
 
 
 class FoodUSDAFood(models.Model):

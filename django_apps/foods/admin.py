@@ -1,6 +1,24 @@
 from django.contrib import admin
 
-from .models import Nutrient, Unit, UnitConversion, Food, NutritionFact
+from .models import (
+    Nutrient, Unit, UnitConversion, Food, NutritionFact, NutrientHealthBenefit,
+    HealthBenefit
+)
+
+
+class NutrientHealthBenefitInline(admin.TabularInline):
+    model = NutrientHealthBenefit
+    extra = 0
+
+    fields = (
+        'nutrient',
+    )
+
+
+@admin.register(HealthBenefit)
+class HealthBenefit(admin.ModelAdmin):
+    fields = ('description', )
+    inlines = [NutrientHealthBenefitInline, ]
 
 
 @admin.register(Nutrient)
