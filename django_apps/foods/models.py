@@ -114,12 +114,14 @@ class Nutrient(models.Model):
 
     # object label in admin
     def __str__(self):
-        return self.name
+        if self.dv_unit:
+            return f'{self.name} - {self.dv_unit.abbr}'
+        else:
+            return self.name
 
     class Meta:
         ordering = [
-            models.F('dv_qty').asc(nulls_last=True),
-            models.F('dv_unit').asc(nulls_last=True)
+            'name'
         ]
         db_table = 'foods_nutrients'
 
@@ -136,6 +138,9 @@ class USDACategory(models.Model):
         return self.name
 
     class Meta:
+        ordering = [
+            models.F('search_order').asc(nulls_last=True),
+        ]
         db_table = 'foods_usdacategories'
 
 

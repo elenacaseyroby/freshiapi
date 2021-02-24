@@ -2,16 +2,32 @@ from django.contrib import admin
 
 from .models import (
     Nutrient, Unit, UnitConversion, Food, NutritionFact, NutrientHealthBenefit,
-    HealthBenefit
+    HealthBenefit, USDACategory,
 )
+from django_admin_inline_paginator.admin import TabularInlinePaginated
+
+from backend.settings import BASE_DIR
 
 
-class HealthBenefitInlineNutrient(admin.TabularInline):
+class HealthBenefitNutrientInline(admin.TabularInline):
     model = NutrientHealthBenefit
     extra = 0
 
     fields = (
         'nutrient',
+    )
+
+
+class FoodInline(TabularInlinePaginated):
+    model = Food
+    extra = 0
+    per_page = 30
+    show_change_link = True
+    fields = (
+        'name',
+    )
+    readonly_fields = (
+        'name',
     )
 
 
@@ -27,7 +43,14 @@ class NutrientHealthBenefitInline(admin.TabularInline):
 @admin.register(HealthBenefit)
 class HealthBenefit(admin.ModelAdmin):
     fields = ('description', )
-    inlines = [HealthBenefitInlineNutrient, ]
+    inlines = [HealthBenefitNutrientInline, ]
+
+
+@admin.register(USDACategory)
+class USDACategory(admin.ModelAdmin):
+    fields = ('name', )
+    readonly_fields = ('name', )
+    inlines = [FoodInline, ]
 
 
 @admin.register(Nutrient)
@@ -87,7 +110,6 @@ class NutritionFactInline(admin.TabularInline):
         'dv_percent'
     )
     readonly_fields = (
-        'nutrient',
         'nutrient_unit',
         'nutrient_dv_qty',
         'nutrient_dv_unit',
