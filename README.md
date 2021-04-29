@@ -39,6 +39,9 @@
 3. update your main branch from the remote repository on github so it's up to date: `git pull origin main`
 ... decide whether we deploy it manually to eb or use deployment pipeline...
 
+## Running Tests
+...add later... 
+
 ## Staging 
 ...add later... 
 
