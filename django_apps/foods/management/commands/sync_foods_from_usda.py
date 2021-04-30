@@ -110,7 +110,7 @@ class Command(BaseCommand):
         category_ids_by_keyword['goose'] = 5
         category_ids_by_keyword[' hen'] = 5
         category_ids_by_keyword['pheasant'] = 5
-        category_ids_by_keyword['dove'] = 5
+        category_ids_by_keyword[' dove'] = 5
         # Snack
         category_ids_by_keyword[' dip'] = 23
         category_ids_by_keyword['chips'] = 23
@@ -165,9 +165,9 @@ class Command(BaseCommand):
         category_ids_by_keyword['kashi'] = 8
         category_ids_by_keyword['kellogs'] = 8
         category_ids_by_keyword['cereal'] = 8
-        category_ids_by_keyword['bran'] = 8
+        category_ids_by_keyword['bran '] = 8
         category_ids_by_keyword['waffle'] = 8
-        category_ids_by_keyword['toast'] = 8
+        category_ids_by_keyword['toast '] = 8
         # Grains
         category_ids_by_keyword['noodles'] = 20
         category_ids_by_keyword['pasta'] = 20
@@ -193,7 +193,7 @@ class Command(BaseCommand):
         category_ids_by_keyword[' nut'] = 12
         category_ids_by_keyword['seed'] = 12
         # Beverage
-        category_ids_by_keyword['tea'] = 14
+        category_ids_by_keyword[' tea '] = 14
         category_ids_by_keyword['drink'] = 14
         # Fruit & Juice
         fruits = [
