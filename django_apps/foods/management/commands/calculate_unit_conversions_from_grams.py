@@ -6,6 +6,7 @@ class Command(BaseCommand):
     help = 'Calculates conversions based on grams to all other units.'
 
     def handle(self, *args, **options):
+        # This command populates the foods_unit_conversions table in the db.
         # Prereqs: must have all conversions from grams to all other units in
         # UnitConversions table.
 
