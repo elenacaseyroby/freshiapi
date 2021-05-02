@@ -6,6 +6,7 @@
 * install homebrew: https://docs.brew.sh/Installation
 * install xcode & command line tools if they aren't already on your mac
 * install python3: `brew install python3`
+* Since for later versions of python, certificates are not pre installed we will need to install them ourselves.  To do this open Applications/Python 3.7 and double click "Install Certificates.command".  This will run the necessary scripts.  If the "Install Certificates.command" file does not exist, read this: stackoverflow.com/a/44649450/412896 
 * install node in /usr/local/bin: https://nodejs.org/en/
 
 ## Local Environment Set Up
