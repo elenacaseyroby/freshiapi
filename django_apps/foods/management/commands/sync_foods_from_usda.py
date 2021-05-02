@@ -832,8 +832,6 @@ class Command(BaseCommand):
     def sync_categories(self, *args, **options):
         # Prereqs: must upload csvs to /freshi-app/food-sync-csvs
         # s3 bucket.
-        category_df = pd.read_csv(
-                'https://freshi-app.s3.amazonaws.com/food-sync-csvs/food_category.csv')
         try:
             category_df = pd.read_csv(
                 'https://freshi-app.s3.amazonaws.com/food-sync-csvs/food_category.csv')
