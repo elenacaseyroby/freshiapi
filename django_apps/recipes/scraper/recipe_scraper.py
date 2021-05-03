@@ -122,18 +122,19 @@ def scrape_recipe(url, recipe_id=None):
     # Scrape source info.
     source_url = scrape_recipe_source_url(cleaned_url)
     source_name = scrape_recipe_source_name(soup_html)
-    if not source_name:
-        source_name = source_url[:99]
 
-    Source.objects.get_or_create(
-        website=source_url,
-        name=source_name
+    # Check if source in db.
+    source = Source.objects.filter(
+        website=source_url
     )
 
-    source = Source.objects.get(
-        website=source_url,
-        name=source_name
-    )
+    # If not, save new source to db.
+    if not source.exists():
+        source = Source(
+            website=source_url,
+            name=source_name
+        )
+        source.save()
 
     # Create/update recipe
     recipe = Recipe()
