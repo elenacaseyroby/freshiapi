@@ -20,7 +20,7 @@ class Source(models.Model):
         db_table = 'recipes_sources'
 
     def __str__(self):
-        return self.name
+        return self.name or self.website
 
 
 class Allergen(models.Model):
