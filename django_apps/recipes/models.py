@@ -13,7 +13,7 @@ from math import floor
 
 class Source(models.Model):
     # Many Recipes to one Source
-    name = models.CharField(max_length=100, null=False, blank=False)
+    name = models.CharField(max_length=100, null=True, blank=True)
     website = models.URLField(null=False, blank=False)
 
     class Meta:
