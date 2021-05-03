@@ -166,14 +166,10 @@ def get_closest_matching_food(food_str):
 
 
 def parse_food(ingredient_str, units_by_name, units_by_abbr):
-    print("parse food:")
-    print(ingredient_str)
     food_str = parse_food_str(ingredient_str, units_by_name, units_by_abbr)
-    print(food_str)
     if not food_str:
         return None
     food = get_closest_matching_food(food_str)
-    print(food)
     return food
 
 
