@@ -288,13 +288,19 @@ class Recipe(models.Model):
                         qty_numerator/qty_denominator, 2)
                     food = ingredient.food
                     # Get food qty in food serving units.
-                    ingredient_qty_in_food_unit = (
-                        ingredient_qty * conversions[
-                            ingredient.qty_unit.id
-                        ][
-                            food.one_serving_unit_id
-                        ]
-                    )
+                    print('food.one_serving_unit_id = ' + str(food.one_serving_unit_id))
+                    print(conversions)
+                    ingredient_qty_in_food_unit = ingredient_qty
+                    # convert ingredient to same unit as food if necessary.
+                    if ingredient.qty_unit.id is not food.one_serving_unit_id:
+                        ingredient_qty_in_food_unit = (
+                            ingredient_qty * conversions[
+                                ingredient.qty_unit.id
+                            ][
+                                food.one_serving_unit_id
+                            ]
+                        )
+                        
                     # Find food servings in ingredient.
                     ingredient_food_servings = round(
                         float(
