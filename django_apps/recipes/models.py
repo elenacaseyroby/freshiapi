@@ -118,6 +118,13 @@ class Recipe(models.Model):
         blank=True
     )
 
+    @cached_property
+    def internet_image_url(self):
+        image = RecipeInternetImage.objects.filter(recipe_id=self.id).first()
+        if image:
+            return image.url
+        return None
+
     def save_allergens(self, ingredients=None):
         if not ingredients:
             ingredients = Ingredient.objects.filter(recipe_id=self.id).all()
