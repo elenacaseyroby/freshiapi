@@ -142,24 +142,39 @@ def parse_food_str(ingredient_str, units_by_name, units_by_abbr):
 
 
 def get_closest_matching_food(food_str):
+    # 1. First try to find exact match
+    exact_match = Food.objects.filter(
+        name=food_str).first()
+    if exact_match:
+        return exact_match
+
+    # 2. If no exact match, try to get pool of foods
+    # to pull best match from.
+    # i. First try to get pool of whole foods.
     foods_with_ingredient_name = Food.objects.filter(
         name__contains=food_str,
         usdacategory__search_order__lte=15).all()
+    # ii. Then try to get pool of any foods.
     if len(foods_with_ingredient_name) == 0:
         foods_with_ingredient_name = Food.objects.filter(
             name__contains=food_str,
             usdacategory__search_order__gt=15).all()
+    # iii. Then try to get pool of foods that match any part of food string.
     if len(foods_with_ingredient_name) == 0:
         words_in_name = food_str.split(' ')
         foods_with_ingredient_name = Food.objects.filter(
             name__in=words_in_name).all()
-    print(
-        f'there are {len(foods_with_ingredient_name)} foods w ingredient name')
+
+    # iv. Finally, find best match in the pool and return it.
     highest_match_score = 0
     food_with_highest_match_score = None
     for food in foods_with_ingredient_name:
-        match_score = fuzz.ratio(food.name.lower(), food_str.lower())
-        if match_score > highest_match_score:
+        db_food = food.name.lower()
+        match_score = fuzz.ratio(db_food, food_str.lower())
+        food_in_food_str = db_food.split(',')[0] in food_str.lower()
+        if match_score > highest_match_score and food_in_food_str:
+            print(str(food.id) + ' ' + food.name + ': ' + str(match_score))
+            print(db_food.split(',')[0] + ' in ' + food_str.lower())
             highest_match_score = match_score
             food_with_highest_match_score = food
     return food_with_highest_match_score
