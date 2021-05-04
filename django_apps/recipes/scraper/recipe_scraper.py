@@ -99,8 +99,8 @@ def clean_url(url):
 
 
 @transaction.atomic
-def scrape_recipe(url, recipe_id=None):
-    # If recipe_id passed, the recipe will be updated.
+def scrape_recipe(url, update_recipe_id=None):
+    # If update_recipe_id passed, the recipe will be updated.
     # Else, it will be added for the first time.
     # We only want to update a recipe like this
     # in certain cases. If we did it everytime
@@ -108,9 +108,10 @@ def scrape_recipe(url, recipe_id=None):
     # and erasing valuable edits.
 
     cleaned_url = clean_url(url)
-    # If meant to be a first time scrape
-    # and recipe exists, do nothing.
-    if not recipe_id:
+    print('recipe id:' + str(update_recipe_id))
+    # If meant to be first time scrape (not update) and recipe exists,
+    # return existing recipe.
+    if not update_recipe_id:
         recipe = Recipe.objects.filter(url=cleaned_url).first()
         if recipe:
             return recipe
@@ -143,13 +144,10 @@ def scrape_recipe(url, recipe_id=None):
 
     # Create/update recipe
     recipe = Recipe()
-    # If recipe_id passed, update recipe.
-    if (recipe_id):
-        # delete recipe ingredients
-        ingredients = Ingredient.objects.filter(recipe_id=recipe_id).all()
-        ingredients.delete()
+    # If recipe_id passed, prepare to update recipe.
+    if (update_recipe_id):
         # set recipe_id so updates are made to existing recipe.
-        recipe.id = recipe_id
+        recipe.id = update_recipe_id
     recipe.url = cleaned_url
     recipe.title = scrape_recipe_title(soup_html)
     recipe.author = scrape_recipe_author(soup_html)
@@ -174,7 +172,7 @@ def scrape_recipe(url, recipe_id=None):
 
     # Only add tags if recipe is new.
     # Might want to change this later, but fine for a first run.
-    if not recipe_id:
+    if not update_recipe_id:
         # Store image url
         image_url = scrape_recipe_image_url(soup_html)
         if image_url:
@@ -235,6 +233,12 @@ def scrape_recipe(url, recipe_id=None):
     if not ingredient_strings:
         recipe.ingredients_in_nutrition_facts = float(0)
         return
+    elif update_recipe_id:
+        # If updating recipe, prepare by
+        # deleting recipe ingredients, so updated ingredients can be saved.
+        # Lazy: fix & use diff later.
+        ingredients = Ingredient.objects.filter(recipe_id=update_recipe_id).all()
+        ingredients.delete()
     # Else, get nutrition breakdown
     units_by_name = {
         unit.name: unit for unit in Unit.objects.all()}
@@ -243,8 +247,8 @@ def scrape_recipe(url, recipe_id=None):
 
     ingredients = []
     # Parse ingredient from scraped ingredient string.
-    for ingredient in ingredient_strings:
-        ingredient = parse_ingredient(ingredient, units_by_name, units_by_abbr)
+    for ingredient_str in ingredient_strings:
+        ingredient = parse_ingredient(ingredient_str, units_by_name, units_by_abbr)
         if ingredient:
             ingredient.recipe_id = recipe.id
             ingredients.append(ingredient)
