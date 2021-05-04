@@ -167,20 +167,24 @@ def get_closest_matching_food(food_str):
 
 def parse_food(ingredient_str, units_by_name, units_by_abbr):
     food_str = parse_food_str(ingredient_str, units_by_name, units_by_abbr)
-    if not food_str:
-        return None
-    food = get_closest_matching_food(food_str)
-    return food
+    if food_str:
+        food = get_closest_matching_food(food_str)
+        return food
+    return None
 
 
 def parse_ingredient(ingredient_str, units_by_name, units_by_abbr):
+    # Returns ingredient if food is matched.  Else returns None.
     ingredient = Ingredient()
     # If food matched, add parse all attributes.
     food = parse_food(ingredient_str, units_by_name, units_by_abbr)
+    # Return None if no food is matched to ingredient.
+    if not food:
+        return None
     ingredient.food = food
     ingredient.qty_numerator = parse_numerator(ingredient_str)
     ingredient.qty_denominator = parse_denominator(
-        ingredient_str, units_by_name, units_by_abbr)
+        ingredient_str, units_by_name, units_by_abbr) 
     # If numerator exists and denominator dne,
     # set denominator to 1.
     if (

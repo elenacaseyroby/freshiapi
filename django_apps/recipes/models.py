@@ -203,7 +203,7 @@ class Recipe(models.Model):
             ]
         )
 
-    def save_nutrition_facts(self, ingredients=None):
+    def save_nutrition_facts(self, ingredients=None, recipe_ingredient_count=None):
         if not ingredients:
             ingredients = Ingredient.objects.filter(recipe_id=self.id).all()
         # If no ingredients, then no nutrition facts to document.
@@ -218,8 +218,7 @@ class Recipe(models.Model):
             return
         # Track ingredients parsed to later update
         # ingredients_in_nutrition_facts %.
-        ingredients_parsed = 0
-        total_ingredients = len(ingredients)
+        ingredients_w_nutrition_facts = 0
 
         nutrition_facts = {}
         conversions = get_unit_conversions_dict()
@@ -233,17 +232,12 @@ class Recipe(models.Model):
             if qty_numerator and not qty_denominator:
                 qty_denominator = 1
 
-            # Skip and mark nutrition facts incomplete
-            # if food dne.
-            if not ingredient.food_id:
-                continue
-
             # Skip and mark nutrition facts incomplete i
             # if no numerator
             if not qty_numerator:
                 continue
 
-            ingredients_parsed += 1
+            ingredients_w_nutrition_facts += 1
             # Get food's nutrition facts from database.
             food_nutrition_facts = FoodNutritionFact.objects.filter(
                 food_id=ingredient.food_id).all()
@@ -289,8 +283,6 @@ class Recipe(models.Model):
                         qty_numerator/qty_denominator, 2)
                     food = ingredient.food
                     # Get food qty in food serving units.
-                    print('food.one_serving_unit_id = ' + str(food.one_serving_unit_id))
-                    print(conversions)
                     ingredient_qty_in_food_unit = ingredient_qty
                     # convert ingredient to same unit as food if necessary.
                     if ingredient.qty_unit.id is not food.one_serving_unit_id:
@@ -348,8 +340,10 @@ class Recipe(models.Model):
             ) for nutrient_id in nutrition_facts
         ])
         # Save note about nutrition facts
-        nutrition_facts_percent = ingredients_parsed / total_ingredients
-        self.ingredients_in_nutrition_facts = round(nutrition_facts_percent, 2)
+        if recipe_ingredient_count:
+            self.ingredients_in_nutrition_facts = round(
+                ingredients_w_nutrition_facts / recipe_ingredient_count, 
+                2)
         self.save()
 
     @cached_property

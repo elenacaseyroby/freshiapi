@@ -151,7 +151,10 @@ def scrape_recipe(url, recipe_id=None):
         # set recipe_id so updates are made to existing recipe.
         recipe.id = recipe_id
     recipe.url = cleaned_url
-    recipe.title = scrape_recipe_title(soup_html) or cleaned_url[:99]
+    recipe.title = scrape_recipe_title(soup_html)
+    recipe.author = scrape_recipe_author(soup_html)
+    recipe.description = scrape_recipe_description(soup_html)
+    recipe.source = source
     recipe.prep_time = scrape_recipe_prep_time(soup_html)
     recipe.cook_time = scrape_recipe_cook_time(soup_html)
     recipe.total_time = scrape_recipe_total_time(soup_html)
@@ -166,9 +169,6 @@ def scrape_recipe(url, recipe_id=None):
         recipe.total_time = prep + cook
 
     recipe.servings_count = scrape_recipe_servings_count(soup_html)
-    recipe.author = scrape_recipe_author(soup_html)
-    recipe.description = scrape_recipe_description(soup_html)
-    recipe.source = source
     recipe.save()
     recipe = Recipe.objects.get(url=cleaned_url)
 
@@ -229,7 +229,7 @@ def scrape_recipe(url, recipe_id=None):
                 for diet in diets
             ]
             RecipeDiet.objects.bulk_create(recipe_diets)
-    # Get ingredients. DON'T SAVE.
+    # Get ingredients. 
     ingredient_strings = scrape_recipe_ingredients(soup_html)
     # If not ingredients, do nothing.
     if not ingredient_strings:
@@ -245,17 +245,15 @@ def scrape_recipe(url, recipe_id=None):
     # Parse ingredient from scraped ingredient string.
     for ingredient in ingredient_strings:
         ingredient = parse_ingredient(ingredient, units_by_name, units_by_abbr)
-        ingredients.append(ingredient)
-
+        if ingredient:
+            ingredient.recipe_id = recipe.id
+            ingredients.append(ingredient)
     # Save ingredients.
-    ingredients_to_create = []
-    for ingredient in ingredients:
-        ingredient.recipe_id = recipe.id
-        ingredients_to_create.append(ingredient)
-    Ingredient.objects.bulk_create(ingredients_to_create)
+    Ingredient.objects.bulk_create(ingredients)
 
     # Save nutrition facts & allergens
-    recipe.save_nutrition_facts(ingredients)
+    recipe_ingredient_count = len(ingredient_strings)
+    recipe.save_nutrition_facts(ingredients, recipe_ingredient_count)
     recipe.save_allergens(ingredients)
 
 # TODO:
