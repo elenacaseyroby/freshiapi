@@ -99,8 +99,8 @@ def clean_url(url):
 
 
 @transaction.atomic
-def scrape_recipe(url, recipe_id=None):
-    # If recipe_id passed, the recipe will be updated.
+def scrape_recipe(url, update_recipe_id=None):
+    # If update_recipe_id passed, the recipe will be updated.
     # Else, it will be added for the first time.
     # We only want to update a recipe like this
     # in certain cases. If we did it everytime
@@ -108,72 +108,71 @@ def scrape_recipe(url, recipe_id=None):
     # and erasing valuable edits.
 
     cleaned_url = clean_url(url)
-    # If meant to be a first time scrape
-    # and recipe exists, do nothing.
-    if not recipe_id:
+    print('recipe id:' + str(update_recipe_id))
+    # If meant to be first time scrape (not update) and recipe exists,
+    # return existing recipe.
+    if not update_recipe_id:
         recipe = Recipe.objects.filter(url=cleaned_url).first()
         if recipe:
             return recipe
 
+    # Fake the user-agent like we're a browser so that
+    # we can scrape sites that block scripts. By default
+    # the user-agent will announce that we are a script
+    # by being set to something like "Python-urllib/2.6".
+    headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 5.1.1; SM-G928X Build/LMY47X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.83 Mobile Safari/537.36'}
     # Get html from url
-    page = requests.get(url)
+    page = requests.get(url, headers=headers)
     soup_html = BeautifulSoup(page.content, 'html.parser')
 
     # Scrape source info.
     source_url = scrape_recipe_source_url(cleaned_url)
     source_name = scrape_recipe_source_name(soup_html)
-    if not source_name:
-        source_name = source_url[:99]
 
-    Source.objects.get_or_create(
-        website=source_url,
-        name=source_name
-    )
+    # Check if source exists.
+    source = Source.objects.filter(
+        website=source_url
+    ).first()
 
-    source = Source.objects.get(
-        website=source_url,
-        name=source_name
-    )
+    # If not, save new source.
+    if not source:
+        source = Source(
+            website=source_url,
+            name=source_name
+        )
+        source.save()
 
     # Create/update recipe
     recipe = Recipe()
-    # If recipe_id passed, update recipe.
-    if (recipe_id):
-        # delete recipe ingredients
-        ingredients = Ingredient.objects.filter(recipe_id=recipe_id).all()
-        ingredients.delete()
+    # If recipe_id passed, prepare to update recipe.
+    if (update_recipe_id):
         # set recipe_id so updates are made to existing recipe.
-        recipe.id = recipe_id
+        recipe.id = update_recipe_id
     recipe.url = cleaned_url
     recipe.title = scrape_recipe_title(soup_html)
-    if recipe.title is None:
-        recipe.title = cleaned_url[:99]
+    recipe.author = scrape_recipe_author(soup_html)
+    recipe.description = scrape_recipe_description(soup_html)
+    recipe.source = source
     recipe.prep_time = scrape_recipe_prep_time(soup_html)
     recipe.cook_time = scrape_recipe_cook_time(soup_html)
     recipe.total_time = scrape_recipe_total_time(soup_html)
+
     # Make sure total time makes sense.
-    # We only need to check if prep or cook time is set.
-    if (recipe.prep_time is not None or recipe.cook_time is not None):
-        prep = recipe.prep_time or timedelta(minutes=float(0))
-        cook = recipe.cook_time or timedelta(minutes=float(0))
-        # If total is none or smaller than prep and cook combine,
-        # then set total to the sum of prep and cook.
-        if (
-            recipe.total_time is None or
-            recipe.total_time < (prep + cook)
-        ):
-            recipe.total_time = prep + cook
+    prep = recipe.prep_time or timedelta(minutes=float(0))
+    cook = recipe.cook_time or timedelta(minutes=float(0))
+    total = recipe.total_time or timedelta(minutes=float(0))
+    # If total is none or smaller than prep and cook combine,
+    # then set total to the sum of prep and cook.
+    if (prep + cook) > total:
+        recipe.total_time = prep + cook
+
     recipe.servings_count = scrape_recipe_servings_count(soup_html)
-    recipe.author = scrape_recipe_author(soup_html)
-    if recipe.author is None:
-        recipe.author = source_name
-    recipe.description = scrape_recipe_description(soup_html)
-    recipe.source = source
     recipe.save()
     recipe = Recipe.objects.get(url=cleaned_url)
 
     # Only add tags if recipe is new.
-    if not recipe_id:
+    # Might want to change this later, but fine for a first run.
+    if not update_recipe_id:
         # Store image url
         image_url = scrape_recipe_image_url(soup_html)
         if image_url:
@@ -228,12 +227,18 @@ def scrape_recipe(url, recipe_id=None):
                 for diet in diets
             ]
             RecipeDiet.objects.bulk_create(recipe_diets)
-    # Get ingredients. DON'T SAVE.
+    # Get ingredients. 
     ingredient_strings = scrape_recipe_ingredients(soup_html)
     # If not ingredients, do nothing.
     if not ingredient_strings:
-        recipe.nutrition_facts_completed = float(0)
+        recipe.ingredients_in_nutrition_facts = float(0)
         return
+    elif update_recipe_id:
+        # If updating recipe, prepare by
+        # deleting recipe ingredients, so updated ingredients can be saved.
+        # Lazy: fix & use diff later.
+        ingredients = Ingredient.objects.filter(recipe_id=update_recipe_id).all()
+        ingredients.delete()
     # Else, get nutrition breakdown
     units_by_name = {
         unit.name: unit for unit in Unit.objects.all()}
@@ -242,24 +247,17 @@ def scrape_recipe(url, recipe_id=None):
 
     ingredients = []
     # Parse ingredient from scraped ingredient string.
-    for ingredient in ingredient_strings:
-        ingredient = parse_ingredient(ingredient, units_by_name, units_by_abbr)
-        ingredients.append(ingredient)
-
+    for ingredient_str in ingredient_strings:
+        ingredient = parse_ingredient(ingredient_str, units_by_name, units_by_abbr)
+        if ingredient:
+            ingredient.recipe_id = recipe.id
+            ingredients.append(ingredient)
     # Save ingredients.
-    ingredients_to_create = []
-    for ingredient in ingredients:
-        # # Skip ingredients without matched food, since we aren't
-        # # publishing anyway.
-        # if ingredient.food_id is None:
-        #     continue
-        # Set recipe_id
-        ingredient.recipe_id = recipe.id
-        ingredients_to_create.append(ingredient)
-    Ingredient.objects.bulk_create(ingredients_to_create)
+    Ingredient.objects.bulk_create(ingredients)
 
     # Save nutrition facts & allergens
-    recipe.save_nutrition_facts(ingredients)
+    recipe_ingredient_count = len(ingredient_strings)
+    recipe.save_nutrition_facts(ingredients, recipe_ingredient_count)
     recipe.save_allergens(ingredients)
 
 # TODO:

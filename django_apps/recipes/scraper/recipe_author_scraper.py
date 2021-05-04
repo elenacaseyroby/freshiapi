@@ -5,8 +5,8 @@ def scrape_author_meta(soup_html):
         {'name': 'author'}
     )
     if author:
-        author = author['content']
-    return author
+        return author['content']
+    return None
 
 
 def scrape_epicurious_author(soup_html):
@@ -21,8 +21,8 @@ def scrape_epicurious_author(soup_html):
         {'class': 'contributor'}
     )
     if author:
-        author = author.get_text()
-    return author
+        return author.get_text()
+    return None
 
 
 def scrape_recipe_author(soup_html):
@@ -30,5 +30,5 @@ def scrape_recipe_author(soup_html):
     if not author:
         author = scrape_epicurious_author(soup_html)
     if author:
-        author = author.strip()[:74]
-    return author
+        return author.strip()[:74]
+    return None

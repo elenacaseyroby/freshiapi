@@ -22,6 +22,8 @@ class Command(BaseCommand):
     """
     help = 'Sync foods from USDA food and nutrient data sets.'
 
+    food_attributes_to_update = ['upc_code',]
+
     def get_category_id(self, data_type, usdacategory_id, name):
         # I know for this I should query db to get usdacategory
         # names in case they've changed.
@@ -302,11 +304,11 @@ class Command(BaseCommand):
                 dtype=portion_dtypes)
         except:
             return self.stdout.write(self.style.ERROR(
-                'Failed to sync foods: Please make \
-                sure the following USDA FoodData Central csvs \
-                are uploaded to the freshi-app/food-sync-csvs \
-                bucket in AWS S3:\
-                food_portion.csv'
+                '''Failed to sync foods: Please make
+                sure the following USDA FoodData Central csvs
+                are uploaded to the freshi-app/food-sync-csvs
+                bucket in AWS S3:
+                food_portion.csv'''
             ))
         grams = Unit.objects.get(name="gram")
         servings_by_fdc = {}
@@ -438,13 +440,10 @@ class Command(BaseCommand):
 
     def food_updated_is_true(self, updated_food, food_in_db):
         # don't update name if changes.
-        return not (
-            updated_food.usdacategory_id == food_in_db.usdacategory_id and
-            updated_food.one_serving_qty == food_in_db.one_serving_qty and
-            updated_food.one_serving_unit == food_in_db.one_serving_unit and
-            updated_food.upc_code == food_in_db.upc_code and
-            updated_food.one_serving_description == food_in_db.one_serving_description
-        )
+        for prop in self.food_attributes_to_update:
+            if getattr(updated_food, prop) != getattr(food_in_db, prop):
+                return False
+        return True
 
     def get_food_to_update_by_fdc(self, foods_by_fdc, food, fdc_id):
         if fdc_id not in foods_by_fdc:
@@ -489,11 +488,8 @@ class Command(BaseCommand):
         fdcs_by_food_name
     ):
         # Create and update food and usdafood objects.
-        food_fields = [
-            'name', 'usdacategory_id', 'upc_code', 'one_serving_qty',
-            'one_serving_unit', 'one_serving_description']
         print(f'{len(foods_to_update)} foods to update')
-        Food.objects.bulk_update(foods_to_update, food_fields, batch_size=100)
+        Food.objects.bulk_update(foods_to_update, self.food_attributes_to_update, batch_size=100)
         print('updated foods!')
         print(f'{len(foods_to_create)} foods to create')
         new_usdafoods = USDAFood.objects.bulk_create(
@@ -561,11 +557,11 @@ class Command(BaseCommand):
                 dtype=market_dtypes)
         except:
             return self.stdout.write(self.style.ERROR(
-                'Failed to sync foods: Please make \
-                sure the following USDA FoodData Central csvs \
-                are uploaded to the freshi-app/food-sync-csvs \
-                bucket in AWS S3:\
-                market_acquisition.csv'
+                '''Failed to sync foods: Please make
+                sure the following USDA FoodData Central csvs
+                are uploaded to the freshi-app/food-sync-csvs
+                bucket in AWS S3:
+                market_acquisition.csv'''
             ))
         upc_by_fdc = {}
         # Create dict to sort upc_code (bar codes) by fdc_id
@@ -590,11 +586,11 @@ class Command(BaseCommand):
         # Throw error if csvs are not uploaded.
         except NameError:
             return self.stdout.write(self.style.ERROR(
-                'Failed to sync nutrition facts: Please make \
-                sure the following USDA FoodData Central csvs \
-                are uploaded to the freshi-app/food-sync-csvs \
-                bucket in AWS S3:\
-                nutrient.csv'
+                '''Failed to sync nutrition facts: Please make
+                sure the following USDA FoodData Central csvs
+                are uploaded to the freshi-app/food-sync-csvs
+                bucket in AWS S3:
+                nutrient.csv'''
             ))
         units_by_abbr = {unit.abbr: unit for unit in Unit.objects.all()}
         unit_by_usdanutrient_id = {}
@@ -634,11 +630,11 @@ class Command(BaseCommand):
         # Throw error if csvs are not uploaded.
         except NameError:
             return self.stdout.write(self.style.ERROR(
-                'Failed to sync nutrition facts: Please make \
-                sure the following USDA FoodData Central csvs \
-                are uploaded to the freshi-app/food-sync-csvs \
-                bucket in AWS S3:\
-                food_nutrient.csv'
+                '''Failed to sync nutrition facts: Please make
+                sure the following USDA FoodData Central csvs
+                are uploaded to the freshi-app/food-sync-csvs
+                bucket in AWS S3:
+                food_nutrient.csv'''
             ))
         fdc_ids = [int(food_nutrient_df['fdc_id'][row])
                    for row in food_nutrient_df.index]
@@ -842,10 +838,10 @@ class Command(BaseCommand):
         # Throw error if csvs are not uploaded.
         except:
             return self.stdout.write(self.style.ERROR(
-                'Failed to sync categories: Please make \
-                sure the following USDA FoodData Central csvs \
-                are uploaded to the freshi-app/food-sync-csvs \
-                bucket in AWS S3: food_category.csv'
+                '''Failed to sync categories: Please make
+                sure the following USDA FoodData Central csvs
+                are uploaded to the freshi-app/food-sync-csvs
+                bucket in AWS S3: food_category.csv'''
             ))
 
             # Get all categories in db.
@@ -903,11 +899,11 @@ class Command(BaseCommand):
                 dtype=food_dtypes)
         except:
             return self.stdout.write(self.style.ERROR(
-                'Failed to sync foods: Please make \
-                sure the following USDA FoodData Central csvs \
-                are uploaded to the freshi-app/food-sync-csvs \
-                bucket in AWS S3:\
-                food.csv'
+                '''Failed to sync foods: Please make
+                sure the following USDA FoodData Central csvs
+                are uploaded to the freshi-app/food-sync-csvs
+                bucket in AWS S3:
+                food.csv'''
             ))
         # Get food data from other csvs
         # dicts
@@ -975,11 +971,11 @@ class Command(BaseCommand):
         # Throw error if csvs are not uploaded.
         except NameError:
             return self.stdout.write(self.style.ERROR(
-                'Failed to sync nutrition facts: Please make \
-                sure the following USDA FoodData Central csvs \
-                are uploaded to the freshi-app/food-sync-csvs \
-                bucket in AWS S3:\
-                food_nutrient.csv'
+                '''Failed to sync nutrition facts: Please make
+                sure the following USDA FoodData Central csvs
+                are uploaded to the freshi-app/food-sync-csvs
+                bucket in AWS S3:
+                food_nutrient.csv'''
             ))
 
         # Get all data you'll need from db to perform the sync.

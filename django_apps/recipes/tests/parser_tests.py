@@ -12,7 +12,7 @@ from django_apps.recipes.scraper.parse_ingredients import (
 
 
 # To run:
-# python manage.py test django_apps.recipes.tests.parser_tests
+# python3 manage.py test django_apps.recipes.tests.parser_tests
 class ParserTestCase(TestCase):
     gram = Unit(
         name='gram'
@@ -191,6 +191,15 @@ class ParserTestCase(TestCase):
         self.assertEqual(
             food_str,
             'ripe tomatoes'
+        )
+
+    def test_parse_food5(self):
+        ingredient_str = '1 egg, beaten'
+        food_str = parse_food_str(
+            ingredient_str, self.units_by_name, self.units_by_abbr)
+        self.assertEqual(
+            food_str,
+            'egg'
         )
 
     def test_parse_food_with_paren(self):

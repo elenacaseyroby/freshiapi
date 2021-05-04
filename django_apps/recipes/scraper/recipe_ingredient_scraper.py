@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 
 
+# This is broken, BA prob updated their site layout :/
 def scrape_ingredients_bon_appetit(soup_html):
     ingredients = []
     ingredients_container = soup_html.select(
@@ -12,6 +13,7 @@ def scrape_ingredients_bon_appetit(soup_html):
         ingredient = ""
         for item in items:
             item_text = item.get_text()
+            # Skip header
             if (
                 'servings' in item_text.lower() or
                 'ingredients' in item_text.lower()
