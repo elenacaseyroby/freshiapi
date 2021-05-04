@@ -115,21 +115,26 @@ def scrape_recipe(url, recipe_id=None):
         if recipe:
             return recipe
 
+    # Fake the user-agent like we're a browser so that
+    # we can scrape sites that block scripts. By default
+    # the user-agent will announce that we are a script
+    # by being set to something like "Python-urllib/2.6".
+    headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 5.1.1; SM-G928X Build/LMY47X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.83 Mobile Safari/537.36'}
     # Get html from url
-    page = requests.get(url)
+    page = requests.get(url, headers=headers)
     soup_html = BeautifulSoup(page.content, 'html.parser')
 
     # Scrape source info.
     source_url = scrape_recipe_source_url(cleaned_url)
     source_name = scrape_recipe_source_name(soup_html)
 
-    # Check if source in db.
+    # Check if source exists.
     source = Source.objects.filter(
         website=source_url
-    )
+    ).first()
 
-    # If not, save new source to db.
-    if not source.exists():
+    # If not, save new source.
+    if not source:
         source = Source(
             website=source_url,
             name=source_name
@@ -146,34 +151,29 @@ def scrape_recipe(url, recipe_id=None):
         # set recipe_id so updates are made to existing recipe.
         recipe.id = recipe_id
     recipe.url = cleaned_url
-    recipe.title = scrape_recipe_title(soup_html)
-    if recipe.title is None:
-        recipe.title = cleaned_url[:99]
+    recipe.title = scrape_recipe_title(soup_html) or cleaned_url[:99]
     recipe.prep_time = scrape_recipe_prep_time(soup_html)
     recipe.cook_time = scrape_recipe_cook_time(soup_html)
     recipe.total_time = scrape_recipe_total_time(soup_html)
+
     # Make sure total time makes sense.
-    # We only need to check if prep or cook time is set.
-    if (recipe.prep_time is not None or recipe.cook_time is not None):
-        prep = recipe.prep_time or timedelta(minutes=float(0))
-        cook = recipe.cook_time or timedelta(minutes=float(0))
-        # If total is none or smaller than prep and cook combine,
-        # then set total to the sum of prep and cook.
-        if (
-            recipe.total_time is None or
-            recipe.total_time < (prep + cook)
-        ):
-            recipe.total_time = prep + cook
+    prep = recipe.prep_time or timedelta(minutes=float(0))
+    cook = recipe.cook_time or timedelta(minutes=float(0))
+    total = recipe.total_time or timedelta(minutes=float(0))
+    # If total is none or smaller than prep and cook combine,
+    # then set total to the sum of prep and cook.
+    if (prep + cook) > total:
+        recipe.total_time = prep + cook
+
     recipe.servings_count = scrape_recipe_servings_count(soup_html)
     recipe.author = scrape_recipe_author(soup_html)
-    if recipe.author is None:
-        recipe.author = source_name
     recipe.description = scrape_recipe_description(soup_html)
     recipe.source = source
     recipe.save()
     recipe = Recipe.objects.get(url=cleaned_url)
 
     # Only add tags if recipe is new.
+    # Might want to change this later, but fine for a first run.
     if not recipe_id:
         # Store image url
         image_url = scrape_recipe_image_url(soup_html)
@@ -233,7 +233,7 @@ def scrape_recipe(url, recipe_id=None):
     ingredient_strings = scrape_recipe_ingredients(soup_html)
     # If not ingredients, do nothing.
     if not ingredient_strings:
-        recipe.nutrition_facts_completed = float(0)
+        recipe.ingredients_in_nutrition_facts = float(0)
         return
     # Else, get nutrition breakdown
     units_by_name = {
@@ -250,11 +250,6 @@ def scrape_recipe(url, recipe_id=None):
     # Save ingredients.
     ingredients_to_create = []
     for ingredient in ingredients:
-        # # Skip ingredients without matched food, since we aren't
-        # # publishing anyway.
-        # if ingredient.food_id is None:
-        #     continue
-        # Set recipe_id
         ingredient.recipe_id = recipe.id
         ingredients_to_create.append(ingredient)
     Ingredient.objects.bulk_create(ingredients_to_create)
