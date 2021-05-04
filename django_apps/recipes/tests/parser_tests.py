@@ -12,7 +12,7 @@ from django_apps.recipes.scraper.parse_ingredients import (
 
 
 # To run:
-# python manage.py test django_apps.recipes.tests.parser_tests
+# python3 manage.py test django_apps.recipes.tests.parser_tests
 class ParserTestCase(TestCase):
     gram = Unit(
         name='gram'

@@ -62,7 +62,7 @@ def get_soup_html(url):
 
 
 # To run:
-# python manage.py test django_apps.recipes.tests.scraper_tests.ScrapeTitleTestCase
+# python3 manage.py test django_apps.recipes.tests.scraper_tests.ScrapeTitleTestCase
 class ScrapeTitleTestCase(TestCase):
     def test_find_bon_appetit_title(self):
         soup_html = get_soup_html(
