@@ -189,6 +189,7 @@ class Recipe(models.Model):
             if food.usdacategory_id == 12:
                 recipe_allergens['tree nuts'] = True
         # Delete all allergens
+        # This is lazy.  Clean up later.
         allergens = RecipeAllergen.objects.filter(recipe_id=self.id).all()
         allergens.delete()
         # Create new allergens
