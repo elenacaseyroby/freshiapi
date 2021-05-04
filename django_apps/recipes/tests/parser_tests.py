@@ -193,6 +193,15 @@ class ParserTestCase(TestCase):
             'ripe tomatoes'
         )
 
+    def test_parse_food5(self):
+        ingredient_str = '1 egg, beaten'
+        food_str = parse_food_str(
+            ingredient_str, self.units_by_name, self.units_by_abbr)
+        self.assertEqual(
+            food_str,
+            'egg'
+        )
+
     def test_parse_food_with_paren(self):
         ingredient_str = '1 cup shelled fresh peas (from about 1 pound pods) or frozen peas, thawed'
         food_str = parse_food_str(
