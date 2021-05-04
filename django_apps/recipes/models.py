@@ -318,6 +318,7 @@ class Recipe(models.Model):
                     fact.nutrient_id
                 ] += ingredient_nutrient_qty
         # Delete all nutrition facts for recipe
+        # TODO: replace w  diff
         recipe_nutrition_facts = NutritionFact.objects.filter(
             recipe_id=self.id
         ).all()
