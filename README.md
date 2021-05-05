@@ -38,6 +38,10 @@
 1. change directories into repo: `cd ~/freshi`
 2. make sure you are on the main branch: `git checkout main`
 3. update your main branch from the remote repository on github so it's up to date: `git pull origin main`
+4. push back to main: `git push origin main`
+5. deploy to staging: `eb deploy freshi-staging`
+6. check that everything's working
+7. deploy to production: `eb deploy freshi-production`
 ... decide whether we deploy it manually to eb or use deployment pipeline...
 
 ## Running Tests
