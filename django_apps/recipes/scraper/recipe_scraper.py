@@ -109,7 +109,7 @@ def get_soup_html(url):
     return soup_html
 
 @transaction.atomic
-def scrape_recipe_basic_info(url, update_recipe_id=None):
+def scrape_recipe_basic_info(url, update_recipe_id=None, soup_html=None):
     # If update_recipe_id passed, the recipe will be updated.
     # Else, it will be added for the first time.
     # We only want to update a recipe like this
@@ -125,8 +125,9 @@ def scrape_recipe_basic_info(url, update_recipe_id=None):
         if recipe:
             return recipe
 
-    # Scrape the page's html 
-    soup_html = get_soup_html(url)
+    # Scrape the page's html
+    if not soup_html: 
+        soup_html = get_soup_html(url)
 
     # Scrape source info.
     source_url = scrape_recipe_source_url(cleaned_url)
@@ -182,12 +183,13 @@ def scrape_recipe_basic_info(url, update_recipe_id=None):
             )
     return recipe
 
-def scrape_recipe_tags(recipe):
+def scrape_recipe_tags(recipe, soup_html=None):
     # Don't scrape if recipe not from web.
     if not recipe.url:
         return
     # Scrape the page's html 
-    soup_html = get_soup_html('http://www.' + recipe.url)
+    if not soup_html:
+        soup_html = get_soup_html('http://www.' + recipe.url)
 
     # Find new categories and add them to the recipe.
     categories_by_name = {
@@ -246,12 +248,13 @@ def scrape_recipe_tags(recipe):
         RecipeDiet.objects.bulk_create(recipe_diets)
     return 'success'
 
-def scrape_recipe_ingredients_and_allergies(recipe):
+def scrape_recipe_ingredients_and_allergies(recipe, soup_html=None):
     # Don't scrape if recipe not from web.
     if not recipe.url:
         return
     # Scrape the page's html 
-    soup_html = get_soup_html('http://www.' + recipe.url)
+    if not soup_html:
+        soup_html = get_soup_html('http://www.' + recipe.url)
     # Get ingredients. 
     ingredient_strings = scrape_recipe_ingredients(soup_html)
     # If not ingredients, do nothing.
@@ -289,9 +292,11 @@ def scrape_recipe_ingredients_and_allergies(recipe):
 
 @transaction.atomic
 def scrape_recipe(url, update_recipe_id=None):
-    recipe = scrape_recipe_basic_info(url, update_recipe_id=None)
-    scrape_recipe_tags(recipe)
-    scrape_recipe_ingredients_and_allergies(recipe)
+    # Scrape the page's html one time and pass it into the following functions.
+    soup_html = get_soup_html(url)
+    recipe = scrape_recipe_basic_info(url, update_recipe_id, soup_html)
+    scrape_recipe_tags(recipe, soup_html)
+    scrape_recipe_ingredients_and_allergies(recipe, soup_html)
     return 'success'
 
     
