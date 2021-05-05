@@ -97,25 +97,7 @@ def clean_url(url):
         cleaned_url = url
     return cleaned_url
 
-
-@transaction.atomic
-def scrape_recipe(url, update_recipe_id=None):
-    # If update_recipe_id passed, the recipe will be updated.
-    # Else, it will be added for the first time.
-    # We only want to update a recipe like this
-    # in certain cases. If we did it everytime
-    # a user went to scrape a website, we would be replacing
-    # and erasing valuable edits.
-
-    cleaned_url = clean_url(url)
-    print('recipe id:' + str(update_recipe_id))
-    # If meant to be first time scrape (not update) and recipe exists,
-    # return existing recipe.
-    if not update_recipe_id:
-        recipe = Recipe.objects.filter(url=cleaned_url).first()
-        if recipe:
-            return recipe
-
+def get_soup_html(url):
     # Fake the user-agent like we're a browser so that
     # we can scrape sites that block scripts. By default
     # the user-agent will announce that we are a script
@@ -124,6 +106,28 @@ def scrape_recipe(url, update_recipe_id=None):
     # Get html from url
     page = requests.get(url, headers=headers)
     soup_html = BeautifulSoup(page.content, 'html.parser')
+    return soup_html
+
+@transaction.atomic
+def scrape_recipe_basic_info(url, update_recipe_id=None, soup_html=None):
+    # If update_recipe_id passed, the recipe will be updated.
+    # Else, it will be added for the first time.
+    # We only want to update a recipe like this
+    # in certain cases. If we did it everytime
+    # a user went to scrape a website, we would be replacing
+    # and erasing valuable edits.
+
+    cleaned_url = clean_url(url)
+    # If meant to be first time scrape (not update) and recipe exists,
+    # return existing recipe.
+    if not update_recipe_id:
+        recipe = Recipe.objects.filter(url=cleaned_url).first()
+        if recipe:
+            return recipe
+
+    # Scrape the page's html
+    if not soup_html: 
+        soup_html = get_soup_html(url)
 
     # Scrape source info.
     source_url = scrape_recipe_source_url(cleaned_url)
@@ -142,12 +146,14 @@ def scrape_recipe(url, update_recipe_id=None):
         )
         source.save()
 
-    # Create/update recipe
-    recipe = Recipe()
-    # If recipe_id passed, prepare to update recipe.
-    if (update_recipe_id):
-        # set recipe_id so updates are made to existing recipe.
-        recipe.id = update_recipe_id
+    recipe = None
+    # If recipe exists, get record.
+    if update_recipe_id:
+        recipe = Recipe.objects.filter(id=update_recipe_id).first()
+    # If recipe is new, create record.
+    if not recipe:
+        recipe = Recipe()
+    
     recipe.url = cleaned_url
     recipe.title = scrape_recipe_title(soup_html)
     recipe.author = scrape_recipe_author(soup_html)
@@ -156,7 +162,6 @@ def scrape_recipe(url, update_recipe_id=None):
     recipe.prep_time = scrape_recipe_prep_time(soup_html)
     recipe.cook_time = scrape_recipe_cook_time(soup_html)
     recipe.total_time = scrape_recipe_total_time(soup_html)
-
     # Make sure total time makes sense.
     prep = recipe.prep_time or timedelta(minutes=float(0))
     cook = recipe.cook_time or timedelta(minutes=float(0))
@@ -165,15 +170,10 @@ def scrape_recipe(url, update_recipe_id=None):
     # then set total to the sum of prep and cook.
     if (prep + cook) > total:
         recipe.total_time = prep + cook
-
     recipe.servings_count = scrape_recipe_servings_count(soup_html)
     recipe.save()
-    recipe = Recipe.objects.get(url=cleaned_url)
-
-    # Only add tags if recipe is new.
-    # Might want to change this later, but fine for a first run.
-    if not update_recipe_id:
-        # Store image url
+    # If recipe doesn't have image, try to scrape one.
+    if not recipe.internet_image_url:
         image_url = scrape_recipe_image_url(soup_html)
         if image_url:
             # Create internet image record to store url
@@ -181,25 +181,40 @@ def scrape_recipe(url, update_recipe_id=None):
                 url=image_url,
                 recipe_id=recipe.id
             )
+    return recipe
 
-        # Add categories
-        categories_by_name = {
-            category.name: category for category in
-            Category.objects.all()
-        }
-        categories = scrape_recipe_categories(
-            soup_html, categories_by_name)
-        if len(categories) > 0:
-            recipe_categories = [
-                RecipeCategory(
-                    category=categories_by_name[category],
-                    recipe=recipe
-                )
-                for category in categories
-            ]
-            RecipeCategory.objects.bulk_create(recipe_categories)
+def scrape_recipe_tags(recipe, soup_html=None):
+    # Don't scrape if recipe not from web.
+    if not recipe.url:
+        return
+    # Scrape the page's html 
+    if not soup_html:
+        soup_html = get_soup_html('http://www.' + recipe.url)
 
-        # Add cuisine
+    # Find new categories and add them to the recipe.
+    categories_by_name = {
+        category.name: category for category in
+        Category.objects.all()
+    }
+    # new categories
+    scraped_categories = set(scrape_recipe_categories(
+        soup_html, categories_by_name))
+    # old categories
+    recipe_categories = set([cat.name for cat in recipe.categories.all()])
+    # add the diff
+    categories_to_add = scraped_categories.difference(recipe_categories)
+    if len(categories_to_add) > 0:
+        recipe_categories = [
+            RecipeCategory(
+                category=categories_by_name[category],
+                recipe=recipe
+            )
+            for category in categories_to_add
+        ]
+        RecipeCategory.objects.bulk_create(recipe_categories)
+    
+    # If recipe doesn't have cuisine, add.
+    if recipe.cuisines.count() == 0:
         cuisines_by_name = {
             cuisine.name: cuisine for cuisine in
             Cuisine.objects.all()
@@ -213,38 +228,51 @@ def scrape_recipe(url, update_recipe_id=None):
             )
             recipe_cuisine.save()
 
-        # Add diets.
-        diets_by_name = {
-            diet.name: diet for diet in Diet.objects.all()
-        }
-        diets = scrape_recipe_diets(soup_html, diets_by_name)
-        if len(diets) > 0:
-            recipe_diets = [
-                RecipeDiet(
-                    diet=diets_by_name[diet],
-                    recipe=recipe
-                )
-                for diet in diets
-            ]
-            RecipeDiet.objects.bulk_create(recipe_diets)
+    # Find new diets and add them to the recipe.
+    diets_by_name = {
+        diet.name: diet for diet in Diet.objects.all()
+    }
+    # new diets
+    scraped_diets = set(scrape_recipe_diets(soup_html, diets_by_name))
+    # old diets
+    recipe_diets = set([diet.name for diet in recipe.diets.all()])
+    diets_to_add = scraped_diets.difference(recipe_diets)
+    if len(diets_to_add) > 0:
+        recipe_diets = [
+            RecipeDiet(
+                diet=diets_by_name[diet],
+                recipe=recipe
+            )
+            for diet in diets_to_add
+        ]
+        RecipeDiet.objects.bulk_create(recipe_diets)
+    return 'success'
+
+def scrape_recipe_ingredients_and_allergies(recipe, soup_html=None):
+    # Don't scrape if recipe not from web.
+    if not recipe.url:
+        return
+    # Scrape the page's html 
+    if not soup_html:
+        soup_html = get_soup_html('http://www.' + recipe.url)
     # Get ingredients. 
     ingredient_strings = scrape_recipe_ingredients(soup_html)
     # If not ingredients, do nothing.
     if not ingredient_strings:
         recipe.ingredients_in_nutrition_facts = float(0)
+        recipe.save()
         return
-    elif update_recipe_id:
-        # If updating recipe, prepare by
-        # deleting recipe ingredients, so updated ingredients can be saved.
-        # Lazy: fix & use diff later.
+
+    # If updating recipe, prepare by
+    # deleting recipe ingredients, so updated ingredients can be saved.
+    # Lazy: fix & use diff later.
+    if recipe.ingredients.count() > 0:
         ingredients = Ingredient.objects.filter(recipe_id=update_recipe_id).all()
         ingredients.delete()
-    # Else, get nutrition breakdown
     units_by_name = {
         unit.name: unit for unit in Unit.objects.all()}
     units_by_abbr = {
         unit.abbr: unit for unit in Unit.objects.all()}
-
     ingredients = []
     # Parse ingredient from scraped ingredient string.
     for ingredient_str in ingredient_strings:
@@ -259,6 +287,19 @@ def scrape_recipe(url, update_recipe_id=None):
     recipe_ingredient_count = len(ingredient_strings)
     recipe.save_nutrition_facts(ingredients, recipe_ingredient_count)
     recipe.save_allergens(ingredients)
+    return 'success'
+
+
+@transaction.atomic
+def scrape_recipe(url, update_recipe_id=None):
+    # Scrape the page's html one time and pass it into the following functions.
+    soup_html = get_soup_html(url)
+    recipe = scrape_recipe_basic_info(url, update_recipe_id, soup_html)
+    scrape_recipe_tags(recipe, soup_html)
+    scrape_recipe_ingredients_and_allergies(recipe, soup_html)
+    return 'success'
+
+    
 
 # TODO:
 # def add_ingredients_and_directions_to_recipe(recipe):
