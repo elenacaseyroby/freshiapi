@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_admin_inline_paginator',
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
     'environ',
     'django_apps',
