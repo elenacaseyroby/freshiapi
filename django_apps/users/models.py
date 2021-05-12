@@ -6,11 +6,13 @@ import jwt
 from datetime import timedelta, date
 
 
-def validate_access_token(access_token):
-    '''Returns user_id if valid, returns false if invalid.'''
+# Move this wherever the login business logic goes.
+def validate_access_token(token):
+    '''Input: token
+    Output: AccessToken object if token is valid, false if token is invalid.'''
     try:
         payload = jwt.decode(
-            access_token,
+            token,
             FRESHI_AUTH_ACCESS_KEY,
             algorithm="HS256"
         )
@@ -24,7 +26,7 @@ def validate_access_token(access_token):
             access_token and
             access_token.expiration_date > date.today()
         ):
-            return user_id
+            return access_token
     except:
         return False
     return False
@@ -59,7 +61,7 @@ class AccessToken(models.Model):
     unique_together = [['user_id', 'code']]
 
     def generate_token(self, user_id):
-        '''Create token record for user and return access token.'''
+        '''Create access token object for user and return token.'''
         # Delete any access tokens already tied to user.
         AccessToken.objects.filter(user_id=user_id).delete()
         # Set user.
@@ -75,9 +77,9 @@ class AccessToken(models.Model):
 
     @cached_property
     def token(self):
-        '''Access tokens are JWT tokens hashed with the FRESHI_AUTH_ACCESS_KEY \
+        '''Tokens are JWT tokens hashed with the FRESHI_AUTH_ACCESS_KEY \
             that store a unique combo of user_id and code that will link back to a unique \
-            AccessToken record.'''
+            AccessToken object.'''
 
         # Notes:
         # 1. Don't store expiration date in JWT token.
