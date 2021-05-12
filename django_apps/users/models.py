@@ -1,7 +1,33 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils.functional import cached_property
 import secrets
+import jwt
 from datetime import timedelta, date
+
+
+def validate_access_token(access_token):
+    '''Returns user_id if valid, returns false if invalid.'''
+    try:
+        payload = jwt.decode(
+            access_token,
+            FRESHI_AUTH_ACCESS_KEY,
+            algorithm="HS256"
+        )
+        user_id = payload['user_id']
+        code = payload['code']
+        access_token = AccessToken.objects.filter(
+            code=code, user_id=user_id).first()
+        # If expiration date is in future, token is valid
+        # return user id
+        if (
+            access_token and
+            access_token.expiration_date > date.today()
+        ):
+            return user_id
+    except:
+        return False
+    return False
 
 
 class User(AbstractUser):
@@ -10,52 +36,77 @@ class User(AbstractUser):
         db_table = '"users_users"'
 
 
-# TODO
-# review
-# make migrations
-# test
-# commit
-# create wrapper to get and validate token from the header for any secure endpoint
+# Made custom AccessToken so we could be sure no sensitive data would be stored in
+# the token (since it will be vulnerable to leaks when stored locally on our mobile
+# app) and to easily manage expiration_dates and access revokation from our backend.
 class AccessToken(models.Model):
-    # Rules:
-    # 1. users are only allowed one token at a time.
-    # 2. records of tokens are note kept: tokens may be deleted once they have expired.
-    # 3. tokens are not unique
-    # 4. users are effectively unique: users are not unique at the db level,
-    # but since we delete old user tokens before making new ones, users are
-    # effectively unique for now.
-    # 5. tokens should be retrieved using both user_id and token code since
-    # codes are not unique.
+    ''' Rules:
+    1. Users are only allowed one access token at a time.
+    2. Records of tokens are not saved: tokens may be deleted once they have expired.
+    3. Token codes are not unique.
+    5. Access tokens are JWT tokens hashed with FRESHI_AUTH_ACCESS_KEY.
+    They store user_id and code which will link back to a unique AccessToken record.
+    4. Users are effectively unique, since we delete all of a user's tokens before creating
+    a new token for said user. That said, users are not unique at the db level in case we
+    ever want to support multiple active access tokens per user.
+    5. Tokens must be retrieved using both user_id and token code since
+    codes are not unique.'''
 
-    # Code should never contain sensitive data, encoded or otherwise,
-    # since it will be stored locally on our mobile app.
     code = models.CharField(max_length=100, null=False, blank=False)
     user = models.ForeignKey(
-        User, on_delete=models.RESTRICT, null=False, blank=False)
+        User, on_delete=models.CASCADE, null=False, blank=False)
     expiration_date = models.DateField(null=False, blank=False)
+    unique_together = [['user_id', 'code']]
 
-    def generate(self, user_id):
+    def generate_token(self, user_id):
+        '''Create token record for user and return access token.'''
         # Delete any access tokens already tied to user.
         AccessToken.objects.filter(user_id=user_id).delete()
         # Set user.
         self.user_id = user_id
         # Expiration date is one year from generation.
         self.expiration_date = timedelta(days=365)
-        # Generate token: as of 2015, it is believed that 32 bytes (256 bits)
-        # of randomness is sufficient for the typical use-case
-        # expected for the secrets module.
+        # Code adds complexity to access token, so we can't be hacked with
+        # FRESHI_AUTH_ACCESS_KEY and user_id alone and also allows for a future in
+        # which a user code have multiple active codes at once, for multiple devices.
         self.code = secrets.token_hex(60)
+        self.save()
+        return self.token
 
-    def validate(self, user_id, code):
-        if self.user_id != user_id:
-            return False
-        if self.code != code:
-            return False
-        if self.expiration_date <= date.today():
-            return False
-        return True
+    @cached_property
+    def token(self):
+        '''Access tokens are JWT tokens hashed with the FRESHI_AUTH_ACCESS_KEY \
+            that store a unique combo of user_id and code that will link back to a unique \
+            AccessToken record.'''
+
+        # Notes:
+        # 1. Don't store expiration date in JWT token.
+        # We want the db to be the source of truth
+        # for the expiration date, so that we can
+        # change the date to revoke access.
+        # 2. Token should
+        # never contain sensitive data, encoded or otherwise,
+        # since it will be stored locally on our mobile app.
+        payload = {
+            'user_id': self.user_id,
+            'code': self.code
+        }
+        # These tokens are pretty secure because they must be made with the
+        # FRESHI_AUTH_ACCESS_KEY and a code and user_id combination from an
+        # active access token record in the db. So to fake one, you would
+        # need a lot of data from diverse and secure parts of our
+        # backend infrastructure. And if our security was compromised, you
+        # could invalidate all active tokens by changing the
+        # FRESHI_AUTH_ACCESS_KEY.
+        # Note: We chose to use the HS256 signature because the same server that
+        # creates the key, decodes the key. If we had another server decoding the
+        # key, we would want to use the RS256 signature, so that if the key used to
+        # decode tokens was exposed, it couldn't be used to create new tokens.
+        return jwt.encode(payload, FRESHI_AUTH_ACCESS_KEY, algorithm="HS256")
 
     def revoke(self):
+        # Note: Could also be revoked by changing expiration_date
+        # if we ever wanted to keep records of our access tokens.
         self.delete()
 
     class Meta:
