@@ -32,12 +32,8 @@ def validate_access_token(token):
     return False
 
 
-class User(AbstractUser):
-
-    class Meta:
-        db_table = '"users_users"'
-
-
+# Could move this into its own app at some point.  For now, don't see the
+# need since I don't think we'll need many more (if any more) authentication classes.
 # Made custom AccessToken so we could be sure no sensitive data would be stored in
 # the token (since it will be vulnerable to leaks when stored locally on our mobile
 # app) and to easily manage expiration_dates and access revokation from our backend.
@@ -116,3 +112,9 @@ class AccessToken(models.Model):
 
     def __str__(self):
         return self.code
+
+
+class User(AbstractUser):
+
+    class Meta:
+        db_table = '"users_users"'
