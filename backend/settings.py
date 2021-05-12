@@ -82,7 +82,8 @@ INSTALLED_APPS = [
     'django_apps.foods',
     'django_apps.users',
     'django_apps.recipes',
-    'django_apps.media'
+    'django_apps.media',
+    'django_apps.api_auth',
 ]
 
 MIDDLEWARE = [
