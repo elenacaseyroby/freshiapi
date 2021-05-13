@@ -1,7 +1,5 @@
 from django.db import models
 from django.utils.functional import cached_property
-from rest_framework.authentication import BaseAuthentication
-from rest_framework import exceptions
 import secrets
 import jwt
 from datetime import date
@@ -9,53 +7,9 @@ from dateutil.relativedelta import relativedelta
 from backend.settings import FRESHI_AUTH_ACCESS_KEY
 
 
-# Move this wherever the login business logic goes.
-def get_access_token(token):
-    '''Input: token
-    Output: user object if token is valid, false if token is invalid.'''
-    try:
-        payload = jwt.decode(
-            token,
-            FRESHI_AUTH_ACCESS_KEY,
-            algorithms="HS256"
-        )
-    except:
-        raise exceptions.ErrorDetail("Unable to decode token.")
-    user_id = payload['user_id']
-    code = payload['code']
-    access_token = AccessToken.objects.filter(
-        code=code, user_id=user_id).first()
-    # If expiration date is in future, token is valid
-    # return user id
-    if (
-        access_token and
-        access_token.expiration_date > date.today()
-    ):
-        return access_token
-
-
-class APIAuthentication(BaseAuthentication):
-    def authenticate(self, request):
-        token = request.headers['Authorization']
-        if not token:  # no username passed in request headers
-            raise exceptions.AuthenticationFailed(
-                'Authorization token not in header')
-        try:
-            access_token = get_access_token(token)
-            # BaseAuthentication class must return (user, None)
-            # Then it checks user.is_authenticated to authenticate
-            return (access_token.user, None)
-        except:
-            # raise exception if user does not exist
-            raise exceptions.AuthenticationFailed(
-                'Authorization token invalid')
-
-
 # Made custom AccessToken so we could be sure no sensitive data would be stored in
 # the token (since it will be vulnerable to leaks when stored locally on our mobile
 # app) and to easily manage expiration_dates and access revokation from our backend.
-
-
 class AccessToken(models.Model):
     ''' Rules:
     1. Users are only allowed one access token at a time.

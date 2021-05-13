@@ -112,10 +112,21 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 REST_FRAMEWORK = {
+    # Determines the default set of authenticators used when accessing the
+    # request.user or request.auth properties. All authenticators must
+    # pass for all drf views.
+    # This is why we cannot add APIAuthentication
+    # here, or else all views including the one to get the Authorization
+    # token would be protected by the Authorization token.
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        'django_apps.api_auth.models.APIAuthentication',
+    ],
+    # Determines the default set of permissions checked at the start of a view.
+    # Permission must be granted by every class in the list.
+    'DEFAULT_PERMISSION_CLASSES': [
+        # Anyone can access API endpoints by default
+        'rest_framework.permissions.AllowAny',
     ]
 }
 
