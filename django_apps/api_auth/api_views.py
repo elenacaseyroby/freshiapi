@@ -1,13 +1,13 @@
 from rest_framework.decorators import api_view
-from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import authenticate
 from rest_framework.response import Response
 
 from django_apps.api_auth.models import AccessToken
+from django_apps.api_auth.auth_utils import get_access_token
 from django_apps.users.models import User
 
 
-@api_view(['POST'])
+@api_view(['POST', ])
 def token(request):
     if request.method == 'POST':
         error = None
@@ -30,3 +30,17 @@ def token(request):
             if user_exists:
                 return Response({'status_code': 401, 'detail': 'Incorrect password. Try again.'})
             return Response({'status_code': 404, 'detail': 'User not found'})
+
+
+@api_view(['POST', ])
+def revoke(request):
+    if request.method == 'POST':
+        if 'Authorization' not in request.headers.keys():
+            return Response({'status_code': 401, 'detail': 'Authorization token missing from the header'})
+        token = request.headers['Authorization']
+        try:
+            access_token = get_access_token(token)
+            access_token.revoke()
+            return Response({'status_code': 200, 'detail': 'Token successfully revoked'})
+        except:
+            return Response({'status_code': 200, 'detail': 'Nothing executed. Token was already invalid'})
