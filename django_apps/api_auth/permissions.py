@@ -20,4 +20,4 @@ class APIIsAuthenticated(BasePermission):
         except:
             # raise exception if user does not exist
             raise exceptions.AuthenticationFailed(
-                'Authorization token invalid')
+                'Permissions error: Authorization token invalid')

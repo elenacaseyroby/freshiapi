@@ -4,6 +4,7 @@ from rest_framework import exceptions
 from django_apps.api_auth.auth_utils import get_access_token
 
 
+# Determines the default set of authenticators used when accessing the request.user or request.auth properties.
 class APIAuthentication(BaseAuthentication):
     def authenticate(self, request):
         token = request.headers['Authorization']
@@ -18,4 +19,4 @@ class APIAuthentication(BaseAuthentication):
         except:
             # raise exception if user does not exist
             raise exceptions.AuthenticationFailed(
-                'Authorization token invalid')
+                'Authorization error: Authorization token invalid')
