@@ -1,14 +1,18 @@
 from django.db import models
 from django.utils.functional import cached_property
+from django.contrib.auth.backends import BaseBackend
+from ..users.models import User
 import secrets
 import jwt
-from datetime import timedelta, date
+from datetime import date
+from dateutil.relativedelta import relativedelta
+from backend.settings import FRESHI_AUTH_ACCESS_KEY
 
 
 # Move this wherever the login business logic goes.
-def validate_access_token(token):
+def get_access_token(token):
     '''Input: token
-    Output: AccessToken object if token is valid, false if token is invalid.'''
+    Output: user object if token is valid, false if token is invalid.'''
     try:
         payload = jwt.decode(
             token,
@@ -27,13 +31,33 @@ def validate_access_token(token):
         ):
             return access_token
     except:
-        return False
-    return False
+        return None
+    return None
+
+
+class CustomBackend(BaseBackend):
+    # required method when extending BaseBackend
+    def authenticate(self, request, token=None):
+        # Check the token and return a user.
+        access_token = get_access_token(token)
+        if access_token:
+            return access_token.user
+        return None
+
+    # required method when extending BaseBackend
+    def get_user(self, user_id):
+        # Check user_id and return user
+        user = User.objects.filter(id=user_id).first()
+        if user:
+            return user
+        return None
 
 
 # Made custom AccessToken so we could be sure no sensitive data would be stored in
 # the token (since it will be vulnerable to leaks when stored locally on our mobile
 # app) and to easily manage expiration_dates and access revokation from our backend.
+
+
 class AccessToken(models.Model):
     ''' Rules:
     1. Users are only allowed one access token at a time.
@@ -60,11 +84,11 @@ class AccessToken(models.Model):
         # Set user.
         self.user_id = user_id
         # Expiration date is one year from generation.
-        self.expiration_date = timedelta(days=365)
+        self.expiration_date = date.today() + relativedelta(years=1)
         # Code adds complexity to access token, so we can't be hacked with
         # FRESHI_AUTH_ACCESS_KEY and user_id alone and also allows for a future in
         # which a user could have multiple active codes at once, for multiple devices.
-        self.code = secrets.token_hex(60)
+        self.code = secrets.token_hex(60)[:100]
         self.save()
         return self.token
 
