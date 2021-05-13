@@ -2,7 +2,6 @@ from django.db import models
 from django.utils.functional import cached_property
 from rest_framework.authentication import BaseAuthentication
 from rest_framework import exceptions
-from ..users.models import User
 import secrets
 import jwt
 from datetime import date
