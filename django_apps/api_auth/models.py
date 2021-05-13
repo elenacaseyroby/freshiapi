@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.functional import cached_property
-from django.contrib.auth.backends import BaseBackend
+from rest_framework.authentication import BaseAuthentication
+from rest_framework import exceptions
 from ..users.models import User
 import secrets
 import jwt
@@ -17,40 +18,38 @@ def get_access_token(token):
         payload = jwt.decode(
             token,
             FRESHI_AUTH_ACCESS_KEY,
-            algorithm="HS256"
+            algorithms="HS256"
         )
-        user_id = payload['user_id']
-        code = payload['code']
-        access_token = AccessToken.objects.filter(
-            code=code, user_id=user_id).first()
-        # If expiration date is in future, token is valid
-        # return user id
-        if (
-            access_token and
-            access_token.expiration_date > date.today()
-        ):
-            return access_token
     except:
-        return None
-    return None
+        raise exceptions.ErrorDetail("Unable to decode token.")
+    user_id = payload['user_id']
+    code = payload['code']
+    access_token = AccessToken.objects.filter(
+        code=code, user_id=user_id).first()
+    # If expiration date is in future, token is valid
+    # return user id
+    if (
+        access_token and
+        access_token.expiration_date > date.today()
+    ):
+        return access_token
 
 
-class CustomBackend(BaseBackend):
-    # required method when extending BaseBackend
-    def authenticate(self, request, token=None):
-        # Check the token and return a user.
-        access_token = get_access_token(token)
-        if access_token:
-            return access_token.user
-        return None
-
-    # required method when extending BaseBackend
-    def get_user(self, user_id):
-        # Check user_id and return user
-        user = User.objects.filter(id=user_id).first()
-        if user:
-            return user
-        return None
+class APIAuthentication(BaseAuthentication):
+    def authenticate(self, request):
+        token = request.headers['Authorization']
+        if not token:  # no username passed in request headers
+            raise exceptions.AuthenticationFailed(
+                'Authorization token not in header')
+        try:
+            access_token = get_access_token(token)
+            # BaseAuthentication class must return (user, None)
+            # Then it checks user.is_authenticated to authenticate
+            return (access_token.user, None)
+        except:
+            # raise exception if user does not exist
+            raise exceptions.AuthenticationFailed(
+                'Authorization token invalid')
 
 
 # Made custom AccessToken so we could be sure no sensitive data would be stored in
