@@ -102,6 +102,11 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 
+# The order of AUTHENTICATION_BACKENDS matters, so if the same
+# username and password is valid in multiple backends, Django
+# will stop processing at the first positive match.
+# If a backend raises a PermissionDenied exception, authentication
+# will immediately fail. Django won’t check the backends that follow.
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
