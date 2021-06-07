@@ -18,11 +18,15 @@ import environ
 
 
 def env_var(VAR_NAME):
-    if VAR_NAME not in os.environ:
-        env = environ.Env()
-        env.read_env()
-        os.environ[VAR_NAME] = env(VAR_NAME)
-    return os.environ[VAR_NAME]
+    try:
+        if VAR_NAME not in os.environ:
+            env = environ.Env()
+            env.read_env()
+            os.environ[VAR_NAME] = env(VAR_NAME)
+        return os.environ[VAR_NAME]
+    except KeyError:
+        error_msg = 'Set the {} environment variable'.format(var_name)
+        raise ImproperlyConfigured(error_msg)
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -82,7 +86,8 @@ INSTALLED_APPS = [
     'django_apps.foods',
     'django_apps.users',
     'django_apps.recipes',
-    'django_apps.media'
+    'django_apps.media',
+    'django_apps.api_auth',
 ]
 
 MIDDLEWARE = [
@@ -96,6 +101,34 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
 ]
+
+# The order of AUTHENTICATION_BACKENDS matters, so if the same
+# username and password is valid in multiple backends, Django
+# will stop processing at the first positive match.
+# If a backend raises a PermissionDenied exception, authentication
+# will immediately fail. Django won’t check the backends that follow.
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+REST_FRAMEWORK = {
+    # Determines the default set of authenticators used when accessing the
+    # request.user or request.auth properties. All authenticators must
+    # pass for all drf views.
+    # This is why we cannot add APIAuthentication
+    # here, or else all views including the one to get the Authorization
+    # token would be protected by the Authorization token.
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    # Determines the default set of permissions checked at the start of a view.
+    # Permission must be granted by every class in the list.
+    'DEFAULT_PERMISSION_CLASSES': [
+        # Anyone can access API endpoints by default
+        'rest_framework.permissions.AllowAny',
+    ]
+}
 
 ROOT_URLCONF = 'backend.urls'
 
@@ -194,3 +227,5 @@ AWS_STORAGE_BUCKET_NAME = env_var('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_REGION_NAME = env_var('AWS_S3_REGION_NAME')
 AWS_ACCESS_KEY_ID = env_var('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = env_var('AWS_SECRET_ACCESS_KEY')
+
+FRESHI_AUTH_ACCESS_KEY = env_var('FRESHI_AUTH_ACCESS_KEY')
