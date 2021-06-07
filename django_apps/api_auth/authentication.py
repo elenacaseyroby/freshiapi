@@ -8,7 +8,7 @@ from django_apps.api_auth.auth_utils import get_access_token
 class APIAuthentication(BaseAuthentication):
     def authenticate(self, request):
         token = request.headers['Authorization']
-        if not token:  # no username passed in request headers
+        if not token:
             raise exceptions.AuthenticationFailed(
                 'Authorization token not in header')
         try:
