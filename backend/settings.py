@@ -18,11 +18,15 @@ import environ
 
 
 def env_var(VAR_NAME):
-    if VAR_NAME not in os.environ:
-        env = environ.Env()
-        env.read_env()
-        os.environ[VAR_NAME] = env(VAR_NAME)
-    return os.environ[VAR_NAME]
+    try:
+        if VAR_NAME not in os.environ:
+            env = environ.Env()
+            env.read_env()
+            os.environ[VAR_NAME] = env(VAR_NAME)
+        return os.environ[VAR_NAME]
+    except KeyError:
+        error_msg = 'Set the {} environment variable'.format(var_name)
+        raise ImproperlyConfigured(error_msg)
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
