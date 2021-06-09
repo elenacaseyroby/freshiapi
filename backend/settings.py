@@ -24,9 +24,9 @@ def env_var(VAR_NAME):
             env.read_env()
             os.environ[VAR_NAME] = env(VAR_NAME)
         return os.environ[VAR_NAME]
-    except KeyError:
+    except:
         error_msg = 'Set the {} environment variable'.format(var_name)
-        raise ImproperlyConfigured(error_msg)
+        raise Exception(error_msg)
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
