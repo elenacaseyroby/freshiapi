@@ -22,7 +22,6 @@ class UserRUD(RetrieveUpdateDestroyAPIView):
 
 
 class UserCreate(CreateAPIView):
-    # Must prove logged in by passing Authentication token in header.
     serializer_class = UserSerializer
 
     def create(self, request, *args, **kwargs):
@@ -58,25 +57,5 @@ class UserCreate(CreateAPIView):
         except ValueError:
             raise ValidationError({
                 'email': 'Please enter valid email'
-            })
-        try:
-            first_name = request.data.get('first_name')
-            if first_name is None or len(first_name) < 2:
-                raise ValidationError(
-                    {'first_name': 'First name must be at least 2 characters in length'}
-                )
-        except ValueError:
-            raise ValidationError({
-                'first_name': 'Please enter valid first name'
-            })
-        try:
-            last_name = request.data.get('last_name')
-            if last_name is None or len(last_name) < 2:
-                raise ValidationError(
-                    {'last_name': 'Last name must be at least 2 characters in length'}
-                )
-        except ValueError:
-            raise ValidationError({
-                'last_name': 'Please enter valid last name'
             })
         return super().create(request, *args, **kwargs)
