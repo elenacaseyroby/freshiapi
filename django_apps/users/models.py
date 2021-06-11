@@ -1,9 +1,31 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django_apps.users.managers import UserManager
 
 
 class User(AbstractUser):
-    REQUIRED_FIELDS = ['email', 'password']
+    objects = UserManager()
+    # AbstractBaseUser provides the core implementation of a user model,
+    # including hashed passwords and tokenized password resets.
+    # AbstractUser provides authentication ^^ plus extra fields like
+    # first_name, last_name, etc.
+    email = models.EmailField(
+        verbose_name='email address',
+        max_length=255,
+        unique=True,
+        blank=False,
+        null=False
+    )
+    # username 150, unique
+    # first_name 150
+    # last_name 150
+    # updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
+    # A list of the field names that will be prompted for when creating
+    # a user via the createsuperuser.
+    # Has no bearing on creation of user in other contexts.
+    # username, email and password are required by default
+    REQUIRED_FIELDS = []
 
     def __str__(self):
         return self.email
@@ -12,9 +34,4 @@ class User(AbstractUser):
         db_table = '"users_users"'
 
     def save(self, *args, **kwargs):
-        # By default, username and email are unique but case sensitive.
-        # To make sure that "Casey" and "casey" are treated the same,
-        # we will make username and email lowercase before saving.
-        self.username = self.username.lower()
-        self.email = self.email.lower()
         super(User, self).save(*args, **kwargs)

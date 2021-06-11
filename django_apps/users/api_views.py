@@ -1,6 +1,7 @@
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import (
     ListAPIView, RetrieveUpdateDestroyAPIView, CreateAPIView)
+from rest_framework.response import Response
 
 from django_apps.users.serializers import UserSerializer
 from django_apps.users.models import User
@@ -25,37 +26,12 @@ class UserCreate(CreateAPIView):
     serializer_class = UserSerializer
 
     def create(self, request, *args, **kwargs):
-        try:
-            username = request.data.get('username')
-            if username is None or len(username) < 3:
-                raise ValidationError(
-                    {'username': 'Username must be at least 3 characters in length'})
-        except ValueError:
-            raise ValidationError({
-                'username': 'Please enter valid username'
-            })
-        try:
-            password = request.data.get('password')
-            if password is None or len(password) < 8:
-                raise ValidationError(
-                    {'password': 'Password must be at least 8 characters in length'}
-                )
-        except ValueError:
-            raise ValidationError({
-                'password': 'Please enter valid password'
-            })
-        try:
-            email = request.data.get('email')
-            if (
-                email is None or
-                '@' not in email or
-                len(email) < 5
-            ):
-                raise ValidationError(
-                    {'email': 'Email must be valid'}
-                )
-        except ValueError:
-            raise ValidationError({
-                'email': 'Please enter valid email'
-            })
-        return super().create(request, *args, **kwargs)
+        username = request.data.get('username')
+        email = request.data.get('email')
+        password = request.data.get('password')
+        # create user using custom user manager.
+        user = User.objects.create_user(
+            username, email, password, *args, **kwargs)
+        # serialize response.
+        serialized_user_data = UserSerializer(user).data
+        return Response(serialized_user_data)
