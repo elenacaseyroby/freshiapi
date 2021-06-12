@@ -3,43 +3,80 @@ from rest_framework.exceptions import ValidationError
 # from django_apps.users.models import User
 
 
+def formatError(errorField, errorMessage):
+    return {
+        "error_field": errorField,
+        "error_message": errorMessage
+    }
+
+
 def getEmailErrors(user_objects, email):
     # return dict or None
     if not email:
-        return {'email': "Email must be set."}
+        return formatError(
+            "email",
+            "Email must be set.")
     if (
         len(email) < 5 or
         '@' not in email
     ):
-        return {'email': "Please enter valid email."}
+        return formatError(
+            "email",
+            "Please enter valid email.")
     if len(email) > 255:
-        return {'email': "Email too long. Please enter shorter email."}
+        return formatError(
+            "email",
+            "Email too long. Please enter shorter email.")
+    if " " in email.strip():
+        return formatError(
+            "email",
+            "Email cannot contain spaces.")
     if user_objects.filter(email=email).count() > 0:
-        return {'email': "A user with that email address already exists."}
+        return formatError(
+            "email",
+            "A user with that email address already exists.")
     return None
 
 
 def getUsernameErrors(user_objects, username):
     # return dict or None
     if not username:
-        return {'username': "Username must be set."}
+        return formatError(
+            "username",
+            "Username must be set.")
     if len(username) < 3:
-        return {'username': "Username too short. Please enter a longer username."}
+        return formatError(
+            "username",
+            "Username too short. Please enter a longer username.")
     if len(username) > 150:
-        return {'username': "Username too long.  Please enter a shorter username."}
+        return formatError(
+            "username",
+            "Username too long.  Please enter a shorter username.")
+    if " " in username.strip():
+        return formatError(
+            "username",
+            "Username cannot contain spaces.")
     if user_objects.filter(username=username).count() > 0:
-        return {'email': "A user with that username already exists."}
+        return formatError(
+            "username",
+            "A user with that username already exists.")
     return None
 
 
 def getPasswordErrors(password):
     # return dict or None
     if not password:
-        return {'password': "Password must be set."}
+        return formatError(
+            "password",
+            "Password must be set.")
     if len(password) < 8:
-        return {'password': "Password too short. Please enter a longer password."}
+        return formatError(
+            "password",
+            "Password too short. Please enter a longer password.")
     if len(password) > 150:
-        return {'password': "Password too long. Please enter a shorter password."}
+        return formatError(
+            "password",
+            "Password too long. Please enter a shorter password.")
 
 
 class UserManager(BaseUserManager):
@@ -57,8 +94,8 @@ class UserManager(BaseUserManager):
         # By default, username and email are unique but case sensitive.
         # To make sure that "Casey" and "casey" are treated the same,
         # we will make username and email lowercase before saving.
-        email = email.lower()
-        username = username.lower()
+        email = email.lower().strip()
+        username = username.lower().strip()
         user = self.model(username=username, email=email, **extra_fields)
         user.set_password(password)
         user.save()
