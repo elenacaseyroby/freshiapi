@@ -65,6 +65,7 @@ ALLOWED_HOSTS = [
     'localhost',
     'freshi-prod.us-east-1.elasticbeanstalk.com',
     'freshi-staging.us-east-1.elasticbeanstalk.com',
+    'www.freshi-staging.us-east-1.elasticbeanstalk.com',
     AWS_LOCAL_IP
 ]
 
