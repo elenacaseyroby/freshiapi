@@ -1,11 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django_apps.users.managers import UserManager
 from django_apps.users.custom_fields import CustomEmailField, CustomUsernameField
 
 
 class User(AbstractUser):
-    objects = UserManager()
     # AbstractBaseUser provides the core implementation of a user model,
     # including hashed passwords and tokenized password resets.
     # AbstractUser provides authentication ^^ plus extra fields like
@@ -42,5 +40,4 @@ class User(AbstractUser):
         db_table = '"users_users"'
 
     def save(self, *args, **kwargs):
-        # save password here
         super(User, self).save(*args, **kwargs)

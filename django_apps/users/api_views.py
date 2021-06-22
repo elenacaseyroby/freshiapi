@@ -1,7 +1,5 @@
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.generics import (
-    GenericAPIView,
-    ListAPIView,
     RetrieveUpdateDestroyAPIView,
     CreateAPIView)
 from rest_framework.response import Response
@@ -9,37 +7,64 @@ from rest_framework.decorators import api_view
 
 from django_apps.users.serializers import UserSerializer
 from django_apps.users.models import User
+from django_apps.api_auth.authentication import APIAuthentication
 from django_apps.api_auth.auth_utils import get_access_token
 
-from django_apps.api_auth.authentication import APIAuthentication
+
+def formatError(errorField, errorMessage):
+    return {
+        "error_field": errorField,
+        "error_message": errorMessage
+    }
 
 
-# class UserList(ListAPIView):
+def getPasswordErrors(password):
+    # return dict or None
+    if not password:
+        return formatError(
+            "password",
+            "Password must be set.")
+    if len(password) < 8:
+        return formatError(
+            "password",
+            "Password too short. Please enter a longer password.")
+    if len(password) > 150:
+        return formatError(
+            "password",
+            "Password too long. Please enter a shorter password.")
 
-#     authentication_classes = (APIAuthentication, )
-#     queryset = User.objects.all()
-#     serializer_class = UserSerializer
+
+def savePasswordFromRequest(request, user):
+    # If password is passed, update that too:
+    if "password" in request.data.keys():
+        password = request.data.get("password")
+        passwordError = getPasswordErrors(password)
+        if passwordError:
+            raise ValidationError(passwordError, code=400)
+        user.set_password(password)
+        user.save()
 
 
 class UserCreate(CreateAPIView):
     serializer_class = UserSerializer
 
     def create(self, request, *args, **kwargs):
-        username = request.data.get('username')
-        email = request.data.get('email')
-        password = request.data.get('password')
-        # create user using custom user manager.
-        user = User.objects.create_user(
-            username, email, password, *args, **kwargs)
-        # serialize response.
-        serialized_user_data = UserSerializer(user).data
-        return Response(serialized_user_data)
+        response = super().create(request, *args, **kwargs)
+        # If request is successful, set password:
+        if (
+            response.status_code >= 200 and
+            response.status_code < 300
+        ):
+            email = request.data.get('email')
+            user = User.objects.filter(email=email).first()
+            if user:
+                savePasswordFromRequest(request, user)
+        return response
 
 
 class UserRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
     # Must prove logged in by passing Authentication token in header.
     authentication_classes = (APIAuthentication, )
-    # make sure that userId from auth is the only user that can be updated.
     queryset = User.objects.all()
     lookup_field = 'id'
     serializer_class = UserSerializer
@@ -50,33 +75,26 @@ class UserRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
         token = request.headers['Authorization']
         access_token = get_access_token(token)
         logged_in_user = access_token.user
-        user_to_update = self.get_object()
-        if user_to_update.id != logged_in_user.id:
+        instance = self.get_object()
+        # Only update if logged in user is same as the user being updated.
+        if instance.id != logged_in_user.id:
             raise AuthenticationFailed(
                 'Authorization error: Authorization token invalid')
-        response = super().update(request, *args, **kwargs)
-        # If password is passed, update that too:
-        if "password" in request.data.keys():
-            password = request.data.get("password")
-            logged_in_user.set_password(password)
-            logged_in_user.save()
-        # if successfully updates, update cache
-        # if response.status_code == 200:
-        #     from django.core.cache import cache
-        #     user = response.data
-        #     cache.set('user_data_{}'.format(user['id']), {
-        #         'first_name': user['first_name'],
-        #         'last_name': user['last_name'],
-        #         'username': user['username'],
-        #         'email': user['email'],
-        #     })
-        return response
 
-        # def delete(self, request, *args, **kwargs):  # override delete method
-    #     product_id = request.data.get('id')  # get id from request
-    #     response = super().delete(request, *args, **kwargs)  # delete object
-    #     # if object is successfully deleted, clear cache.
-    #     if response.status_code == 200:
-    #         from django.core.cache import cache
-    #         cache.delete('product_data_{}'.format(product_id))
-    #     return response
+        savePasswordFromRequest(request, instance)
+
+        # Only update the attributes that are passed in (partial update):
+        partial = kwargs.pop('partial', True)
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        # update cache
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        # Return serialized user.
+        return Response(serializer.data)
