@@ -35,14 +35,26 @@ def getPasswordErrors(password):
 
 
 def savePasswordFromRequest(request, user):
-    # If password is passed, update that too:
+    # Check if password passed in request.
     if "password" in request.data.keys():
         password = request.data.get("password")
+        # Validate new password.
         passwordError = getPasswordErrors(password)
         if passwordError:
             raise ValidationError(passwordError, code=400)
+        # Update password if no valdiation errors.
         user.set_password(password)
         user.save()
+
+
+def userToUpdateMatchesLoggedInUser(request, user_to_update):
+    token = request.headers['Authorization']
+    access_token = get_access_token(token)
+    logged_in_user = access_token.user
+    # Only update if logged in user is same as the user being updated.
+    if user_to_update.id != logged_in_user.id:
+        return False
+    return True
 
 
 class UserCreate(CreateAPIView):
@@ -71,26 +83,25 @@ class UserRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
 
     # override update method
     def update(self, request, *args, **kwargs):
-        # Get user associated with auth token used to authenticate request.
-        token = request.headers['Authorization']
-        access_token = get_access_token(token)
-        logged_in_user = access_token.user
+        # Get instance of user that will be updated.
         instance = self.get_object()
-        # Only update if logged in user is same as the user being updated.
-        if instance.id != logged_in_user.id:
-            raise AuthenticationFailed(
-                'Authorization error: Authorization token invalid')
 
+        # Get user associated with auth token used to authenticate request.
+        if not userToUpdateMatchesLoggedInUser(request, instance):
+            raise AuthenticationFailed(
+                "Authorization error: You cannot update another user's account.")
+
+        # Save password or throw error.
         savePasswordFromRequest(request, instance)
 
-        # Only update the attributes that are passed in (partial update):
+        # Update any attributes that were passed in the request.
         partial = kwargs.pop('partial', True)
         serializer = self.get_serializer(
             instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
-        # update cache
+        # Update cache.
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # forcibly invalidate the prefetch cache on the instance.
