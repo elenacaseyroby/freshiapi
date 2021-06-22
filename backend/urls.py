@@ -17,15 +17,15 @@ from django.contrib import admin
 from django.urls import path, re_path
 
 from django_apps.website.views import index, manifest
-from django_apps.users.api_views import UserList, UserCreate
+from django_apps.users.api_views import UserCreate, UserRetrieveUpdateDestroy
 from django_apps.api_auth.api_views import token, revoke
 
 urlpatterns = [
     # API
     path('api/v1/token/', token, name="token"),
     path('api/v1/token/revoke/', revoke, name="revoke"),
-    path('api/v1/users/', UserList.as_view()),
     path('api/v1/users/new/', UserCreate.as_view()),
+    path('api/v1/users/<int:id>/', UserRetrieveUpdateDestroy.as_view()),
 
     # Route “host:8000/” to the view that renders the frontend build to serve
     # front and back end at port 8000.

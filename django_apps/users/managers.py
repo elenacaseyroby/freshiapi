@@ -101,6 +101,47 @@ class UserManager(BaseUserManager):
         user.save()
         return user
 
+    # def update_user(self, *args, **extra_fields):
+    #     """
+    #     Create and save a User with the given email and password.
+    #     """
+    #     error = None
+    #     email = None
+    #     username = None
+    #     password = None
+    #     if (
+    #         "email" in args and
+    #         not error
+    #     ):
+    #         getEmailErrors(self, args["email"])
+    #         email = args["email"].lower().strip()
+    #     if (
+    #         "username" in args and
+    #         not error
+    #     ):
+    #         error = getUsernameErrors(self, args["username"])
+    #         username = args["username"].lower().strip()
+    #     if (
+    #         "password" in args and
+    #         not error
+    #     ):
+    #         error = getPasswordErrors(args["password"])
+    #         password = args["password"]
+    #     if error:
+    #         raise ValidationError(error)
+    #     # By default, username and email are unique but case sensitive.
+    #     # To make sure that "Casey" and "casey" are treated the same,
+    #     # we will make username and email lowercase before saving.
+    #     user = self.model(*args, **extra_fields)
+    #     if username:
+    #         user.username = username
+    #     if email:
+    #         user.email = email
+    #     if password:
+    #         user.set_password(password)
+    #     user.save()
+    #     return user
+
     def create_superuser(self, username, email, password, **extra_fields):
         """
         Create and save a SuperUser with the given email and password.
