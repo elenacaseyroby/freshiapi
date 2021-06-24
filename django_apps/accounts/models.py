@@ -37,7 +37,7 @@ class User(AbstractUser):
         return self.email
 
     class Meta:
-        db_table = '"accounts_users"'
+        db_table = 'accounts_users'
 
     def save(self, *args, **kwargs):
         super(User, self).save(*args, **kwargs)

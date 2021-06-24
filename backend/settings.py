@@ -90,6 +90,7 @@ INSTALLED_APPS = [
     'django_apps.recipes',
     'django_apps.media',
     'django_apps.api_auth',
+    'django_apps.communications',
 ]
 
 MIDDLEWARE = [
@@ -139,7 +140,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         # Add the root folder of frontend to serve front and back end
         # at port 8000.
-        'DIRS': [os.path.join(BASE_DIR, 'frontend')],
+        'DIRS': [os.path.join(BASE_DIR, 'frontend'), os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
