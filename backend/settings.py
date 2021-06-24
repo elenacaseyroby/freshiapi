@@ -86,7 +86,7 @@ INSTALLED_APPS = [
     'django_apps',
     'django_apps.website',
     'django_apps.foods',
-    'django_apps.users',
+    'django_apps.accounts',
     'django_apps.recipes',
     'django_apps.media',
     'django_apps.api_auth',
@@ -192,7 +192,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = 'accounts.User'
 
 
 # Internationalization

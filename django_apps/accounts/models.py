@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django_apps.users.custom_fields import CustomEmailField, CustomUsernameField
+from django_apps.accounts.custom_fields import CustomEmailField, CustomUsernameField
 
 
 class User(AbstractUser):
@@ -37,7 +37,7 @@ class User(AbstractUser):
         return self.email
 
     class Meta:
-        db_table = '"users_users"'
+        db_table = '"accounts_users"'
 
     def save(self, *args, **kwargs):
         super(User, self).save(*args, **kwargs)

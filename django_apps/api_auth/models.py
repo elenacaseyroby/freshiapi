@@ -25,7 +25,7 @@ class AccessToken(models.Model):
 
     code = models.CharField(max_length=100, null=False, blank=False)
     user = models.ForeignKey(
-        'users.User', on_delete=models.CASCADE, null=False, blank=False)
+        'accounts.User', on_delete=models.CASCADE, null=False, blank=False)
     expiration_date = models.DateField(null=False, blank=False)
     unique_together = [['user_id', 'code']]
 

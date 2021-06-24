@@ -4,7 +4,7 @@ from rest_framework.response import Response
 
 from django_apps.api_auth.models import AccessToken
 from django_apps.api_auth.auth_utils import get_access_token
-from django_apps.users.models import User
+from django_apps.accounts.models import User
 
 
 @api_view(['POST', ])

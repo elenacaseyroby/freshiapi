@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path, re_path
 
 from django_apps.website.views import index, manifest
-from django_apps.users.api_views import UserCreate, UserRetrieveUpdateDestroy
+from django_apps.accounts.api_views import UserCreate, UserRetrieveUpdateDestroy
 from django_apps.api_auth.api_views import token, revoke
 
 urlpatterns = [

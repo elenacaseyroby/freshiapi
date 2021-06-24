@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.functional import cached_property
 
-from django_apps.users.models import User
+from django_apps.accounts.models import User
 
 # Note: in postgress unique_together is functionally the same
 # as index_together

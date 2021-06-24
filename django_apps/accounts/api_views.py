@@ -5,8 +5,8 @@ from rest_framework.generics import (
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
-from django_apps.users.serializers import UserSerializer
-from django_apps.users.models import User
+from django_apps.accounts.serializers import UserSerializer
+from django_apps.accounts.models import User
 from django_apps.api_auth.authentication import APIAuthentication
 from django_apps.api_auth.auth_utils import get_access_token
 
