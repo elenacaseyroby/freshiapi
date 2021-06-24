@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 from pathlib import Path
+from django.core.mail import get_connection
 
 import os
 import requests
@@ -230,3 +231,10 @@ AWS_ACCESS_KEY_ID = env_var('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = env_var('AWS_SECRET_ACCESS_KEY')
 
 FRESHI_AUTH_ACCESS_KEY = env_var('FRESHI_AUTH_ACCESS_KEY')
+
+# Send emails through gmail.
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = env_var('EMAIL_PORT')
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "apikey"
+EMAIL_HOST_PASSWORD = env_var('EMAIL_HOST_PASSWORD')
