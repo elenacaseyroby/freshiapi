@@ -140,7 +140,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         # Add the root folder of frontend to serve front and back end
         # at port 8000.
-        'DIRS': [os.path.join(BASE_DIR, 'frontend'), os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [os.path.join(BASE_DIR, 'frontend'), ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
