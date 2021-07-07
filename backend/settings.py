@@ -236,6 +236,7 @@ FRESHI_AUTH_ACCESS_KEY = env_var('FRESHI_AUTH_ACCESS_KEY')
 # Send emails through gmail.
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = env_var('EMAIL_PORT')
+EMAIL_HOST_USER = env_var('EMAIL_HOST_USER')
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "apikey"
+# EMAIL_HOST_USER = "apikey"
 EMAIL_HOST_PASSWORD = env_var('EMAIL_HOST_PASSWORD')
