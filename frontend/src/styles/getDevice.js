@@ -1,4 +1,6 @@
 const getDevice = (windowWidth) => {
+  // normalizer used to scale text and images
+  // for responsive rendering.
   if (windowWidth < 768) {
     return {
       name: 'mobile',
