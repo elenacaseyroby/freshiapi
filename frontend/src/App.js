@@ -24,7 +24,7 @@ class App extends Component {
   }
 
   updateDimensions = () => {
-    const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 0;
+    const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 400;
     this.setState({
       windowWidth,
     });
@@ -34,13 +34,14 @@ class App extends Component {
     const {
       windowWidth,
     } = this.state;
+    const media = { windowWidth, };
     return (
       <Router>
         <Route
           exact
           path="/design-system"
           render={() => (
-            <DesignSystem windowWidth={windowWidth} />
+            <DesignSystem media={media} />
           )}
         />
         <Route

@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 // import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import './assets/fonts/Varela_Round/VarelaRound-Regular.ttf';
 
 ReactDOM.render(
   <React.StrictMode>

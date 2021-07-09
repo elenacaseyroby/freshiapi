@@ -1,8 +1,10 @@
 import React from 'react';
 import getFonts from './styles/getFonts';
 
-const DesignSystem = (windowWidth) => {
-  const fonts = getFonts(windowWidth);
+// eslint-disable-next-line react/prop-types
+const DesignSystem = ({ media }) => {
+  // eslint-disable-next-line react/prop-types
+  const fonts = getFonts(media.windowWidth);
   return (
     <div>
       <div style={fonts.largeTitle}>largeTitle</div>
