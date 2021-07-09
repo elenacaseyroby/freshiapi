@@ -1,17 +1,20 @@
 const getDevice = (windowWidth) => {
-  const device = {
-    name: 'desktop',
-    normalizer: windowWidth / 1280,
-  };
   if (windowWidth < 768) {
-    device.name = 'mobile';
-    return device;
+    return {
+      name: 'mobile',
+      normalizer: 1,
+    };
   }
   if (windowWidth < 1024) {
-    device.name = 'tablet';
-    return device;
+    return {
+      name: 'tablet',
+      normalizer: 1.5,
+    };
   }
-  return device;
+  return {
+    name: 'desktop',
+    normalizer: windowWidth / 700,
+  };
 };
 
 export default getDevice;

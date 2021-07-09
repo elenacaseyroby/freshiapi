@@ -10,57 +10,57 @@ const getFonts = (windowWidth) => {
     largeTitle: {
       fontFamily: round,
       fontWeight: 'normal',
-      fontSize: 99 * device.normalizer,
+      fontSize: 33 * device.normalizer,
     },
     title1: {
       fontFamily: round,
       fontWeight: 'normal',
-      fontSize: 81 * device.normalizer,
+      fontSize: 27 * device.normalizer,
     },
     title2: {
       fontFamily: round,
       fontWeight: 'normal',
-      fontSize: 63 * device.normalizer,
+      fontSize: 21 * device.normalizer,
     },
     title3: {
       fontFamily: round,
       fontWeight: 'normal',
-      fontSize: 57 * device.normalizer,
+      fontSize: 19 * device.normalizer,
     },
     headline: {
       fontFamily: round,
       fontWeight: 'normal',
-      fontSize: 51 * device.normalizer,
+      fontSize: 17 * device.normalizer,
     },
     body: {
       fontFamily: regular,
       fontWeight: 'normal',
-      fontSize: 48 * device.normalizer,
+      fontSize: 16 * device.normalizer,
     },
     callout: {
       fontFamily: regular,
       fontWeight: 'normal',
-      fontSize: 45 * device.normalizer,
+      fontSize: 15 * device.normalizer,
     },
     subhead: {
       fontFamily: regular,
       fontWeight: 'normal',
-      fontSize: 42 * device.normalizer,
+      fontSize: 14 * device.normalizer,
     },
     footnote: {
       fontFamily: regular,
       fontWeight: 'normal',
-      fontSize: 36 * device.normalizer,
+      fontSize: 12 * device.normalizer,
     },
     caption1: {
       fontFamily: regular,
       fontWeight: 'normal',
-      fontSize: 33 * device.normalizer,
+      fontSize: 11 * device.normalizer,
     },
     caption2: {
       fontFamily: regular,
       fontWeight: 'normal',
-      fontSize: 33 * device.normalizer,
+      fontSize: 11 * device.normalizer,
     },
   };
   return fonts;
