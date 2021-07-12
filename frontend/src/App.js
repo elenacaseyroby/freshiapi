@@ -4,7 +4,6 @@ import {
   Route,
 } from 'react-router-dom';
 import DesignSystem from './DesignSystem/DesignSystem';
-import getDevice from './styles/getDevice';
 import getColors from './styles/getColors';
 
 // import logo from './logo.svg';
@@ -16,7 +15,7 @@ class App extends Component {
     this.state = {
       windowWidth: 400,
       windowHeight: 600,
-      lightMode: false,
+      lightMode: true,
     };
     this.updateDimensions = this.updateDimensions.bind(this);
   }
@@ -45,13 +44,10 @@ class App extends Component {
       windowHeight,
       lightMode,
     } = this.state;
-    const device = getDevice(windowWidth);
     const colors = getColors(lightMode);
     const media = {
       windowWidth,
       windowHeight,
-      deviceName: device.name,
-      deviceNormalizer: device.normalizer,
       lightMode
     };
     return (

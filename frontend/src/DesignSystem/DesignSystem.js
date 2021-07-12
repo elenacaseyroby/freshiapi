@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import getColors from '../styles/getColors';
 import getFonts from '../styles/getFonts';
 import getStyles from '../styles/getStyles';
+import ColorSquare from './ColorSquare';
 
 const DesignSystem = ({ media }) => {
   const { windowWidth, lightMode } = media;
@@ -10,9 +11,18 @@ const DesignSystem = ({ media }) => {
   const styles = getStyles(windowWidth);
   const fonts = getFonts(windowWidth);
   return (
-    <div style={styles.grid}>
+    <div style={{
+      ...styles.paddingTop,
+      ...styles.paddingBottom,
+      ...styles.grid
+    }}
+    >
       {/* fonts */}
-      <div style={{ ...styles.column, ...styles.componentMargin }}>
+      <div style={{
+        ...styles.column,
+        ...styles.marginRight,
+        ...styles.marginBottom }}
+      >
         { Object.keys(fonts).map((font) => {
           const fontStyle = fonts[font];
           return (
@@ -27,17 +37,43 @@ const DesignSystem = ({ media }) => {
         })}
       </div>
       {/* colors */}
-      <div style={{ ...styles.column, ...styles.componentMargin }}>
-        { Object.keys(colors).map((colorName) => {
-          const color = colors[colorName];
-          return (
-            <div style={{ backgroundColor: color.hex }}>
-              <div>
-                {colorName}
-              </div>
-            </div>
-          );
-        })}
+      <div style={{ ...styles.column }}>
+        <div style={styles.grid}>
+          <div style={{ ...styles.column, ...styles.marginRight }}>
+            { Object.keys(colors).map((colorName, index) => {
+              // put first half of colors in one column and
+              // second half in another column.
+              if (index > Object.keys(colors).length / 2) return null;
+              const color = colors[colorName];
+              return (
+                <ColorSquare
+                  name={colorName}
+                  hex={color.hex}
+                  opacity={color.opacity}
+                  windowWidth={windowWidth}
+                  lightMode={lightMode}
+                />
+              );
+            }) }
+          </div>
+          <div style={styles.column}>
+            { Object.keys(colors).map((colorName, index) => {
+              // put first half of colors in one column and
+              // second half in another column.
+              if (index < Object.keys(colors).length / 2) return null;
+              const color = colors[colorName];
+              return (
+                <ColorSquare
+                  name={colorName}
+                  hex={color.hex}
+                  opacity={color.opacity}
+                  windowWidth={windowWidth}
+                  lightMode={lightMode}
+                />
+              );
+            }) }
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -47,8 +83,6 @@ DesignSystem.defaultProps = {
   media: {
     windowHeight: 600,
     windowWidth: 400,
-    deviceName: 'mobile',
-    deviceNormalizer: 1,
     lightMode: true,
   }
 };
@@ -57,8 +91,6 @@ DesignSystem.propTypes = {
   media: PropTypes.shape({
     windowHeight: PropTypes.number.isRequired,
     windowWidth: PropTypes.number.isRequired,
-    deviceName: PropTypes.string.isRequired,
-    deviceNormalizer: PropTypes.number.isRequired,
     lightMode: PropTypes.bool.isRequired,
   }),
 };
