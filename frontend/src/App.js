@@ -4,6 +4,8 @@ import {
   Route,
 } from 'react-router-dom';
 import DesignSystem from './DesignSystem';
+import getDevice from './styles/getDevice';
+import getFonts from './styles/getFonts';
 import getColors from './styles/getColors';
 
 // import logo from './logo.svg';
@@ -44,8 +46,16 @@ class App extends Component {
       windowHeight,
       lightMode,
     } = this.state;
-    const media = { windowWidth, windowHeight };
+    const device = getDevice(windowWidth);
     const colors = getColors(lightMode);
+    const fonts = getFonts(windowWidth);
+    const media = {
+      windowWidth,
+      windowHeight,
+      colors,
+      device,
+      fonts,
+      lightMode };
     return (
       <div
       // try to center the entire app like swift
