@@ -79,20 +79,12 @@ const DesignSystem = ({ media }) => {
   );
 };
 
-DesignSystem.defaultProps = {
-  media: {
-    windowHeight: 600,
-    windowWidth: 400,
-    lightMode: true,
-  }
-};
-
 DesignSystem.propTypes = {
   media: PropTypes.shape({
     windowHeight: PropTypes.number.isRequired,
     windowWidth: PropTypes.number.isRequired,
     lightMode: PropTypes.bool.isRequired,
-  }),
+  }).isRequired,
 };
 
 export default DesignSystem;

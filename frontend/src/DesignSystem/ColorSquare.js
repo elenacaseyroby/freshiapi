@@ -57,14 +57,6 @@ const ColorSquare = ({
   );
 };
 
-// ColorSquare.defaultProps = {
-//   name: 'backgroundColor',
-//   hex: '#ffffff',
-//   opacity: '100%',
-//   windowWidth: 400,
-//   lightMode: true,
-// };
-
 ColorSquare.propTypes = {
   name: PropTypes.string.isRequired,
   hex: PropTypes.string.isRequired,
