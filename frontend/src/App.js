@@ -3,9 +3,8 @@ import {
   BrowserRouter as Router,
   Route,
 } from 'react-router-dom';
-import DesignSystem from './DesignSystem';
+import DesignSystem from './DesignSystem/DesignSystem';
 import getDevice from './styles/getDevice';
-import getFonts from './styles/getFonts';
 import getColors from './styles/getColors';
 
 // import logo from './logo.svg';
@@ -17,7 +16,7 @@ class App extends Component {
     this.state = {
       windowWidth: 400,
       windowHeight: 600,
-      lightMode: true,
+      lightMode: false,
     };
     this.updateDimensions = this.updateDimensions.bind(this);
   }
@@ -48,14 +47,13 @@ class App extends Component {
     } = this.state;
     const device = getDevice(windowWidth);
     const colors = getColors(lightMode);
-    const fonts = getFonts(windowWidth);
     const media = {
       windowWidth,
       windowHeight,
-      colors,
-      device,
-      fonts,
-      lightMode };
+      deviceName: device.name,
+      deviceNormalizer: device.normalizer,
+      lightMode
+    };
     return (
       <div
       // try to center the entire app like swift
@@ -65,7 +63,7 @@ class App extends Component {
           minHeight: windowHeight,
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundColor: colors.background,
+          backgroundColor: colors.background.hex,
         }}
       >
         <Router>
