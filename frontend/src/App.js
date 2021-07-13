@@ -5,6 +5,8 @@ import {
 } from 'react-router-dom';
 import DesignSystem from './DesignSystem/DesignSystem';
 import getColors from './styles/getColors';
+import getFonts from './styles/getFonts';
+import getStyles from './styles/getStyles';
 
 // import logo from './logo.svg';
 // import './App.css';
@@ -45,6 +47,8 @@ class App extends Component {
       lightMode,
     } = this.state;
     const colors = getColors(lightMode);
+    const fonts = getFonts(windowWidth);
+    const styles = getStyles(windowWidth);
     const media = {
       windowWidth,
       windowHeight,
@@ -70,11 +74,80 @@ class App extends Component {
               <DesignSystem media={media} />
             )}
           />
+          { /* mobile password reset route: */ }
+          <Route
+            exact
+            path="/reset-password/:id/:token"
+            render={({ match }) => {
+              const { id, token } = match.params;
+              // const host = 'www.freshi.io';
+              const host = 'localhost:8000';
+              const currentRoute = `${host}/${id}/${token}`;
+              const deeplink = `freshi://${host}/reset-password?userId=${id}&authToken=${token}`;
+              window.location = deeplink;
+              return (
+                <div style={{
+                  display: 'block',
+                  ...styles.padding, }}
+                >
+                  <div style={{
+                    ...fonts.largeTitle,
+                    color: colors.interactiveFocus.hex, }}
+                  >
+                    Freshi
+                  </div>
+                  <br />
+                  <div style={{
+                    ...fonts.headline,
+                    color: colors.highContrast.hex, }}
+                  >
+                    To reset your password:
+                  </div>
+                  <div style={{
+                    ...fonts.body,
+                    color: colors.highContrast.hex, }}
+                  >
+                    <br />
+                    1. Download the Freshi app on your iPhone or tablet.
+                    <br />
+                    2. Open the Freshi app on your iPhone or tablet.
+                    <br />
+                    3. On the same device, visit this url: &nbsp;
+                    <a
+                      href={currentRoute}
+                      style={{ color: colors.interactiveFocus.hex }}
+                    >
+                      {currentRoute}
+                    </a>
+                    <br />
+                    4. Reset your password and enjoy!
+                    <br />
+                    <br />
+                    If you still can&apos;t access your account,
+                    <br />
+                    send me an email and I&apos;ll be happy to help you out!
+                    <br />
+                    <a
+                      href="mailto:casey.freshi@gmail.com"
+                      style={{ color: colors.interactiveFocus.hex }}
+                    >
+                      casey.freshi@gmail.com
+                    </a>
+                  </div>
+                </div>
+              );
+            }}
+          />
           <Route
             exact
             path="/"
             render={() => (
-              <></>
+              <div style={{
+                ...fonts.largeTitle,
+                color: colors.interactiveFocus.hex, }}
+              >
+                Freshi
+              </div>
             )}
           />
         </Router>

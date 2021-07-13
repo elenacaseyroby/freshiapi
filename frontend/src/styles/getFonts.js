@@ -33,34 +33,34 @@ const getFonts = (windowWidth) => {
       fontSize: 17 * device.normalizer,
     },
     body: {
-      fontFamily: regular,
+      fontFamily: round,
       fontWeight: 'normal',
-      fontSize: 16 * device.normalizer,
+      fontSize: 13 * device.normalizer,
     },
     callout: {
       fontFamily: regular,
       fontWeight: 'normal',
-      fontSize: 15 * device.normalizer,
+      fontSize: 12 * device.normalizer,
     },
     subhead: {
       fontFamily: regular,
       fontWeight: 'normal',
-      fontSize: 14 * device.normalizer,
+      fontSize: 11 * device.normalizer,
     },
     footnote: {
       fontFamily: regular,
       fontWeight: 'normal',
-      fontSize: 12 * device.normalizer,
+      fontSize: 10 * device.normalizer,
     },
     caption1: {
-      fontFamily: regular,
+      fontFamily: round,
       fontWeight: 'normal',
-      fontSize: 11 * device.normalizer,
+      fontSize: 9 * device.normalizer,
     },
     caption2: {
       fontFamily: regular,
       fontWeight: 'normal',
-      fontSize: 11 * device.normalizer,
+      fontSize: 9 * device.normalizer,
     },
   };
   return fonts;

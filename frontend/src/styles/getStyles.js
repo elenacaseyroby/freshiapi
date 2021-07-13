@@ -15,6 +15,9 @@ const getStyles = (windowWidth) => {
     paddingBottom: {
       paddingBottom: 50 * device.normalizer,
     },
+    padding: {
+      padding: 50 * device.normalizer,
+    },
     marginRight: {
       marginRight: 10 * device.normalizer,
     },
