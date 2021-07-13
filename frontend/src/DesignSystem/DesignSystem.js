@@ -41,7 +41,6 @@ const DesignSystem = ({ media, toggleLightMode }) => {
           style={{
             backgroundColor: colors.background.color,
             color: colors.interactiveFocus.color,
-            justifyContent: 'center',
             borderColor: colors.background.color,
             borderWidth: 0.3 * device.normalizer,
             borderRadius: 5 * device.normalizer,
