@@ -24,16 +24,24 @@ const DesignSystem = ({ media, toggleLightMode }) => {
         display: 'flex',
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         /* row with space between end */
         ...styles.marginBottom
       }}
       >
-        <div style={{
-          ...fonts.largeTitle,
-          ...colors.interactiveFocus }}
-        >
-          Freshi
+        <div style={{ display: 'block' }}>
+          <div style={{
+            ...fonts.largeTitle,
+            ...colors.interactiveFocus }}
+          >
+            Freshi
+          </div>
+          <div style={{
+            ...fonts.title3,
+            ...colors.interactiveFocus }}
+          >
+            design system
+          </div>
         </div>
         <button
           type="button"
@@ -50,7 +58,7 @@ const DesignSystem = ({ media, toggleLightMode }) => {
             /* spread-radius: Positive values will cause the shadow to expand
             and grow bigger, negative values will cause the shadow to shrink. */
             boxShadow: `3px 3px 10px -2px ${colors.shadow.color}`,
-            ...fonts.caption1 }}
+            ...fonts.callout }}
         >
           {lightMode ? 'Dark Mode' : 'Light Mode'}
         </button>
@@ -68,7 +76,9 @@ const DesignSystem = ({ media, toggleLightMode }) => {
           { Object.keys(fonts).map((font) => {
             const fontStyle = fonts[font];
             return (
-              <>
+              <div style={{
+                ...styles.marginBottom }}
+              >
                 <div style={{
                   ...colors.highContrast,
                   ...fontStyle
@@ -91,21 +101,20 @@ const DesignSystem = ({ media, toggleLightMode }) => {
                   <br />
                   Font Size: &nbsp;
                   {Math.floor(fontStyle.fontSize)}
-                  <br />
-                  <br />
-                  <br />
                 </div>
-              </>
+              </div>
             );
           })}
         </div>
-        {/* colors */}
+        {/* colors & style */}
         <div style={{ ...styles.column }}>
-          <div style={styles.collapsableGrid}>
+          <div style={{
+            ...styles.collapsableGrid,
+            ...styles.marginBottom }}
+          >
+            {/* first column of colors */}
             <div style={{ ...styles.column, ...styles.marginRight }}>
               { Object.keys(colors).map((colorName, index) => {
-                // put first half of colors in one column and
-                // second half in another column.
                 if (index > indexMidpoint) return null;
                 const color = colors[colorName];
                 return (
@@ -119,10 +128,9 @@ const DesignSystem = ({ media, toggleLightMode }) => {
                 );
               }) }
             </div>
-            <div style={styles.column}>
+            {/* second column of colors */}
+            <div style={{ ...styles.column }}>
               { Object.keys(colors).map((colorName, index) => {
-                // put first half of colors in one column and
-                // second half in another column.
                 if (index <= indexMidpoint) return null;
                 const color = colors[colorName];
                 return (
@@ -135,6 +143,30 @@ const DesignSystem = ({ media, toggleLightMode }) => {
                   />
                 );
               }) }
+            </div>
+          </div>
+          {/* styles */}
+          <div style={{
+            display: 'block',
+            ...styles.marginTop,
+          }}
+          >
+            <div style={{
+              ...fonts.headline,
+              ...colors.highContrast }}
+            >
+              Global Styles
+            </div>
+            <div style={{
+              ...fonts.body,
+              ...colors.highContrast }}
+            >
+              padding: &nbsp;
+              {Math.floor(styles.padding.padding)}
+              <br />
+              margin: &nbsp;
+              {Math.floor(styles.margin.margin)}
+              <br />
             </div>
           </div>
         </div>

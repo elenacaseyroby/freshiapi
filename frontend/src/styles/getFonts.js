@@ -49,6 +49,12 @@ const getFonts = (windowWidth) => {
       fontSize: 13 * device.textNormalizer,
       usageNote: 'Use for body text.',
     },
+    callout: {
+      fontFamily: round,
+      fontWeight: 'normal',
+      fontSize: 12 * device.textNormalizer,
+      usageNote: 'Use for button text and such.',
+    },
     footnote: {
       fontFamily: regular,
       fontWeight: 'normal',
