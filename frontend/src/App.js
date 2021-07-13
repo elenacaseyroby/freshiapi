@@ -137,7 +137,7 @@ class App extends Component {
                     <br />
                     <a
                       href="mailto:casey.freshi@gmail.com"
-                      style={colors.interactiveFocus.color}
+                      style={colors.interactiveFocus}
                     >
                       casey.freshi@gmail.com
                     </a>
