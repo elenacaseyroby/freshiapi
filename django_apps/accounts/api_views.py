@@ -1,14 +1,77 @@
+from logging import error
+from django.utils.functional import classproperty
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
     CreateAPIView)
 from rest_framework.response import Response
+from django.conf import settings
+from django.core.mail import get_connection
+from django.core.mail.message import EmailMessage
 from rest_framework.decorators import api_view
 
 from django_apps.accounts.serializers import UserSerializer
 from django_apps.accounts.models import User
 from django_apps.api_auth.authentication import APIAuthentication
 from django_apps.api_auth.auth_utils import get_access_token
+
+
+@api_view(['POST', ])
+def password_reset_email(request):
+    if request.method == 'POST':
+        if 'email' not in request.headers.keys():
+            return Response({
+                'status_code': 401,
+                'detail': 'Email missing from the header'
+            })
+        email = request.headers['email']
+        user = User.objects.filter(email=email).first()
+        # Return error if there is no account under that email.
+        if not user:
+            return Response({
+                'status_code': 401,
+                'detail': 'There is no account tied to the email:  ' + email + '.'
+            })
+        # Make token.
+        token = "alksfjlkajsf"  # placeholder
+        try:
+            # Send email.
+            host = "localhost:8000"
+            # host = "www.freshi.io"
+            pw_reset_url = "{host}/reset-password/{user.id}/{token}"
+            connection = get_connection(
+                use_tls=settings.EMAIL_USE_TLS,
+                host=settings.EMAIL_HOST,
+                port=settings.EMAIL_PORT,
+                username=settings.EMAIL_HOST_USER,
+                password=settings.EMAIL_HOST_PASSWORD)
+            subject = "Freshi Password Reset"
+            body = "Hi {user.name}, \
+                \
+                Sorry to hear you're locked out of your account! Click <a href='{pw_reset_url}'>here</a> to reset your password.\
+                \
+                Please don't hesitate to reach out if you need any further help.\
+                \
+                take care,\
+                \
+                Casey\
+                Cofounder of Freshi"
+            EmailMessage(
+                subject,
+                body,
+                settings.EMAIL_HOST_USER,
+                [email, ],
+                connection=connection).send()
+            # Record in email db.
+            return Response({
+                'status_code': 200,
+                'detail': 'Password reset email sent.'
+            })
+        except Exception as e:
+            return Response({
+                'status_code': 500,
+                'detail': 'Email failed: ' + str(e)
+            })
 
 
 def formatError(errorField, errorMessage):

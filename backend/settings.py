@@ -26,7 +26,7 @@ def env_var(VAR_NAME):
             os.environ[VAR_NAME] = env(VAR_NAME)
         return os.environ[VAR_NAME]
     except:
-        error_msg = 'Set the {} environment variable'.format(var_name)
+        error_msg = 'Set the {} environment variable'.format(VAR_NAME)
         raise Exception(error_msg)
 
 

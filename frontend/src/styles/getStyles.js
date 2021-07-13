@@ -4,6 +4,9 @@ const getStyles = (windowWidth) => {
   const device = getDevice(windowWidth);
   const styles = {
     grid: {
+      display: 'flex',
+    },
+    collapsableGrid: {
       display: device.name === 'mobile' ? 'block' : 'flex',
     },
     column: {

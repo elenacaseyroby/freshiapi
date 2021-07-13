@@ -20,6 +20,7 @@ class App extends Component {
       lightMode: true,
     };
     this.updateDimensions = this.updateDimensions.bind(this);
+    this.toggleLightMode = this.toggleLightMode.bind(this);
   }
 
   componentDidMount() {
@@ -40,6 +41,13 @@ class App extends Component {
     });
   }
 
+  toggleLightMode = () => {
+    const { lightMode } = this.state;
+    this.setState({
+      lightMode: !lightMode,
+    });
+  }
+
   render() {
     const {
       windowWidth,
@@ -52,7 +60,7 @@ class App extends Component {
     const media = {
       windowWidth,
       windowHeight,
-      lightMode
+      lightMode,
     };
     return (
       <div
@@ -63,7 +71,7 @@ class App extends Component {
           minHeight: windowHeight,
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundColor: colors.background.hex,
+          backgroundColor: colors.background.color,
         }}
       >
         <Router>
@@ -71,7 +79,7 @@ class App extends Component {
             exact
             path="/design-system"
             render={() => (
-              <DesignSystem media={media} />
+              <DesignSystem media={media} toggleLightMode={this.toggleLightMode} />
             )}
           />
           { /* mobile password reset route: */ }
@@ -88,24 +96,24 @@ class App extends Component {
               return (
                 <div style={{
                   display: 'block',
-                  ...styles.padding, }}
+                  ...styles.padding }}
                 >
                   <div style={{
                     ...fonts.largeTitle,
-                    color: colors.interactiveFocus.hex, }}
+                    ...colors.interactiveFocus }}
                   >
                     Freshi
                   </div>
                   <br />
                   <div style={{
                     ...fonts.headline,
-                    color: colors.highContrast.hex, }}
+                    ...colors.highContrast }}
                   >
                     To reset your password:
                   </div>
                   <div style={{
                     ...fonts.body,
-                    color: colors.highContrast.hex, }}
+                    ...colors.highContrast }}
                   >
                     <br />
                     1. Download the Freshi app on your iPhone or tablet.
@@ -115,7 +123,7 @@ class App extends Component {
                     3. On the same device, visit this url: &nbsp;
                     <a
                       href={currentRoute}
-                      style={{ color: colors.interactiveFocus.hex }}
+                      style={colors.interactiveFocus}
                     >
                       {currentRoute}
                     </a>
@@ -129,7 +137,7 @@ class App extends Component {
                     <br />
                     <a
                       href="mailto:casey.freshi@gmail.com"
-                      style={{ color: colors.interactiveFocus.hex }}
+                      style={colors.interactiveFocus.color}
                     >
                       casey.freshi@gmail.com
                     </a>
@@ -144,7 +152,7 @@ class App extends Component {
             render={() => (
               <div style={{
                 ...fonts.largeTitle,
-                color: colors.interactiveFocus.hex, }}
+                ...colors.interactiveFocus }}
               >
                 Freshi
               </div>

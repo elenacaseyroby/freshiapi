@@ -10,7 +10,7 @@ const getColorSquareStyles = ({ windowWidth, lightMode }) => {
   const colors = getColors(lightMode);
   const styles = {
     text: {
-      color: colors.highContrast.hex,
+      ...colors.highContrast,
       ...fonts.caption1
     },
   };
@@ -30,7 +30,10 @@ const ColorSquare = ({
   const globalStyles = getStyles(windowWidth);
   const sideLength = device.name === 'desktop' ? 50 * device.normalizer : 100;
   return (
-    <div style={{ ...globalStyles.grid, ...globalStyles.marginBottom }}>
+    <div style={{
+      ...globalStyles.grid,
+      ...globalStyles.marginBottom }}
+    >
       {/* color block */}
       <div style={{
         maxWidth: sideLength,
@@ -43,7 +46,7 @@ const ColorSquare = ({
         borderColor: colors.highContrast.hex,
         ...globalStyles.column,
         ...globalStyles.marginRight,
-        // borderColor: colors.highContrast.hex,
+        // borderColor: colors.highContrast,
         // borderWidth: 1 * device.normalizer,
       }}
       />
