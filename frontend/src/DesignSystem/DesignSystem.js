@@ -10,6 +10,7 @@ const DesignSystem = ({ media }) => {
   const colors = getColors(lightMode);
   const styles = getStyles(windowWidth);
   const fonts = getFonts(windowWidth);
+  const indexMidpoint = Math.ceil(Object.keys(colors).length / 2) - 1;
   return (
     <div style={{
       ...styles.paddingTop,
@@ -43,7 +44,7 @@ const DesignSystem = ({ media }) => {
             { Object.keys(colors).map((colorName, index) => {
               // put first half of colors in one column and
               // second half in another column.
-              if (index > Object.keys(colors).length / 2) return null;
+              if (index > indexMidpoint) return null;
               const color = colors[colorName];
               return (
                 <ColorSquare
@@ -60,7 +61,7 @@ const DesignSystem = ({ media }) => {
             { Object.keys(colors).map((colorName, index) => {
               // put first half of colors in one column and
               // second half in another column.
-              if (index < Object.keys(colors).length / 2) return null;
+              if (index <= indexMidpoint) return null;
               const color = colors[colorName];
               return (
                 <ColorSquare

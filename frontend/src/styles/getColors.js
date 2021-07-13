@@ -41,7 +41,7 @@ const getColors = (lightMode) => {
     shadow: {
       hex: lightMode ? '#9b9a9a' : '#000000',
       opacity: '50%',
-    }
+    },
   };
   return colors;
 };
