@@ -136,10 +136,10 @@ class App extends Component {
                     send me an email and I&apos;ll be happy to help you out!
                     <br />
                     <a
-                      href="mailto:casey.freshi@gmail.com"
+                      href="mailto:casey@freshi.io"
                       style={colors.interactiveFocus}
                     >
-                      casey.freshi@gmail.com
+                      casey@freshi.io
                     </a>
                   </div>
                 </div>
