@@ -5,14 +5,14 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
     CreateAPIView)
 from rest_framework.response import Response
-from django.conf import settings
 from rest_framework.decorators import api_view
-from django.core.mail import send_mail
+from django.conf import settings
 
 from django_apps.accounts.serializers import UserSerializer
 from django_apps.accounts.models import User
 from django_apps.api_auth.authentication import APIAuthentication
 from django_apps.api_auth.auth_utils import get_access_token
+from django_apps.communications.services import send_email
 
 
 @api_view(['POST', ])
@@ -33,14 +33,13 @@ def password_reset_email(request):
             })
         # Make token.
         token = "alksfjlkajsf"  # placeholder
-        try:
-            # Send email.
-            host = "localhost:8000"
-            # host = "www.freshi.io"
-            pw_reset_url = f"http://{host}/reset-password/{user.id}/{token}"
-            subject = "Freshi Password Reset"
-            message = f"""
-Hi {user.first_name},
+
+        # Send email.
+        host = settings.FRESHI_URL
+        # host = "www.freshi.io"
+        pw_reset_url = f"http://{host}/reset-password/{user.id}/{token}"
+        subject = "Freshi Password Reset"
+        message = f"""Hi {user.first_name},
 
 I'm sorry to hear you're locked out of your account! Visit {pw_reset_url} to reset your password.
 
@@ -51,45 +50,35 @@ Take care,
 Casey
 
 Co-founder of Freshi
-            """
-            html_message = f"""
-<!DOCTYPE html>
+        """
+        html_message = f"""<!DOCTYPE html>
 <html>
 <head>
 </head>
 <body>
 <p>Hi {user.first_name},</p>
-    
+
 <p>I'm sorry to hear you're locked out of your account! Click <a href='{pw_reset_url}'>here</a> to reset your password.</p>
-    
+
 <p>If that doesn't do the trick, you can reply to this email and I'll be happy to provide further assistance.</p>
-    
+
 <p>Take care,</p>
-    
+
 <p>Casey</p>
 
 <p>Co-founder of Freshi</p>
 </body>
 </html>
-            """
+        """
 
-            send_mail(
-                subject,
-                message,
-                settings.FRESHI_SUPPORT_EMAIL,
-                [user.email],
-                fail_silently=False,
-                html_message=html_message)
-            # Record in email db.
-            return Response({
-                'status_code': 200,
-                'detail': 'Password reset email sent.'
-            })
-        except Exception as e:
-            return Response({
-                'status_code': 500,
-                'detail': 'Email failed: ' + str(e)
-            })
+        # Send email, record in db, and return response.
+        response = send_email(
+            subject,
+            message,
+            settings.FRESHI_SUPPORT_EMAIL,
+            [user.email],
+            html_message=html_message)
+        return Response(response)
 
 
 def formatError(errorField, errorMessage):

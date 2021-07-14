@@ -88,8 +88,8 @@ class App extends Component {
             path="/reset-password/:id/:token"
             render={({ match }) => {
               const { id, token } = match.params;
-              // const host = 'www.freshi.io';
-              const host = 'localhost:8000';
+              const host = 'www.freshi.io';
+              // const host = 'localhost:8000';
               const currentRoute = `${host}/${id}/${token}`;
               const deeplink = `freshi://${host}/reset-password?userId=${id}&authToken=${token}`;
               window.location = deeplink;
