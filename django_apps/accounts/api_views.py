@@ -6,9 +6,8 @@ from rest_framework.generics import (
     CreateAPIView)
 from rest_framework.response import Response
 from django.conf import settings
-from django.core.mail import get_connection
-from django.core.mail.message import EmailMessage
 from rest_framework.decorators import api_view
+from django.core.mail import send_mail
 
 from django_apps.accounts.serializers import UserSerializer
 from django_apps.accounts.models import User
@@ -39,12 +38,6 @@ def password_reset_email(request):
             host = "localhost:8000"
             # host = "www.freshi.io"
             pw_reset_url = "{host}/reset-password/{user.id}/{token}"
-            connection = get_connection(
-                use_tls=settings.EMAIL_USE_TLS,
-                host=settings.EMAIL_HOST,
-                port=settings.EMAIL_PORT,
-                username=settings.EMAIL_HOST_USER,
-                password=settings.EMAIL_HOST_PASSWORD)
             subject = "Freshi Password Reset"
             body = "Hi {user.name}, \
                 \
@@ -56,12 +49,12 @@ def password_reset_email(request):
                 \
                 Casey\
                 Cofounder of Freshi"
-            EmailMessage(
+            send_mail(
                 subject,
                 body,
-                settings.EMAIL_HOST_USER,
-                [email, ],
-                connection=connection).send()
+                settings.FRESHI_SUPPORT_EMAIL,
+                [user.email],
+                fail_silently=False)
             # Record in email db.
             return Response({
                 'status_code': 200,

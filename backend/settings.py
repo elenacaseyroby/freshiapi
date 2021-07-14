@@ -233,10 +233,12 @@ AWS_SECRET_ACCESS_KEY = env_var('AWS_SECRET_ACCESS_KEY')
 
 FRESHI_AUTH_ACCESS_KEY = env_var('FRESHI_AUTH_ACCESS_KEY')
 
-# Send emails through gmail.
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = env_var('EMAIL_PORT')
-FRESHI_SUPPORT_EMAIL = env_var('FRESHI_SUPPORT_EMAIL')
+# Sendgrid settings are automatically passed
+# when you use django.core.mail.send_mail
+EMAIL_HOST = 'smtp.sendgrid.net'
+# this is exactly the value 'apikey'
+EMAIL_HOST_USER = 'apikey'
+EMAIL_HOST_PASSWORD = env_var('SENDGRID_API_KEY')
+EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = "apikey"
-EMAIL_HOST_PASSWORD = env_var('EMAIL_HOST_PASSWORD')
+FRESHI_SUPPORT_EMAIL = env_var('FRESHI_SUPPORT_EMAIL')
