@@ -10,7 +10,9 @@ class APIIsAuthenticated(BasePermission):
         token = request.headers['Authorization']
         if not token:  # no username passed in request headers
             raise exceptions.AuthenticationFailed(
-                'Authorization token not in header')
+                detail='Authorization token not in header',
+                code=401
+            )
         try:
             access_token = get_access_token(token)
             # BaseAuthentication class must return (user, None)
@@ -20,4 +22,6 @@ class APIIsAuthenticated(BasePermission):
         except:
             # raise exception if user does not exist
             raise exceptions.AuthenticationFailed(
-                'Permissions error: Authorization token invalid')
+                detail='Permissions error: Authorization token invalid',
+                code=401
+            )

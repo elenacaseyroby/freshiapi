@@ -53,7 +53,7 @@ def send_email(subject, message, from_email, to_emails, html_message=None):
     # Return response
     if email_error:
         return {
-            'status_code': 400,
+            'status_code': 500,
             'detail': email_error
         }
 

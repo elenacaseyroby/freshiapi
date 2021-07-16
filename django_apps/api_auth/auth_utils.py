@@ -9,7 +9,7 @@ from backend.settings import FRESHI_AUTH_ACCESS_KEY
 
 def get_access_token(token):
     '''Input: token
-    Output: user object if token is valid, false if token is invalid.'''
+    Output: user object if token is valid, None if token is invalid.'''
     try:
         payload = jwt.decode(
             token,

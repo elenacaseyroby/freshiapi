@@ -1,15 +1,22 @@
 from logging import error
 from django.utils.functional import classproperty
-from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
     CreateAPIView)
 from rest_framework.response import Response
+from rest_framework.exceptions import (
+    ValidationError,
+    AuthenticationFailed,
+    Throttled,
+    ErrorDetail
+)
 from rest_framework.decorators import api_view
 from django.conf import settings
+from datetime import date
 
 from django_apps.accounts.serializers import UserSerializer
 from django_apps.accounts.models import User
+from django_apps.api_auth.models import AccessToken
 from django_apps.api_auth.authentication import APIAuthentication
 from django_apps.api_auth.auth_utils import get_access_token
 from django_apps.communications.services import send_email
@@ -19,20 +26,37 @@ from django_apps.communications.services import send_email
 def password_reset_email(request):
     if request.method == 'POST':
         if 'email' not in request.headers.keys():
-            return Response({
-                'status_code': 401,
-                'detail': 'Email missing from the header'
-            })
+            return ValidationError(
+                'Email missing from the header',
+                code=401
+            )
         email = request.headers['email']
         user = User.objects.filter(email=email).first()
         # Return error if there is no account under that email.
         if not user:
-            return Response({
-                'status_code': 401,
-                'detail': 'There is no account tied to the email:  ' + email + '.'
-            })
+            return ValidationError(
+                'There is no account tied to the email:  ' + email + '.',
+                code=401
+            )
+
+        pw_reset_attemps_today = AccessToken.objects.filter(
+            user_id=user.id,
+            date_created=date.today(),
+            purpose='pw_reset',
+        ).count()
+
+        if pw_reset_attemps_today >= 3:
+            raise Throttled(
+                detail="""
+You have reached your max number of password reset requests 
+for the day. Please email casey@freshi.io for further help on this matter.""",
+                code=401
+            )
+
         # Make token.
-        token = "alksfjlkajsf"  # placeholder
+        access_token = AccessToken()
+        purpose = 'pw_reset'
+        token = access_token.generate_token(user.id, purpose)
 
         # Send email.
         host = settings.FRESHI_URL
@@ -78,7 +102,42 @@ Co-founder of Freshi
             settings.FRESHI_SUPPORT_EMAIL,
             [user.email],
             html_message=html_message)
+        if response['status_code'] == 500:
+            return ErrorDetail(
+                response['detail'],
+                code=response['status_code'],
+            )
         return Response(response)
+
+
+@api_view(['POST', ])
+def password_reset(request):
+    if request.method == 'POST':
+        api_authentification = APIAuthentication()
+        user = api_authentification.authenticate(request)
+        if not user:
+            raise AuthenticationFailed(
+                detail='Password reset token invalid.  Please request a new password reset email.',
+                code=401
+            )
+        if "password" in request.data.keys():
+            # Save new password
+            savePasswordFromRequest(request, user)
+            active_tokens = AccessToken.objects.filter(
+                user_id=user.id,
+                # active
+                expiration_date__gt=date.today()
+            ).all()
+
+            # Deactivate all active access tokens.
+            for token in active_tokens:
+                token.expiration_date = date.today()
+            AccessToken.objects.bulk_update(active_tokens, ['expiration_date'])
+        else:
+            raise ValidationError(
+                'Password missing from header.',
+                code=401
+            )
 
 
 def formatError(errorField, errorMessage):
@@ -159,7 +218,9 @@ class UserRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
         # Get user associated with auth token used to authenticate request.
         if not userToUpdateMatchesLoggedInUser(request, instance):
             raise AuthenticationFailed(
-                "Authorization error: You cannot update another user's account.")
+                detail="Authorization error: You cannot update another user's account.",
+                code=401
+            )
 
         # Save password or throw error.
         savePasswordFromRequest(request, instance)
