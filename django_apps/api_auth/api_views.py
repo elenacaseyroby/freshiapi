@@ -43,7 +43,7 @@ def token(request):
                     code=401
                 )
 
-            return NotFound(
+            raise NotFound(
                 detail='User not found',
                 code=404
             )
@@ -53,7 +53,7 @@ def token(request):
 def revoke(request):
     if request.method == 'POST':
         if 'Authorization' not in request.headers.keys():
-            return ValidationError(
+            raise ValidationError(
                 'Authorization token missing from the header',
                 code=401
             )
@@ -61,12 +61,12 @@ def revoke(request):
         try:
             access_token = get_access_token(token)
             access_token.revoke()
-            return Response({
+            raise Response({
                 'status_code': 200,
                 'detail': 'Token successfully revoked'
             })
         except:
-            return Response({
+            raise Response({
                 'status_code': 200,
                 'detail': 'Nothing executed. Token was already invalid'
             })

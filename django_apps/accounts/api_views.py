@@ -26,7 +26,7 @@ from django_apps.communications.services import send_email
 def password_reset_email(request):
     if request.method == 'POST':
         if 'email' not in request.headers.keys():
-            return ValidationError(
+            raise ValidationError(
                 'Email missing from the header',
                 code=401
             )
@@ -34,7 +34,7 @@ def password_reset_email(request):
         user = User.objects.filter(email=email).first()
         # Return error if there is no account under that email.
         if not user:
-            return ValidationError(
+            raise ValidationError(
                 'There is no account tied to the email:  ' + email + '.',
                 code=401
             )
@@ -103,7 +103,7 @@ Co-founder of Freshi
             [user.email],
             html_message=html_message)
         if response['status_code'] == 500:
-            return ErrorDetail(
+            raise ErrorDetail(
                 response['detail'],
                 code=response['status_code'],
             )
