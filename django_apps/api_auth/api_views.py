@@ -10,15 +10,15 @@ from django_apps.accounts.models import User
 @api_view(['POST', ])
 def token(request):
     if request.method == 'POST':
-        error = None
         header_keys = request.headers.keys()
+        errors = {}
         if 'username' not in header_keys:
-            error = {'detail': 'username missing from header.'}
-        elif 'password' not in header_keys:
-            error = {'detail': 'password missing from header.'}
-        if error:
+            errors['username'] = ['username missing from header.']
+        if 'password' not in header_keys:
+            errors['password'] = ['password missing from header.']
+        if 'username' in errors or 'password' in errors:
             raise ValidationError(
-                error,
+                errors,
                 code=401
             )
         # Usernames are stored in lowercase form, so make sure to inforce case here.
