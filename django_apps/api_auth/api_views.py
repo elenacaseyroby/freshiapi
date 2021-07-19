@@ -13,9 +13,9 @@ def token(request):
         error = None
         header_keys = request.headers.keys()
         if 'username' not in header_keys:
-            error = 'username missing from header.'
+            error = {'detail': 'username missing from header.'}
         elif 'password' not in header_keys:
-            error = 'password missing from header.'
+            error = {'detail': 'password missing from header.'}
         if error:
             raise ValidationError(
                 error,
@@ -39,12 +39,16 @@ def token(request):
             user_exists = User.objects.filter(username=username).exists()
             if user_exists:
                 raise ValidationError(
-                    'Incorrect password. Try again.',
+                    {
+                        'detail': 'Incorrect password. Try again.'
+                    },
                     code=401
                 )
 
             raise NotFound(
-                detail='User not found',
+                detail={
+                    'detail': 'User not found.'
+                },
                 code=404
             )
 
