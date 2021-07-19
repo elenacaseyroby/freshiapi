@@ -49,9 +49,9 @@ def password_reset_email(request):
         if pw_reset_attempts >= 3:
             raise Throttled(
                 detail={
-                    'detail': """You have reached your max number of
-password reset requests in a 12 hour period. Please email casey@freshi.io for
-further help on this matter."""
+                    'detail': """You have reached your max number of \
+password reset requests in a 12 hour period. Please email casey@freshi.io \
+for further help on this matter."""
                 },
                 code=401
             )

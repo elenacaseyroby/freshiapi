@@ -6,6 +6,7 @@ from django_apps.communications.models import Email
 
 # An in house function to send email, record email in communications_emails table
 # and return response with status and detail message describing success or failure.
+
 def send_email(subject, message, from_email, to_emails, html_message=None):
     # INPUT
     # subject string
@@ -25,17 +26,18 @@ def send_email(subject, message, from_email, to_emails, html_message=None):
     # Set if email fails to be recorded in db
     db_error = None
 
-    # Send email
-    try:
-        send_mail(
-            subject,
-            message,
-            from_email,
-            to_emails,
-            fail_silently=False,
-            html_message=html_message)
-    except Exception as e:
-        email_error = f"Email failed to send: {str(e)}"
+    # Send email: only in staging and production
+    if settings.ENV != 'development':
+        try:
+            send_mail(
+                subject,
+                message,
+                from_email,
+                to_emails,
+                fail_silently=False,
+                html_message=html_message)
+        except Exception as e:
+            email_error = f"Email failed to send: {str(e)}"
 
     # Record email
     try:
