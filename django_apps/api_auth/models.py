@@ -2,18 +2,18 @@ from django.db import models
 from django.utils.functional import cached_property
 import secrets
 import jwt
-from datetime import date
+from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 from backend.settings import FRESHI_AUTH_ACCESS_KEY
 
 
 # Made custom AccessToken so we could be sure no sensitive data would be stored in
 # the token (since it will be vulnerable to leaks when stored locally on our mobile
-# app) and to easily manage expiration_dates and access revokation from our backend.
+# app) and to easily manage expiration_times and access revokation from our backend.
 class AccessToken(models.Model):
     ''' Rules:
     1. Users are allowed up to 5 active access tokens at a time.
-    2. A token is active if the expiration_date is greater than the current date.
+    2. A token is active if the expiration_time is greater than the current date.
     3. Tokens are JWT tokens hashed with FRESHI_AUTH_ACCESS_KEY.
     They store the user_id and a code which will link back to a unique AccessToken record.  
     4. The code is not unique and could be reused in many users' access tokens.
@@ -26,7 +26,7 @@ class AccessToken(models.Model):
     code = models.CharField(max_length=100, null=False, blank=False)
     user = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE, null=False, blank=False)
-    expiration_date = models.DateField(null=False, blank=False)
+    expiration_time = models.DateTimeField(null=False, blank=False)
     unique_together = [['user_id', 'code']]
     # The first element in each tuple is the actual value to be set
     # on the model, and the second element is the human-readable name.
@@ -36,9 +36,9 @@ class AccessToken(models.Model):
     )
     purpose = models.CharField(
         max_length=20, choices=PURPOSE_CHOICES, default='login')
-    date_created = models.DateTimeField(
+    time_created = models.DateTimeField(
         auto_now_add=True, null=True, blank=True)
-    date_modified = models.DateTimeField(
+    last_modified = models.DateTimeField(
         auto_now=True, null=True, blank=True)
 
     def generate_token(self, user_id, purpose):
@@ -48,10 +48,10 @@ class AccessToken(models.Model):
 
         # Set expiration date based on purpose.
         if purpose == 'pw_reset':
-            self.expiration_date = date.today() + relativedelta(hours=1)
+            self.expiration_time = timezone.now() + relativedelta(hours=1)
             self.purpose = purpose
         else:
-            self.expiration_date = date.today() + relativedelta(years=1)
+            self.expiration_time = timezone.now() + relativedelta(years=1)
             self.purpose = 'login'
 
         # Expiration date is one year from generation.
@@ -60,8 +60,8 @@ class AccessToken(models.Model):
         active_tokens = AccessToken.objects.filter(
             user_id=user_id,
             # active
-            expiration_date__gt=date.today()
-        ).order_by('expiration_date').all()
+            expiration_time__gt=timezone.now()
+        ).order_by('expiration_time').all()
 
         # If user has over the allowable number of active access tokens
         # revoke access for the oldest token.
@@ -88,7 +88,7 @@ class AccessToken(models.Model):
 
     @cached_property
     def is_active(self):
-        return self.expiration_date > date.today()
+        return self.expiration_time > timezone.now()
 
     @cached_property
     def token(self):
@@ -122,8 +122,8 @@ class AccessToken(models.Model):
         return jwt.encode(payload, FRESHI_AUTH_ACCESS_KEY, algorithm="HS256")
 
     def revoke(self):
-        # Set expiration_date to today.
-        self.expiration_date = date.today()
+        # Set expiration_time to today.
+        self.expiration_time = timezone.now()
         self.save()
 
     class Meta:

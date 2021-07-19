@@ -12,7 +12,8 @@ from rest_framework.exceptions import (
 )
 from rest_framework.decorators import api_view
 from django.conf import settings
-from datetime import date
+from django.utils import timezone
+from dateutil.relativedelta import relativedelta
 
 from django_apps.accounts.serializers import UserSerializer
 from django_apps.accounts.models import User
@@ -27,7 +28,7 @@ def password_reset_email(request):
     if request.method == 'POST':
         if 'email' not in request.headers.keys():
             raise ValidationError(
-                'Email missing from the header',
+                {'detail': 'Email missing from the header'},
                 code=401
             )
         email = request.headers['email']
@@ -35,21 +36,23 @@ def password_reset_email(request):
         # Return error if there is no account under that email.
         if not user:
             raise ValidationError(
-                'There is no account tied to the email:  ' + email + '.',
+                {'detail': 'There is no account tied to the email:  ' + email + '.'},
                 code=401
             )
 
-        pw_reset_attemps_today = AccessToken.objects.filter(
+        pw_reset_attempts = AccessToken.objects.filter(
             user_id=user.id,
-            date_created=date.today(),
+            time_created__gt=timezone.now() - relativedelta(hours=12),
             purpose='pw_reset',
         ).count()
 
-        if pw_reset_attemps_today >= 3:
+        if pw_reset_attempts >= 3:
             raise Throttled(
-                detail="""
-You have reached your max number of password reset requests 
-for the day. Please email casey@freshi.io for further help on this matter.""",
+                detail={
+                    'detail': """You have reached your max number of
+password reset requests in a 12 hour period. Please email casey@freshi.io for
+further help on this matter."""
+                },
                 code=401
             )
 
@@ -104,46 +107,53 @@ Co-founder of Freshi
             html_message=html_message)
         if response['status_code'] == 500:
             raise ErrorDetail(
-                response['detail'],
+                {'detail': response['detail']},
                 code=response['status_code'],
             )
         return Response(response)
 
 
-@api_view(['POST', ])
+@ api_view(['POST', ])
 def password_reset(request):
     if request.method == 'POST':
         api_authentification = APIAuthentication()
-        user = api_authentification.authenticate(request)
+        (user, error) = api_authentification.authenticate(request)
         if not user:
             raise AuthenticationFailed(
-                detail='Password reset token invalid.  Please request a new password reset email.',
+                detail={
+                    'detail': """Password reset token invalid.  
+Please request a new password reset email."""
+                },
                 code=401
             )
-        if "password" in request.data.keys():
+        if "password" in request.headers.keys():
             # Save new password
             savePasswordFromRequest(request, user)
+
+            # Get all active access tokens.
             active_tokens = AccessToken.objects.filter(
                 user_id=user.id,
                 # active
-                expiration_date__gt=date.today()
+                expiration_time__gt=timezone.now()
             ).all()
 
             # Deactivate all active access tokens.
             for token in active_tokens:
-                token.expiration_date = date.today()
-            AccessToken.objects.bulk_update(active_tokens, ['expiration_date'])
+                token.expiration_time = timezone.now()
+            AccessToken.objects.bulk_update(active_tokens, ['expiration_time'])
         else:
             raise ValidationError(
-                'Password missing from header.',
+                {'detail': 'Password missing from the header.'},
                 code=401
             )
+        return Response({
+            'detail': 'Successfully reset password!'
+        })
 
 
 def formatError(errorField, errorMessage):
     return {
-        "error_field": errorField,
-        "error_message": errorMessage
+        errorField: errorMessage
     }
 
 
