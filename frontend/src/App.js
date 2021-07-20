@@ -91,7 +91,7 @@ class App extends Component {
               const { id, token } = match.params;
               const host = 'www.freshi.io';
               // const host = 'localhost:8000';
-              const currentRoute = `${host}/${id}/${token}`;
+              const currentRoute = `http://${host}/${id}/${token}`;
               const deeplink = `freshi://${host}/reset-password?userId=${id}&authToken=${token}`;
               window.location = deeplink;
               return (
@@ -131,7 +131,10 @@ class App extends Component {
                       <FreshiButton
                         label="visit url"
                         onClick={() => {
-                          window.location.href = currentRoute;
+                          window.open(
+                            currentRoute,
+                            '_blank' // open in a new window
+                          );
                         }}
                         backgroundColor={colors.background.color}
                         forgroundColor={colors.interactiveFocus.color}
