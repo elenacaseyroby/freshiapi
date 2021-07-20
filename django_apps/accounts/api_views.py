@@ -127,8 +127,9 @@ Please request a new password reset email."""
                 code=401
             )
         if "password" in request.headers.keys():
+            password = request.headers.get("password")
             # Save new password
-            savePasswordFromRequest(request, user)
+            savePasswordFromRequest(password, user)
 
             # Get all active access tokens.
             active_tokens = AccessToken.objects.filter(
@@ -146,8 +147,14 @@ Please request a new password reset email."""
                 {'detail': 'Password missing from the header.'},
                 code=401
             )
+        # Generate login token
+        access_token = AccessToken()
+        purpose = 'login'
+        token = access_token.generate_token(user.id, purpose)
         return Response({
-            'detail': 'Successfully reset password!'
+            'detail': 'Success!',
+            'token': token,
+            'user_id': user.id
         })
 
 
@@ -173,17 +180,14 @@ def getPasswordErrors(password):
             "Password too long. Please enter a shorter password.")
 
 
-def savePasswordFromRequest(request, user):
-    # Check if password passed in request.
-    if "password" in request.data.keys():
-        password = request.data.get("password")
-        # Validate new password.
-        passwordError = getPasswordErrors(password)
-        if passwordError:
-            raise ValidationError(passwordError, code=400)
-        # Update password if no valdiation errors.
-        user.set_password(password)
-        user.save()
+def savePasswordFromRequest(password, user):
+    # Validate new password.
+    passwordError = getPasswordErrors(password)
+    if passwordError:
+        raise ValidationError(passwordError, code=400)
+    # Update password if no valdiation errors.
+    user.set_password(password)
+    user.save()
 
 
 def userToUpdateMatchesLoggedInUser(request, user_to_update):
@@ -208,8 +212,9 @@ class UserCreate(CreateAPIView):
         ):
             email = request.data.get('email')
             user = User.objects.filter(email=email).first()
-            if user:
-                savePasswordFromRequest(request, user)
+            if user and "password" in request.data.keys():
+                password = request.data.get("password")
+                savePasswordFromRequest(password, user)
         return response
 
 
@@ -233,7 +238,9 @@ class UserRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
             )
 
         # Save password or throw error.
-        savePasswordFromRequest(request, instance)
+        if "password" in request.data.keys():
+            password = request.data.get("password")
+        savePasswordFromRequest(password, instance)
 
         # Update any attributes that were passed in the request.
         partial = kwargs.pop('partial', True)
