@@ -4,6 +4,7 @@ import {
   Route,
 } from 'react-router-dom';
 import DesignSystem from './DesignSystem/DesignSystem';
+import FreshiButton from './components/FreshiButton';
 import getColors from './styles/getColors';
 import getFonts from './styles/getFonts';
 import getStyles from './styles/getStyles';
@@ -120,13 +121,35 @@ class App extends Component {
                     <br />
                     2. Open the Freshi app on your iPhone or tablet.
                     <br />
-                    3. On the same device, visit this url: &nbsp;
-                    <a
-                      href={currentRoute}
-                      style={colors.interactiveFocus}
+                    3. On the same device, go to this url: &nbsp;
+                    <br />
+                    <div style={{
+                      ...styles.marginTop,
+                      ...styles.marginBottom
+                    }}
                     >
-                      {currentRoute}
-                    </a>
+                      <FreshiButton
+                        label="visit url"
+                        onClick={() => {
+                          window.location.href = currentRoute;
+                        }}
+                        backgroundColor={colors.background.color}
+                        forgroundColor={colors.interactiveFocus.color}
+                        media={media}
+                        style={{
+                          ...styles.marginRight
+                        }}
+                      />
+                      <FreshiButton
+                        label="copy url"
+                        onClick={() => {
+                          navigator.clipboard.writeText(currentRoute);
+                        }}
+                        backgroundColor={colors.interactiveFocus.color}
+                        forgroundColor={colors.background.color}
+                        media={media}
+                      />
+                    </div>
                     <br />
                     4. Reset your password and enjoy!
                     <br />
@@ -135,12 +158,33 @@ class App extends Component {
                     <br />
                     send me an email and I&apos;ll be happy to help you out!
                     <br />
-                    <a
-                      href="mailto:casey@freshi.io"
-                      style={colors.interactiveFocus}
+                    <div style={{
+                      ...styles.marginTop,
+                      ...styles.marginBottom
+                    }}
                     >
-                      casey@freshi.io
-                    </a>
+                      <FreshiButton
+                        label="send email"
+                        onClick={() => {
+                          window.location.href = 'mailto: casey@freshi.io';
+                        }}
+                        backgroundColor={colors.background.color}
+                        forgroundColor={colors.interactiveFocus.color}
+                        media={media}
+                        style={{
+                          ...styles.marginRight,
+                        }}
+                      />
+                      <FreshiButton
+                        label="copy email"
+                        onClick={() => {
+                          navigator.clipboard.writeText('casey@freshi.io');
+                        }}
+                        backgroundColor={colors.interactiveFocus.color}
+                        forgroundColor={colors.background.color}
+                        media={media}
+                      />
+                    </div>
                   </div>
                 </div>
               );

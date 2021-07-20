@@ -3,15 +3,14 @@ import PropTypes from 'prop-types';
 import getColors from '../styles/getColors';
 import getFonts from '../styles/getFonts';
 import getStyles from '../styles/getStyles';
-import getDevice from '../styles/getDevice';
 import ColorSquare from './ColorSquare';
+import FreshiButton from '../components/FreshiButton';
 
 const DesignSystem = ({ media, toggleLightMode }) => {
   const { windowWidth, lightMode } = media;
   const colors = getColors(lightMode);
   const styles = getStyles(windowWidth);
   const fonts = getFonts(windowWidth);
-  const device = getDevice(windowWidth);
   const indexMidpoint = Math.ceil(Object.keys(colors).length / 2) - 1;
   return (
     <div style={{
@@ -43,25 +42,13 @@ const DesignSystem = ({ media, toggleLightMode }) => {
             design system
           </div>
         </div>
-        <button
-          type="button"
+        <FreshiButton
+          label={lightMode ? 'Dark Mode' : 'Light Mode'}
           onClick={toggleLightMode}
-          style={{
-            backgroundColor: colors.background.color,
-            color: colors.interactiveFocus.color,
-            borderColor: colors.background.color,
-            borderWidth: 0.3 * device.normalizer,
-            borderRadius: 5 * device.normalizer,
-            padding: 10 * device.normalizer,
-            /* offset-x | offset-y | blur-radius| spread-radius | color */
-            /* blur-radius: bigger number means bigger, lighter shadow */
-            /* spread-radius: Positive values will cause the shadow to expand
-            and grow bigger, negative values will cause the shadow to shrink. */
-            boxShadow: `3px 3px 10px -2px ${colors.shadow.color}`,
-            ...fonts.callout }}
-        >
-          {lightMode ? 'Dark Mode' : 'Light Mode'}
-        </button>
+          backgroundColor={colors.background.color}
+          forgroundColor={colors.interactiveFocus.color}
+          media={media}
+        />
       </div>
       <div style={{
         ...styles.collapsableGrid
