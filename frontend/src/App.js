@@ -152,13 +152,12 @@ class App extends Component {
                         media={media}
                       />
                     </div>
-                    <br />
                     4. Reset your password and enjoy!
                     <br />
                     <br />
                     If you still can&apos;t access your account,
                     <br />
-                    send me an email and I&apos;ll be happy to help you out!
+                    send us an email and we&apos;ll be happy to help you out!
                     <br />
                     <div style={{
                       ...styles.marginTop,
