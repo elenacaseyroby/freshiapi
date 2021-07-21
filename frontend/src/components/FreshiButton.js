@@ -25,8 +25,8 @@ const FreshiButton = ({
         color: forgroundColor,
         borderColor: backgroundColor,
         borderWidth: 0.3 * device.normalizer,
-        borderRadius: 5 * device.normalizer,
         padding: 5 * device.normalizer,
+        borderRadius: 5 * device.normalizer,
         /* offset-x | offset-y | blur-radius| spread-radius | color */
         /* blur-radius: bigger number means bigger, lighter shadow */
         /* spread-radius: Positive values will cause the shadow to expand

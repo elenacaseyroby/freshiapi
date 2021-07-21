@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import getColors from '../styles/getColors';
 import getFonts from '../styles/getFonts';
+import getDevice from '../styles/getDevice';
 import getStyles from '../styles/getStyles';
 import ColorSquare from './ColorSquare';
 import FreshiButton from '../components/FreshiButton';
@@ -11,6 +12,7 @@ const DesignSystem = ({ media, toggleLightMode }) => {
   const colors = getColors(lightMode);
   const styles = getStyles(windowWidth);
   const fonts = getFonts(windowWidth);
+  const device = getDevice(windowWidth);
   const indexMidpoint = Math.ceil(Object.keys(colors).length / 2) - 1;
   return (
     <div style={{
@@ -48,6 +50,10 @@ const DesignSystem = ({ media, toggleLightMode }) => {
           backgroundColor={colors.background.color}
           forgroundColor={colors.interactiveFocus.color}
           media={media}
+          // override padding
+          style={{
+            padding: 10 * device.normalizer
+          }}
         />
       </div>
       <div style={{

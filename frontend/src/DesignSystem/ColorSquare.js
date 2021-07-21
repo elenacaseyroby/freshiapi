@@ -41,9 +41,13 @@ const ColorSquare = ({
         minHeight: sideLength,
         maxHeight: sideLength,
         backgroundColor: hex,
-        borderStyle: 'solid',
-        borderWidth: 1 * device.normalizer,
-        borderColor: colors.highContrast.hex,
+        borderRadius: 5 * device.normalizer,
+        /* offset-x | offset-y | blur-radius| spread-radius | color */
+        /* blur-radius: bigger number means bigger, lighter shadow */
+        /* spread-radius: Positive values will cause the shadow to expand
+        and grow bigger, negative values will cause the shadow to shrink. */
+        boxShadow: `3px 3px 10px -2px ${colors.shadow.color}`,
+        borderColor: hex,
         ...globalStyles.column,
         ...globalStyles.marginRight,
         // borderColor: colors.highContrast,
