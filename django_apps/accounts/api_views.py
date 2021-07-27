@@ -66,7 +66,7 @@ for further help on this matter."""
         # host = "www.freshi.io"
         pw_reset_url = f"http://{host}/reset-password/{user.id}/{token}"
         subject = "Freshi Password Reset"
-        message = f"""Hi {user.first_name},
+        message = f"""Hi {'there' if not user.first_name else user.first_name},
 
 I'm sorry to hear you're locked out of your account! To confirm, your username is {user.username}. You can visit {pw_reset_url} to reset your password.
 
@@ -85,7 +85,7 @@ Co-founder of Freshi
 <head>
 </head>
 <body>
-<p>Hi {user.first_name},</p>
+<p>Hi {'there' if not user.first_name else user.first_name},</p>
 
 <p>I'm sorry to hear you're locked out of your account! To confirm, your username is {user.username}. You can click <a href='{pw_reset_url}'>here</a> to reset your password.</p>
 
