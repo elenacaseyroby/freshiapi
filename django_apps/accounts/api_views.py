@@ -68,7 +68,7 @@ for further help on this matter."""
         subject = "Freshi Password Reset"
         message = f"""Hi {user.first_name},
 
-I'm sorry to hear you're locked out of your account! Visit {pw_reset_url} to reset your password.
+I'm sorry to hear you're locked out of your account! To confirm, your username is {user.username}. You can visit {pw_reset_url} to reset your password.
 
 If that doesn't do the trick, you can reply to this email and I'll be happy to provide further assistance.
 
@@ -87,9 +87,11 @@ Co-founder of Freshi
 <body>
 <p>Hi {user.first_name},</p>
 
-<p>I'm sorry to hear you're locked out of your account! Click <a href='{pw_reset_url}'>here</a> to reset your password.</p>
+<p>I'm sorry to hear you're locked out of your account! To confirm, your username is {user.username}. You can click <a href='{pw_reset_url}'>here</a> to reset your password.</p>
 
 <p>If that doesn't do the trick, you can reply to this email and I'll be happy to provide further assistance.</p>
+
+<p>If you did not request a password reset for this account, do nothing and your account will remain unchanged.</p>
 
 <p>Take care,</p>
 
