@@ -41,7 +41,7 @@
 4. push back to main: `git push origin main`
 5. now that github is up to date, we can deploy to staging: `eb deploy freshi-staging`
 6. check that everything's working
-7. deploy to production: `eb deploy freshi-production`
+7. deploy to production: `eb deploy freshi-prod`
 
 ## Running Tests
 ...add later... 
