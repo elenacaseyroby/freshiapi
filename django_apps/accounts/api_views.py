@@ -50,7 +50,7 @@ def password_reset_email(request):
             raise Throttled(
                 detail={
                     'detail': """You have reached your max number of \
-password reset requests in a 12 hour period. Please email casey@freshi.io \
+password reset requests in a 12 hour period. Please email {settings.FRESHI_SUPPORT_EMAIL} \
 for further help on this matter."""
                 },
                 code=401
@@ -71,6 +71,8 @@ for further help on this matter."""
 I'm sorry to hear you're locked out of your account! Visit {pw_reset_url} to reset your password.
 
 If that doesn't do the trick, you can reply to this email and I'll be happy to provide further assistance.
+
+If you did not request a password reset for this account, do nothing and your account will remain unchanged.
 
 Take care,
 
