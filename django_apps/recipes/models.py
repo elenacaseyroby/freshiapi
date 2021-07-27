@@ -74,7 +74,7 @@ class Recipe(models.Model):
     description = models.TextField(null=True, blank=True)
     url = models.URLField(null=True, blank=True)
     owner = models.ForeignKey(
-        'users.User', on_delete=models.RESTRICT, null=True, blank=True)
+        'accounts.User', on_delete=models.RESTRICT, null=True, blank=True)
     source = models.ForeignKey(
         Source, on_delete=models.RESTRICT, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
@@ -82,9 +82,9 @@ class Recipe(models.Model):
     ingredients = models.ManyToManyField(
         'foods.Food', through='Ingredient', blank=True)
 
-    # This field tracks how many ingredients were included in the 
+    # This field tracks how many ingredients were included in the
     # calculation of the recipe's nutrition facts. For example
-    # if none of the ingredients are matched to foods in the foods table, then 
+    # if none of the ingredients are matched to foods in the foods table, then
     # 0% of the ingredients were included in the calculation of the nutrition
     # facts.
     ingredients_in_nutrition_facts = models.DecimalField(
@@ -214,8 +214,8 @@ class Recipe(models.Model):
         if not ingredients:
             ingredients = Ingredient.objects.filter(recipe_id=self.id).all()
         # If no ingredients, then no nutrition facts to document.
-        
-        # Track the percentage of the ingredients that were used to 
+
+        # Track the percentage of the ingredients that were used to
         # calculate the nutrition facts for the recipe.
         # Start by setting ingredients_in_nutrition_facts to 0% and
         # update as you go.
@@ -268,7 +268,7 @@ class Recipe(models.Model):
                     )
                 # Commenting this out because it leads to issues like
                 # counting the recipe as having 100g of salt per serving
-                # because the serving size of salt in our db is 100g 
+                # because the serving size of salt in our db is 100g
                 # (a relic of the usda food db):
                 # If no ingredient qty and no unit, calculate ingredient
                 # nutrient qty by takinging the food nutrient_qty for
@@ -300,7 +300,7 @@ class Recipe(models.Model):
                                 food.one_serving_unit_id
                             ]
                         )
-                        
+
                     # Find food servings in ingredient.
                     ingredient_food_servings = round(
                         float(
@@ -350,7 +350,7 @@ class Recipe(models.Model):
         # Save note about nutrition facts
         if recipe_ingredient_count:
             self.ingredients_in_nutrition_facts = round(
-                ingredients_w_nutrition_facts / recipe_ingredient_count, 
+                ingredients_w_nutrition_facts / recipe_ingredient_count,
                 2)
         self.save()
 

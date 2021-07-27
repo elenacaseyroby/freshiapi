@@ -10,7 +10,9 @@ class APIAuthentication(BaseAuthentication):
         token = request.headers['Authorization']
         if not token:
             raise exceptions.AuthenticationFailed(
-                'Authorization token not in header')
+                detail='Authorization token not in header',
+                code=401
+            )
         try:
             access_token = get_access_token(token)
             # BaseAuthentication class must return (user, None)
@@ -19,4 +21,6 @@ class APIAuthentication(BaseAuthentication):
         except:
             # raise exception if user does not exist
             raise exceptions.AuthenticationFailed(
-                'Authorization error: Authorization token invalid')
+                detail='Authorization error: Authorization token invalid',
+                code=401
+            )

@@ -2,47 +2,93 @@ from django.db import models
 from django.utils.functional import cached_property
 import secrets
 import jwt
-from datetime import date
+from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 from backend.settings import FRESHI_AUTH_ACCESS_KEY
 
 
 # Made custom AccessToken so we could be sure no sensitive data would be stored in
 # the token (since it will be vulnerable to leaks when stored locally on our mobile
-# app) and to easily manage expiration_dates and access revokation from our backend.
+# app) and to easily manage expiration_times and access revokation from our backend.
 class AccessToken(models.Model):
     ''' Rules:
-    1. Users are only allowed one access token at a time.
-    2. Records of tokens are not saved: tokens may be deleted once they have expired.
-    3. Token codes are not unique.
-    5. Access tokens are JWT tokens hashed with FRESHI_AUTH_ACCESS_KEY.
-    They store user_id and code which will link back to a unique AccessToken record.
-    4. Users are effectively unique, since we delete all of a user's tokens before creating
-    a new token for said user. That said, users are not unique at the db level in case we
-    ever want to support multiple active access tokens per user.
+    1. Users are allowed up to 5 active access tokens at a time.
+    2. A token is active if the expiration_time is greater than the current date.
+    3. Tokens are JWT tokens hashed with FRESHI_AUTH_ACCESS_KEY.
+    They store the user_id and a code which will link back to a unique AccessToken record.  
+    4. The code is not unique and could be reused in many users' access tokens.
     5. Tokens must be retrieved using both user_id and token code since
-    codes are not unique.'''
+    codes alone are not unique.'''
 
+    # Code adds complexity to access token, so we can't be hacked with
+    # FRESHI_AUTH_ACCESS_KEY and user_id alone and also allows for
+    # multiple active codes at once, for multiple devices.
     code = models.CharField(max_length=100, null=False, blank=False)
     user = models.ForeignKey(
-        'users.User', on_delete=models.CASCADE, null=False, blank=False)
-    expiration_date = models.DateField(null=False, blank=False)
+        'accounts.User', on_delete=models.CASCADE, null=False, blank=False)
+    expiration_time = models.DateTimeField(null=False, blank=False)
     unique_together = [['user_id', 'code']]
+    # The first element in each tuple is the actual value to be set
+    # on the model, and the second element is the human-readable name.
+    PURPOSE_CHOICES = (
+        ('login', 'LOGIN'),
+        ('pw_reset', 'PW_RESET'),
+    )
+    purpose = models.CharField(
+        max_length=20, choices=PURPOSE_CHOICES, default='login')
+    time_created = models.DateTimeField(
+        auto_now_add=True, null=True, blank=True)
+    last_modified = models.DateTimeField(
+        auto_now=True, null=True, blank=True)
 
-    def generate_token(self, user_id):
+    def generate_token(self, user_id, purpose):
         '''Create access token object for user and return token.'''
-        # Delete any access tokens already tied to user.
-        AccessToken.objects.filter(user_id=user_id).delete()
         # Set user.
         self.user_id = user_id
+
+        # Set expiration date based on purpose.
+        if purpose == 'pw_reset':
+            self.expiration_time = timezone.now() + relativedelta(hours=1)
+            self.purpose = purpose
+        else:
+            self.expiration_time = timezone.now() + relativedelta(years=1)
+            self.purpose = 'login'
+
         # Expiration date is one year from generation.
-        self.expiration_date = date.today() + relativedelta(years=1)
-        # Code adds complexity to access token, so we can't be hacked with
-        # FRESHI_AUTH_ACCESS_KEY and user_id alone and also allows for a future in
-        # which a user could have multiple active codes at once, for multiple devices.
-        self.code = secrets.token_hex(60)[:100]
+
+        # Get user's active tokens.
+        active_tokens = AccessToken.objects.filter(
+            user_id=user_id,
+            # active
+            expiration_time__gt=timezone.now()
+        ).order_by('expiration_time').all()
+
+        # If user has over the allowable number of active access tokens
+        # revoke access for the oldest token.
+        concurrent_logins_allowed = 5
+        if active_tokens.count() >= concurrent_logins_allowed:
+            oldest_token = active_tokens.first()
+            oldest_token.revoke()
+
+        # Create unique user_id / code combo for new access token.
+        active_token_exists = True
+        attempts = 0
+        code = None
+        while active_token_exists and attempts < 10:
+            # generate new code until unique user_id / code combo is found.
+            # kill after 10 attempts
+            code = secrets.token_hex(60)[:100]
+            active_token_exists = active_tokens.filter(
+                code=code).exists()
+            attempts += 1
+        self.code = code
         self.save()
+
         return self.token
+
+    @cached_property
+    def is_active(self):
+        return self.expiration_time > timezone.now()
 
     @cached_property
     def token(self):
@@ -76,9 +122,9 @@ class AccessToken(models.Model):
         return jwt.encode(payload, FRESHI_AUTH_ACCESS_KEY, algorithm="HS256")
 
     def revoke(self):
-        # Note: Could also be revoked by changing expiration_date
-        # if we ever wanted to keep records of our access tokens.
-        self.delete()
+        # Set expiration_time to today.
+        self.expiration_time = timezone.now()
+        self.save()
 
     class Meta:
         db_table = 'api_auth_access_tokens'

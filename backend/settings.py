@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 from pathlib import Path
+from django.core.mail import get_connection
 
 import os
 import requests
@@ -25,9 +26,11 @@ def env_var(VAR_NAME):
             os.environ[VAR_NAME] = env(VAR_NAME)
         return os.environ[VAR_NAME]
     except:
-        error_msg = 'Set the {} environment variable'.format(var_name)
+        error_msg = 'Set the {} environment variable'.format(VAR_NAME)
         raise Exception(error_msg)
 
+
+ENV = env_var('ENV')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -85,10 +88,11 @@ INSTALLED_APPS = [
     'django_apps',
     'django_apps.website',
     'django_apps.foods',
-    'django_apps.users',
+    'django_apps.accounts',
     'django_apps.recipes',
     'django_apps.media',
     'django_apps.api_auth',
+    'django_apps.communications',
 ]
 
 MIDDLEWARE = [
@@ -138,7 +142,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         # Add the root folder of frontend to serve front and back end
         # at port 8000.
-        'DIRS': [os.path.join(BASE_DIR, 'frontend')],
+        'DIRS': [os.path.join(BASE_DIR, 'frontend'), ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -191,7 +195,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = 'accounts.User'
 
 
 # Internationalization
@@ -230,3 +234,13 @@ AWS_ACCESS_KEY_ID = env_var('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = env_var('AWS_SECRET_ACCESS_KEY')
 
 FRESHI_AUTH_ACCESS_KEY = env_var('FRESHI_AUTH_ACCESS_KEY')
+
+# Sendgrid settings are automatically passed
+# when you use django.core.mail.send_mail
+EMAIL_HOST = 'smtp.sendgrid.net'
+# this is exactly the value 'apikey'
+EMAIL_HOST_USER = 'apikey'
+EMAIL_HOST_PASSWORD = env_var('SENDGRID_API_KEY')
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+FRESHI_SUPPORT_EMAIL = env_var('FRESHI_SUPPORT_EMAIL')
