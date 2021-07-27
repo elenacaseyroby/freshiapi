@@ -49,7 +49,7 @@ def password_reset_email(request):
         if pw_reset_attempts >= 3:
             raise Throttled(
                 detail={
-                    'detail': """You have reached your max number of \
+                    'detail': f"""You have reached your max number of \
 password reset requests in a 12 hour period. Please email {settings.FRESHI_SUPPORT_EMAIL} \
 for further help on this matter."""
                 },
@@ -62,7 +62,7 @@ for further help on this matter."""
         token = access_token.generate_token(user.id, purpose)
 
         # Send email.
-        host = settings.FRESHI_URL
+        host = request.META['HTTP_HOST']
         # host = "www.freshi.io"
         pw_reset_url = f"http://{host}/reset-password/{user.id}/{token}"
         subject = "Freshi Password Reset"
