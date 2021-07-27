@@ -72,7 +72,7 @@ I'm sorry to hear you're locked out of your account! To confirm, your username i
 
 If that doesn't do the trick, you can reply to this email and I'll be happy to provide further assistance.
 
-If you did not request a password reset for this account, do nothing and your account will remain unchanged.
+Please note: if you did not request a password reset for this account, do nothing and your account will remain unchanged.
 
 Take care,
 
@@ -91,7 +91,7 @@ Co-founder of Freshi
 
 <p>If that doesn't do the trick, you can reply to this email and I'll be happy to provide further assistance.</p>
 
-<p>If you did not request a password reset for this account, do nothing and your account will remain unchanged.</p>
+<p>Please note: if you did not request a password reset for this account, do nothing and your account will remain unchanged.</p>
 
 <p>Take care,</p>
 
