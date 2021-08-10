@@ -3,7 +3,7 @@ import {
   BrowserRouter as Router,
   Route,
 } from 'react-router-dom';
-import DesignSystem from './DesignSystem/DesignSystem';
+import DesignSystem from './components/DesignSystem/DesignSystem';
 import FreshiButton from './components/FreshiButton';
 import getColors from './styles/getColors';
 import getFonts from './styles/getFonts';

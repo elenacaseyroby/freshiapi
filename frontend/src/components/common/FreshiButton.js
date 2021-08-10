@@ -1,8 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import getFonts from '../styles/getFonts';
-import getDevice from '../styles/getDevice';
-import getColors from '../styles/getColors';
+import getFonts from '../../styles/getFonts';
+import getDevice from '../../styles/getDevice';
+import getColors from '../../styles/getColors';
 
 const FreshiButton = ({
   label,
@@ -10,7 +10,7 @@ const FreshiButton = ({
   backgroundColor,
   forgroundColor,
   media,
-  style
+  style,
 }) => {
   const { lightMode, windowWidth } = media;
   const device = getDevice(windowWidth);
@@ -33,7 +33,8 @@ const FreshiButton = ({
         and grow bigger, negative values will cause the shadow to shrink. */
         boxShadow: `3px 3px 10px -2px ${colors.shadow.color}`,
         ...fonts.callout,
-        ...style }}
+        ...style,
+      }}
     >
       {label}
     </button>
@@ -41,7 +42,7 @@ const FreshiButton = ({
 };
 
 FreshiButton.defaultProps = {
-  style: {}
+  style: {},
 };
 
 FreshiButton.propTypes = {
@@ -54,7 +55,7 @@ FreshiButton.propTypes = {
     windowWidth: PropTypes.number.isRequired,
     lightMode: PropTypes.bool.isRequired,
   }).isRequired,
-  style: React.CSSProperties
+  style: React.CSSProperties,
 };
 
 export default FreshiButton;
