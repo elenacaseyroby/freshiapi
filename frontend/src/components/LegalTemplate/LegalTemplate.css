@@ -1,0 +1,95 @@
+/* title */
+.legaltemplate h1 {
+  font-family: "Varela Round", sans-serif;
+  color: #242e36;
+}
+
+/* subtitle */
+.legaltemplate h2 {
+  font-family: "Varela Round", sans-serif;
+  color: #242e36;
+}
+
+/* caption */
+.legaltemplate h3 {
+  font-family: "Roboto", serif;
+  font-weight: 200;
+  color: #b2bbc2;
+}
+
+/* body */
+.legaltemplate p {
+  font-family: "Roboto", serif;
+  color: #242e36;
+}
+
+/*text size down here*/
+
+/* mobile screen rules */
+@media only screen and (max-width: 768px) {
+  /* title */
+  .legaltemplate h1 {
+    font-size: 15;
+  }
+
+  /* subtitle */
+  .legaltemplate h2 {
+    font-size: 11;
+  }
+
+  /* caption */
+  .legaltemplate h3 {
+    font-size: 11;
+  }
+
+  /* body */
+  .legaltemplate p {
+    font-size: 10;
+  }
+}
+
+/* tablet screen rules */
+@media only screen and (min-width: 768px) and (max-width: 1024px) {
+  /* title */
+  .legaltemplate h1 {
+    font-size: 25;
+  }
+
+  /* subtitle */
+  .legaltemplate h2 {
+    font-size: 15;
+  }
+
+  /* caption */
+  .legaltemplate h3 {
+    font-size: 15;
+  }
+
+  /* body */
+  .legaltemplate p {
+    font-size: 13;
+  }
+}
+
+/* desktop screen rules */
+@media only screen and (min-width: 1024px) {
+  /* title */
+  .legaltemplate h1 {
+    font-size: 40;
+  }
+
+  /* subtitle */
+  .legaltemplate h2 {
+    font-size: 30;
+  }
+
+  /* caption */
+  .legaltemplate h3 {
+    font-size: 23;
+  }
+
+  /* body */
+  .legaltemplate p {
+    font-size: 18;
+  }
+}

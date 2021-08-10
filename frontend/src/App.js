@@ -195,7 +195,7 @@ class App extends Component {
             exact
             path="/privacy-policy"
             render={() => (
-              <PrivacyPolicy />
+              <PrivacyPolicy media={media} />
             )}
           />
           <Route
