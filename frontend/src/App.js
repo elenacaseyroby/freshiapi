@@ -3,12 +3,10 @@ import {
   BrowserRouter as Router,
   Route,
 } from 'react-router-dom';
-import DesignSystem from './DesignSystem/DesignSystem';
-// import FreshiButton from './components/FreshiButton';
+import DesignSystem from './components/DesignSystem/DesignSystem';
 import getColors from './styles/getColors';
 import getFonts from './styles/getFonts';
-// import getStyles from './styles/getStyles';
-import PasswordReset from './PasswordReset/PasswordReset';
+import PasswordReset from './components/PasswordReset/PasswordReset';
 
 // import logo from './logo.svg';
 // import './App.css';

@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import getColors from '../styles/getColors';
-import getFonts from '../styles/getFonts';
-import getStyles from '../styles/getStyles';
-import FreshiButton from '../components/FreshiButton';
+import getColors from '../../styles/getColors';
+import getFonts from '../../styles/getFonts';
+import getStyles from '../../styles/getStyles';
+import FreshiButton from '../common/FreshiButton';
 
 class PasswordReset extends Component {
   constructor(props) {
