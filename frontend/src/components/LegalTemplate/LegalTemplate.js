@@ -15,7 +15,8 @@ const LegalTemplate = ({
   const styles = getStyles(media.windowWidth);
   return (
     <div style={{
-      ...styles.padding,
+      ...styles.paddingRight,
+      ...styles.paddingLeft,
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'flex-start',

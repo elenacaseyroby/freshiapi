@@ -12,14 +12,20 @@ const getStyles = (windowWidth) => {
     column: {
       flex: 1,
     },
+    padding: {
+      padding: 20 * device.normalizer,
+    },
     paddingTop: {
       paddingTop: 20 * device.normalizer,
     },
     paddingBottom: {
       paddingBottom: 20 * device.normalizer,
     },
-    padding: {
-      padding: 20 * device.normalizer,
+    paddingLeft: {
+      paddingLeft: 20 * device.normalizer,
+    },
+    paddingRight: {
+      paddingRight: 20 * device.normalizer,
     },
     marginRight: {
       marginRight: 10 * device.normalizer,
