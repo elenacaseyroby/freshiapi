@@ -4,10 +4,11 @@ import {
   Route,
 } from 'react-router-dom';
 import DesignSystem from './DesignSystem/DesignSystem';
-import FreshiButton from './components/FreshiButton';
+// import FreshiButton from './components/FreshiButton';
 import getColors from './styles/getColors';
 import getFonts from './styles/getFonts';
-import getStyles from './styles/getStyles';
+// import getStyles from './styles/getStyles';
+import PasswordReset from './PasswordReset/PasswordReset';
 
 // import logo from './logo.svg';
 // import './App.css';
@@ -57,7 +58,7 @@ class App extends Component {
     } = this.state;
     const colors = getColors(lightMode);
     const fonts = getFonts(windowWidth);
-    const styles = getStyles(windowWidth);
+    // const styles = getStyles(windowWidth);
     const media = {
       windowWidth,
       windowHeight,
@@ -83,113 +84,17 @@ class App extends Component {
               <DesignSystem media={media} toggleLightMode={this.toggleLightMode} />
             )}
           />
-          { /* mobile password reset route: */ }
+          { /* mobile password reset route with deeplink: */ }
           <Route
             exact
             path="/reset-password/:id/:token"
-            render={({ match }) => {
-              const { id, token } = match.params;
-              const host = window.location.origin;
-              const currentRoute = `${host}/reset-password/${id}/${token}`;
-              const deeplink = `freshi://${host}/reset-password?userId=${id}&authToken=${token}`;
-              window.location = deeplink;
-              return (
-                <div style={{
-                  display: 'block',
-                  ...styles.padding }}
-                >
-                  <div style={{
-                    ...fonts.largeTitle,
-                    ...colors.interactiveFocus }}
-                  >
-                    Freshi
-                  </div>
-                  <br />
-                  <div style={{
-                    ...fonts.headline,
-                    ...colors.highContrast }}
-                  >
-                    To reset your password:
-                  </div>
-                  <div style={{
-                    ...fonts.body,
-                    ...colors.highContrast }}
-                  >
-                    <br />
-                    1. Download the Freshi app on your iPhone or tablet.
-                    <br />
-                    2. Open the Freshi app on your iPhone or tablet.
-                    <br />
-                    3. On the same device, go to this url: &nbsp;
-                    <br />
-                    <div style={{
-                      ...styles.marginTop,
-                      ...styles.marginBottom
-                    }}
-                    >
-                      <FreshiButton
-                        label="visit url"
-                        onClick={() => {
-                          window.open(
-                            currentRoute,
-                            '_blank' // open in a new window
-                          );
-                        }}
-                        backgroundColor={colors.background.color}
-                        forgroundColor={colors.interactiveFocus.color}
-                        media={media}
-                        style={{
-                          ...styles.marginRight
-                        }}
-                      />
-                      <FreshiButton
-                        label="copy url"
-                        onClick={() => {
-                          navigator.clipboard.writeText(currentRoute);
-                        }}
-                        backgroundColor={colors.interactiveFocus.color}
-                        forgroundColor={colors.background.color}
-                        media={media}
-                      />
-                    </div>
-                    4. Reset your password and enjoy!
-                    <br />
-                    <br />
-                    If you still can&apos;t access your account,
-                    <br />
-                    send us an email and we&apos;ll be happy to help you out!
-                    <br />
-                    <div style={{
-                      ...styles.marginTop,
-                      ...styles.marginBottom
-                    }}
-                    >
-                      <FreshiButton
-                        label="send email"
-                        onClick={() => {
-                          window.location.href = 'mailto: casey@freshi.io';
-                        }}
-                        backgroundColor={colors.background.color}
-                        forgroundColor={colors.interactiveFocus.color}
-                        media={media}
-                        style={{
-                          ...styles.marginRight,
-                        }}
-                      />
-                      <FreshiButton
-                        label="copy email"
-                        onClick={() => {
-                          navigator.clipboard.writeText('casey@freshi.io');
-                        }}
-                        backgroundColor={colors.interactiveFocus.color}
-                        forgroundColor={colors.background.color}
-                        media={media}
-                      />
-                    </div>
-                  </div>
-                </div>
-              );
-            }}
+            render={({ match }) => (
+              <PasswordReset
+                media={media}
+                lightMode={lightMode}
+                match={match}
+              />
+            )}
           />
           <Route
             exact
