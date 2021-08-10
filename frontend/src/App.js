@@ -7,7 +7,7 @@ import DesignSystem from './components/DesignSystem/DesignSystem';
 import FreshiButton from './components/FreshiButton';
 import getColors from './styles/getColors';
 import getFonts from './styles/getFonts';
-import getStyles from './styles/getStyles';
+import PrivacyPolicy from './components/PrivacyPolicy/PrivacyPolicy';
 
 // import logo from './logo.svg';
 // import './App.css';
@@ -190,6 +190,13 @@ class App extends Component {
                 </div>
               );
             }}
+          />
+          <Route
+            exact
+            path="/privacy-policy"
+            render={() => (
+              <PrivacyPolicy />
+            )}
           />
           <Route
             exact
