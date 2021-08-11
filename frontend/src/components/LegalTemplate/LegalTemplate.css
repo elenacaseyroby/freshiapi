@@ -29,22 +29,22 @@
 @media only screen and (max-width: 768px) {
   /* title */
   .legaltemplate h1 {
-    font-size: 15;
+    font-size: 12;
   }
 
   /* subtitle */
   .legaltemplate h2 {
-    font-size: 11;
+    font-size: 10;
   }
 
   /* caption */
   .legaltemplate h3 {
-    font-size: 11;
+    font-size: 10;
   }
 
   /* body */
   .legaltemplate p {
-    font-size: 10;
+    font-size: 9;
   }
 }
 
