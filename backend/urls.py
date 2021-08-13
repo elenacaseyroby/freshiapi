@@ -21,7 +21,9 @@ from django_apps.accounts.api_views import (
     UserCreate,
     UserRetrieveUpdateDestroy,
     password_reset_email,
-    password_reset
+    password_reset,
+    privacy_policy,
+    terms
 )
 from django_apps.api_auth.api_views import token, revoke
 
@@ -37,6 +39,14 @@ urlpatterns = [
         'api/v1/password-reset/',
         password_reset,
         name="password_reset"),
+    path(
+        'api/v1/privacy-policy/',
+        privacy_policy,
+        name="privacy_policy"),
+    path(
+        'api/v1/terms/',
+        terms,
+        name="terms"),
     path('api/v1/users/new/', UserCreate.as_view()),
     path('api/v1/users/<int:id>/', UserRetrieveUpdateDestroy.as_view()),
 

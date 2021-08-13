@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils import timezone
 from django_apps.accounts.custom_fields import CustomEmailField, CustomUsernameField
 
 
@@ -41,3 +42,57 @@ class User(AbstractUser):
 
     def save(self, *args, **kwargs):
         super(User, self).save(*args, **kwargs)
+
+
+class PrivacyPolicy(models.Model):
+    body = models.TextField(blank=False, null=False)
+    date_published = models.DateField(
+        blank=False, null=False)
+
+    # object label in admin
+    def __str__(self):
+        return self.date_published
+
+    class Meta:
+        db_table = 'accounts_privacy_policies'
+
+
+class Terms(models.Model):
+    body = models.TextField(blank=False, null=False)
+    date_published = models.DateField(
+        blank=False, null=False)
+
+    # object label in admin
+    def __str__(self):
+        return self.date_published
+
+    class Meta:
+        db_table = 'accounts_terms'
+
+
+class UserTerms(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, db_column='user_id')
+    terms = models.ForeignKey(
+        Terms, on_delete=models.CASCADE, db_column='terms_id')
+    date_agreed = models.DateTimeField(
+        auto_now_add=True, null=False, blank=False)
+
+    unique_together = [['user', 'terms']]
+
+    class Meta:
+        db_table = 'accounts_user_terms'
+
+
+class UserPolicy(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, db_column='user_id')
+    policy = models.ForeignKey(
+        PrivacyPolicy, on_delete=models.CASCADE, db_column='policy_id')
+    date_agreed = models.DateTimeField(
+        auto_now_add=True, null=False, blank=False)
+
+    unique_together = [['user', 'policy']]
+
+    class Meta:
+        db_table = 'accounts_user_policies'

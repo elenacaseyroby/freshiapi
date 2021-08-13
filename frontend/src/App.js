@@ -8,6 +8,7 @@ import getColors from './styles/getColors';
 import getFonts from './styles/getFonts';
 import PasswordReset from './components/PasswordReset/PasswordReset';
 import PrivacyPolicy from './components/PrivacyPolicy/PrivacyPolicy';
+import LegalTemplate from './components/LegalTemplate/LegalTemplate';
 
 // import logo from './logo.svg';
 // import './App.css';
@@ -106,7 +107,7 @@ class App extends Component {
             exact
             path="/mobile-terms-and-conditions"
             render={() => (
-              <PrivacyPolicy media={media} />
+              <LegalTemplate media={media} body="<h1> t&c </h1>" />
             )}
           />
           <Route

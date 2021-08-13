@@ -15,8 +15,12 @@ from django.conf import settings
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 
-from django_apps.accounts.serializers import UserSerializer
-from django_apps.accounts.models import User
+from django_apps.accounts.serializers import (
+    UserSerializer,
+    PrivacyPolicySerializer,
+    TermsSerializer
+)
+from django_apps.accounts.models import User, PrivacyPolicy, Terms
 from django_apps.api_auth.models import AccessToken
 from django_apps.api_auth.authentication import APIAuthentication
 from django_apps.api_auth.auth_utils import get_access_token
@@ -159,6 +163,24 @@ Please request a new password reset email."""
             'detail': 'Success!',
             'token': token,
             'user_id': user.id
+        })
+
+
+@api_view(['GET', ])
+def privacy_policy(request):
+    if request.method == 'GET':
+        active_policy = PrivacyPolicy.objects.order_by('date_published').last()
+        return Response({
+            'privacy_policy': PrivacyPolicySerializer(active_policy).data
+        })
+
+
+@api_view(['GET', ])
+def terms(request):
+    if request.method == 'GET':
+        active_terms = Terms.objects.order_by('date_published').last()
+        return Response({
+            'terms': TermsSerializer(active_terms).data
         })
 
 
