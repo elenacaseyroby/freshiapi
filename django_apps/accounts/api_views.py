@@ -238,9 +238,12 @@ class UserCreate(CreateAPIView):
         ):
             email = request.data.get('email')
             user = User.objects.filter(email=email).first()
+            # Set password.
             if user and "password" in request.data.keys():
                 password = request.data.get("password")
                 savePasswordFromRequest(password, user)
+            # Agree to terms & conditions
+            user.agree_to_terms()
         return response
 
 

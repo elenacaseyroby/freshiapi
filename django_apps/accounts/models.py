@@ -40,6 +40,22 @@ class User(AbstractUser):
     class Meta:
         db_table = 'accounts_users'
 
+    def agree_to_terms(self):
+        latest_pp = PrivacyPolicy.objects.order_by('date_published').last()
+        user_has_agreed_pp = UserPolicy.objects.filter(
+            user_id=self.id, policy_id=latest_pp.id).exists()
+        if not user_has_agreed_pp:
+            # If user hasn't agreed to privacy policy, record agreement.
+            user_pp = UserPolicy(user_id=self.id, policy_id=latest_pp.id)
+            user_pp.save()
+        latest_terms = Terms.objects.order_by('date_published').last()
+        user_has_agreed_terms = UserTerms.objects.filter(
+            user_id=self.id, terms_id=latest_terms.id).exists()
+        if not user_has_agreed_terms:
+            # If user hasn't agreed to terms, record agreement
+            user_terms = UserTerms(user_id=self.id, terms_id=latest_terms.id)
+            user_terms.save()
+
     def save(self, *args, **kwargs):
         super(User, self).save(*args, **kwargs)
 
