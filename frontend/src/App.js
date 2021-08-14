@@ -7,8 +7,6 @@ import DesignSystem from './components/DesignSystem/DesignSystem';
 import getColors from './styles/getColors';
 import getFonts from './styles/getFonts';
 import PasswordReset from './components/PasswordReset/PasswordReset';
-import PrivacyPolicy from './components/PrivacyPolicy/PrivacyPolicy';
-import LegalTemplate from './components/LegalTemplate/LegalTemplate';
 
 // import logo from './logo.svg';
 // import './App.css';
@@ -94,20 +92,6 @@ class App extends Component {
                 lightMode={lightMode}
                 match={match}
               />
-            )}
-          />
-          <Route
-            exact
-            path="/mobile-privacy-policy"
-            render={() => (
-              <PrivacyPolicy media={media} />
-            )}
-          />
-          <Route
-            exact
-            path="/mobile-terms-and-conditions"
-            render={() => (
-              <LegalTemplate media={media} body="<h1> t&c </h1>" />
             )}
           />
           <Route
