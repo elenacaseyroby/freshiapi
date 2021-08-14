@@ -15,8 +15,12 @@ from django.conf import settings
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 
-from django_apps.accounts.serializers import UserSerializer
-from django_apps.accounts.models import User
+from django_apps.accounts.serializers import (
+    UserSerializer,
+    PrivacyPolicySerializer,
+    TermsSerializer
+)
+from django_apps.accounts.models import User, PrivacyPolicy, Terms
 from django_apps.api_auth.models import AccessToken
 from django_apps.api_auth.authentication import APIAuthentication
 from django_apps.api_auth.auth_utils import get_access_token
@@ -66,13 +70,13 @@ for further help on this matter."""
         # host = "www.freshi.io"
         pw_reset_url = f"http://{host}/reset-password/{user.id}/{token}"
         subject = "Freshi Password Reset"
-        message = f"""Hi {user.first_name},
+        message = f"""Hi {'there' if not user.first_name else user.first_name},
 
-I'm sorry to hear you're locked out of your account! Visit {pw_reset_url} to reset your password.
+I'm sorry to hear you're locked out of your account! To confirm, your username is {user.username}. You can visit {pw_reset_url} to reset your password.
 
 If that doesn't do the trick, you can reply to this email and I'll be happy to provide further assistance.
 
-If you did not request a password reset for this account, do nothing and your account will remain unchanged.
+Please note: if you did not request a password reset for this account, do nothing and your account will remain unchanged.
 
 Take care,
 
@@ -85,11 +89,13 @@ Co-founder of Freshi
 <head>
 </head>
 <body>
-<p>Hi {user.first_name},</p>
+<p>Hi {'there' if not user.first_name else user.first_name},</p>
 
-<p>I'm sorry to hear you're locked out of your account! Click <a href='{pw_reset_url}'>here</a> to reset your password.</p>
+<p>I'm sorry to hear you're locked out of your account! To confirm, your username is {user.username}. You can click <a href='{pw_reset_url}'>here</a> to reset your password.</p>
 
 <p>If that doesn't do the trick, you can reply to this email and I'll be happy to provide further assistance.</p>
+
+<p>Please note: if you did not request a password reset for this account, do nothing and your account will remain unchanged.</p>
 
 <p>Take care,</p>
 
@@ -160,6 +166,24 @@ Please request a new password reset email."""
         })
 
 
+@api_view(['GET', ])
+def privacy_policy(request):
+    if request.method == 'GET':
+        active_policy = PrivacyPolicy.objects.order_by('date_published').last()
+        return Response({
+            'privacy_policy': PrivacyPolicySerializer(active_policy).data
+        })
+
+
+@api_view(['GET', ])
+def terms(request):
+    if request.method == 'GET':
+        active_terms = Terms.objects.order_by('date_published').last()
+        return Response({
+            'terms': TermsSerializer(active_terms).data
+        })
+
+
 def formatError(errorField, errorMessage):
     return {
         errorField: errorMessage
@@ -214,9 +238,12 @@ class UserCreate(CreateAPIView):
         ):
             email = request.data.get('email')
             user = User.objects.filter(email=email).first()
+            # Set password.
             if user and "password" in request.data.keys():
                 password = request.data.get("password")
                 savePasswordFromRequest(password, user)
+            # Agree to terms & conditions
+            user.agree_to_terms()
         return response
 
 

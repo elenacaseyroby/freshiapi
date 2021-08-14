@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils import timezone
 from django_apps.accounts.custom_fields import CustomEmailField, CustomUsernameField
 
 
@@ -39,5 +40,75 @@ class User(AbstractUser):
     class Meta:
         db_table = 'accounts_users'
 
+    def agree_to_terms(self):
+        latest_pp = PrivacyPolicy.objects.order_by('date_published').last()
+        user_has_agreed_pp = UserPolicy.objects.filter(
+            user_id=self.id, policy_id=latest_pp.id).exists()
+        if not user_has_agreed_pp:
+            # If user hasn't agreed to privacy policy, record agreement.
+            user_pp = UserPolicy(user_id=self.id, policy_id=latest_pp.id)
+            user_pp.save()
+        latest_terms = Terms.objects.order_by('date_published').last()
+        user_has_agreed_terms = UserTerms.objects.filter(
+            user_id=self.id, terms_id=latest_terms.id).exists()
+        if not user_has_agreed_terms:
+            # If user hasn't agreed to terms, record agreement
+            user_terms = UserTerms(user_id=self.id, terms_id=latest_terms.id)
+            user_terms.save()
+
     def save(self, *args, **kwargs):
         super(User, self).save(*args, **kwargs)
+
+
+class PrivacyPolicy(models.Model):
+    body = models.TextField(blank=False, null=False)
+    date_published = models.DateField(
+        blank=False, null=False)
+
+    # object label in admin
+    def __str__(self):
+        return self.date_published
+
+    class Meta:
+        db_table = 'accounts_privacy_policies'
+
+
+class Terms(models.Model):
+    body = models.TextField(blank=False, null=False)
+    date_published = models.DateField(
+        blank=False, null=False)
+
+    # object label in admin
+    def __str__(self):
+        return self.date_published
+
+    class Meta:
+        db_table = 'accounts_terms'
+
+
+class UserTerms(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, db_column='user_id')
+    terms = models.ForeignKey(
+        Terms, on_delete=models.CASCADE, db_column='terms_id')
+    date_agreed = models.DateTimeField(
+        auto_now_add=True, null=False, blank=False)
+
+    unique_together = [['user', 'terms']]
+
+    class Meta:
+        db_table = 'accounts_user_terms'
+
+
+class UserPolicy(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, db_column='user_id')
+    policy = models.ForeignKey(
+        PrivacyPolicy, on_delete=models.CASCADE, db_column='policy_id')
+    date_agreed = models.DateTimeField(
+        auto_now_add=True, null=False, blank=False)
+
+    unique_together = [['user', 'policy']]
+
+    class Meta:
+        db_table = 'accounts_user_policies'

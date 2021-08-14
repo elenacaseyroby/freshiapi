@@ -1,9 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import getFonts from '../styles/getFonts';
-import getColors from '../styles/getColors';
-import getDevice from '../styles/getDevice';
-import getStyles from '../styles/getStyles';
+import getFonts from '../../styles/getFonts';
+import getColors from '../../styles/getColors';
+import getDevice from '../../styles/getDevice';
+import getStyles from '../../styles/getStyles';
 
 const getColorSquareStyles = ({ windowWidth, lightMode }) => {
   const fonts = getFonts(windowWidth);
@@ -11,7 +11,7 @@ const getColorSquareStyles = ({ windowWidth, lightMode }) => {
   const styles = {
     text: {
       ...colors.highContrast,
-      ...fonts.caption1
+      ...fonts.caption1,
     },
   };
   return styles;
@@ -32,7 +32,8 @@ const ColorSquare = ({
   return (
     <div style={{
       ...globalStyles.grid,
-      ...globalStyles.marginBottom }}
+      ...globalStyles.marginBottom,
+    }}
     >
       {/* color block */}
       <div style={{
@@ -69,7 +70,7 @@ ColorSquare.propTypes = {
   hex: PropTypes.string.isRequired,
   opacity: PropTypes.string.isRequired,
   windowWidth: PropTypes.number.isRequired,
-  lightMode: PropTypes.bool.isRequired
+  lightMode: PropTypes.bool.isRequired,
 };
 
 export default ColorSquare;

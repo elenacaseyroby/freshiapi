@@ -1,11 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import getColors from '../styles/getColors';
-import getFonts from '../styles/getFonts';
-import getDevice from '../styles/getDevice';
-import getStyles from '../styles/getStyles';
+import getColors from '../../styles/getColors';
+import getFonts from '../../styles/getFonts';
+import getDevice from '../../styles/getDevice';
+import getStyles from '../../styles/getStyles';
 import ColorSquare from './ColorSquare';
-import FreshiButton from '../components/FreshiButton';
+import FreshiButton from '../common/FreshiButton';
 
 const DesignSystem = ({ media, toggleLightMode }) => {
   const { windowWidth, lightMode } = media;
@@ -17,7 +17,8 @@ const DesignSystem = ({ media, toggleLightMode }) => {
   return (
     <div style={{
       ...styles.padding,
-      display: 'block' }}
+      display: 'block',
+    }}
     >
       {/* header */}
       <div style={{
@@ -27,19 +28,21 @@ const DesignSystem = ({ media, toggleLightMode }) => {
         justifyContent: 'space-between',
         alignItems: 'flex-start',
         /* row with space between end */
-        ...styles.marginBottom
+        ...styles.marginBottom,
       }}
       >
         <div style={{ display: 'block' }}>
           <div style={{
             ...fonts.largeTitle,
-            ...colors.interactiveFocus }}
+            ...colors.interactiveFocus,
+          }}
           >
             Freshi
           </div>
           <div style={{
             ...fonts.title3,
-            ...colors.interactiveFocus }}
+            ...colors.interactiveFocus,
+          }}
           >
             design system
           </div>
@@ -52,36 +55,35 @@ const DesignSystem = ({ media, toggleLightMode }) => {
           media={media}
           // override padding
           style={{
-            padding: 10 * device.normalizer
+            padding: 10 * device.normalizer,
           }}
         />
       </div>
       <div style={{
-        ...styles.collapsableGrid
+        ...styles.collapsableGrid,
       }}
       >
         {/* fonts */}
         <div style={{
           ...styles.column,
           ...styles.marginRight,
-          ...styles.marginBottom }}
+          ...styles.marginBottom,
+        }}
         >
           { Object.keys(fonts).map((font) => {
             const fontStyle = fonts[font];
             return (
-              <div style={{
-                ...styles.marginBottom }}
-              >
+              <div style={{ ...styles.marginBottom }}>
                 <div style={{
                   ...colors.highContrast,
-                  ...fontStyle
+                  ...fontStyle,
                 }}
                 >
                   {font}
                 </div>
                 <div style={{
                   ...colors.highContrast,
-                  ...fonts.caption1
+                  ...fonts.caption1,
                 }}
                 >
                   {fontStyle.usageNote}
@@ -103,7 +105,8 @@ const DesignSystem = ({ media, toggleLightMode }) => {
         <div style={{ ...styles.column }}>
           <div style={{
             ...styles.collapsableGrid,
-            ...styles.marginBottom }}
+            ...styles.marginBottom,
+          }}
           >
             {/* first column of colors */}
             <div style={{ ...styles.column, ...styles.marginRight }}>
@@ -146,13 +149,15 @@ const DesignSystem = ({ media, toggleLightMode }) => {
           >
             <div style={{
               ...fonts.headline,
-              ...colors.highContrast }}
+              ...colors.highContrast,
+            }}
             >
               Global Styles
             </div>
             <div style={{
               ...fonts.body,
-              ...colors.highContrast }}
+              ...colors.highContrast,
+            }}
             >
               padding: &nbsp;
               {Math.floor(styles.padding.padding)}
