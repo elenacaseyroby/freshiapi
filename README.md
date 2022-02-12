@@ -1,4 +1,4 @@
-# freshi
+# Freshi API
 
 ## Tooling
 * install git and connect to your github account: https://docs.github.com/en/github/getting-started-with-github/set-up-git#setting-up-git
